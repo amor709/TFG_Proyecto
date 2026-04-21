@@ -1,0 +1,941 @@
+/* ════════════════════════════════════════════════════════════════════
+   soundmusik.css  –  Hoja de estilos principal de SoundMusik
+   Arquitectura: Variables → Reset → Layout Shell → Header → Sidebar
+                 → Main Content → Hero → Cards → Right Panel → Footer/Player
+   ════════════════════════════════════════════════════════════════════ */
+
+/* ───────────────────────────────────────────────────────────────────
+   1. VARIABLES CSS  (paleta · tipografía · espaciados · tiempos)
+   ─────────────────────────────────────────────────────────────────── */
+:root {
+  /* Paleta principal */
+  --color-bg:           #0d0d0d;   /* fondo global casi negro */
+  --color-surface-01:   #161616;   /* superficies de primer nivel (sidebar, right panel) */
+  --color-surface-02:   #1f1f1f;   /* superficies de segundo nivel (cards, footer) */
+  --color-surface-03:   #2a2a2a;   /* bordes / separadores / hover suave */
+
+  /* Acento y acciones */
+  --color-accent:       #e8212e;   /* rojo SoundMusik */
+  --color-accent-hover: #ff3a46;   /* rojo iluminado al hover */
+  --color-accent-muted: rgba(232, 33, 46, 0.15);
+
+  /* Tipografía */
+  --color-text-primary:   #f0f0f0;
+  --color-text-secondary: #9a9a9a;
+  --color-text-muted:     #5a5a5a;
+
+  /* Fuentes */
+  --font-display: 'Bebas Neue', sans-serif;   /* títulos grandes */
+  --font-body:    'DM Sans', sans-serif;       /* cuerpo y UI */
+
+  /* Tamaños de fuente */
+  --text-xs:   0.65rem;   /*  10px */
+  --text-sm:   0.75rem;   /*  12px */
+  --text-base: 0.875rem;  /*  14px */
+  --text-md:   1rem;      /*  16px */
+  --text-lg:   1.25rem;   /*  20px */
+  --text-xl:   1.5rem;    /*  24px */
+  --text-2xl:  2rem;      /*  32px */
+  --text-hero: clamp(2.5rem, 5vw, 4.5rem);  /* Nombre del artista héroe */
+
+  /* Espaciados */
+  --space-1:  0.25rem;
+  --space-2:  0.5rem;
+  --space-3:  0.75rem;
+  --space-4:  1rem;
+  --space-5:  1.25rem;
+  --space-6:  1.5rem;
+  --space-8:  2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* Layout – alturas */
+  --header-h:  10vh;
+  --footer-h:  10vh;
+  --body-h:    80vh;
+
+  /* Layout – anchos de columna */
+  --sidebar-w:      280px;
+  --right-panel-w:  280px;
+
+  /* Radios de borde */
+  --radius-sm:  4px;
+  --radius-md:  8px;
+  --radius-lg:  12px;
+  --radius-xl:  20px;
+  --radius-full: 9999px;
+
+  /* Íconos */
+  --icon-xs: 14px;
+  --icon-sm: 18px;
+  --icon-md: 24px;
+  --icon-lg: 36px;
+
+  /* Transiciones */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-fast:   150ms;
+  --duration-normal: 250ms;
+  --duration-slow:   400ms;
+
+  /* Sombras */
+  --shadow-card:   0 4px 24px rgba(0, 0, 0, 0.5);
+  --shadow-hover:  0 8px 32px rgba(0, 0, 0, 0.7);
+  --shadow-accent: 0 0 20px rgba(232, 33, 46, 0.35);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   2. RESET Y BASE
+   ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;          /* La SPA no hace scroll a nivel raíz */
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a { color: inherit; text-decoration: none; }
+ul { list-style: none; }
+button { background: none; border: none; cursor: pointer; color: inherit; font-family: inherit; }
+input  { font-family: inherit; }
+img    { display: block; max-width: 100%; object-fit: cover; }
+
+/* Clases de íconos (tamaños usados con etiquetas <img>) */
+.icon--xs { width: var(--icon-xs); height: var(--icon-xs); object-fit: contain; }
+.icon--sm { width: var(--icon-sm); height: var(--icon-sm); object-fit: contain; }
+.icon--md { width: var(--icon-md); height: var(--icon-md); object-fit: contain; }
+.icon--lg { width: var(--icon-lg); height: var(--icon-lg); object-fit: contain; }
+
+/* ───────────────────────────────────────────────────────────────────
+   3. APP SHELL  –  contenedor raíz (100vh en 3 filas)
+   ─────────────────────────────────────────────────────────────────── */
+.app-shell {
+  display: grid;
+  grid-template-rows: var(--header-h) var(--body-h) var(--footer-h);
+  grid-template-columns: 1fr;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   4. HEADER  (10vh)
+   ─────────────────────────────────────────────────────────────────── */
+.app-header {
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: 0 var(--space-6);
+  background: var(--color-surface-01);
+  border-bottom: 1px solid var(--color-surface-03);
+  z-index: 100;
+}
+
+/* Logo */
+.header__logo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  width: var(--sidebar-w);            /* alinea visualmente con el sidebar */
+}
+
+.logo__icon {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.logo__text {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  letter-spacing: 0.02em;
+}
+
+.logo__sound  { color: var(--color-text-primary); }
+.logo__musik  { color: var(--color-accent); }
+
+/* Barra de búsqueda global */
+.header__search {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.search-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface-02);
+  border: 1px solid var(--color-surface-03);
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-4);
+  width: min(520px, 100%);
+  transition: border-color var(--duration-normal) var(--ease-out),
+              box-shadow   var(--duration-normal) var(--ease-out);
+}
+
+.search-bar:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-accent);
+}
+
+.search-bar__home-icon   { opacity: 0.6; }
+.search-bar__search-icon { opacity: 0.6; }
+
+.search-bar__input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-primary);
+  font-size: var(--text-base);
+}
+
+.search-bar__input::placeholder { color: var(--color-text-muted); }
+
+/* Controles derecha del header */
+.header__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+  width: var(--right-panel-w);
+  justify-content: flex-end;
+}
+
+.header-btn {
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  opacity: 0.7;
+  transition: opacity var(--duration-fast), background var(--duration-fast);
+}
+.header-btn:hover { opacity: 1; background: var(--color-surface-03); }
+
+.header__avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  border: 2px solid var(--color-accent);
+  flex-shrink: 0;
+}
+.avatar-img { width: 100%; height: 100%; object-fit: cover; }
+
+/* ───────────────────────────────────────────────────────────────────
+   5. APP BODY  –  3 columnas (80vh)
+   ─────────────────────────────────────────────────────────────────── */
+.app-body {
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr var(--right-panel-w);
+  grid-template-rows: 1fr;
+  overflow: hidden;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   6. SIDEBAR IZQUIERDO
+   ─────────────────────────────────────────────────────────────────── */
+.sidebar {
+  grid-column: 1;
+  background: var(--color-surface-01);
+  border-right: 1px solid var(--color-surface-03);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-3);
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-03) transparent;
+}
+
+/* Título + botón añadir */
+.sidebar__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--space-2);
+}
+
+.sidebar__title {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.sidebar__add-btn {
+  padding: var(--space-1);
+  border-radius: var(--radius-sm);
+  opacity: 0.5;
+  transition: opacity var(--duration-fast), background var(--duration-fast);
+}
+.sidebar__add-btn:hover { opacity: 1; background: var(--color-surface-03); }
+
+/* Búsqueda interna */
+.sidebar__search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  background: var(--color-surface-02);
+  border-radius: var(--radius-md);
+  padding: var(--space-2) var(--space-3);
+}
+
+.sidebar__search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+.sidebar__search-input::placeholder { color: var(--color-text-muted); }
+
+/* Chips de filtro */
+.sidebar__filters {
+  display: flex;
+  gap: var(--space-2);
+  padding: 0 var(--space-1);
+}
+
+.filter-chip {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  background: var(--color-surface-03);
+  color: var(--color-text-secondary);
+  transition: background var(--duration-fast), color var(--duration-fast);
+}
+.filter-chip:hover  { background: var(--color-surface-03); color: var(--color-text-primary); }
+.filter-chip--active {
+  background: var(--color-text-primary);
+  color: var(--color-bg);
+}
+
+/* Lista de elementos */
+.sidebar__list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  flex: 1;
+}
+
+.sidebar-item__link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2);
+  border-radius: var(--radius-md);
+  transition: background var(--duration-fast);
+}
+.sidebar-item__link:hover { background: var(--color-surface-03); }
+.sidebar-item__link--active { background: var(--color-surface-03); }
+
+/* Thumbnail */
+.sidebar-item__thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface-02);
+}
+
+/* Thumbnail especial "Mis joyas" */
+.sidebar-item__thumb--liked {
+  background: linear-gradient(135deg, var(--color-accent) 0%, #8b0000 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-item__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sidebar-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  overflow: hidden;
+}
+
+.sidebar-item__name {
+  font-size: var(--text-base);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--color-text-primary);
+}
+
+.sidebar-item__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   7. MAIN CONTENT  –  área dinámica (bloque Django)
+   ─────────────────────────────────────────────────────────────────── */
+.main-content {
+  grid-column: 2;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--color-bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-03) transparent;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   8. HÉROE  –  banner del artista destacado
+   ─────────────────────────────────────────────────────────────────── */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 280px;          /* ~35% de 80vh a 1080px de alto */
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+}
+
+/* Fondo con imagen + efectos */
+.hero__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.hero__bg {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center 25%;  /* Encuadra los rostros */
+  filter: blur(0px) brightness(0.7);  /* Oscurecer sin desenfoque como en el original */
+  transform: scale(1.03);            /* Evita bordes del blur si se activa */
+  transition: filter var(--duration-slow) var(--ease-out);
+}
+
+/* Gradiente oscuro de la parte inferior (para legibilidad del texto) */
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(13, 13, 13, 0)   0%,
+    rgba(13, 13, 13, 0.15) 40%,
+    rgba(13, 13, 13, 0.7)  75%,
+    rgba(13, 13, 13, 0.92) 100%
+  );
+}
+
+/* Contenido textual del héroe */
+.hero__body {
+  position: relative;
+  z-index: 1;
+  padding: var(--space-8) var(--space-10);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.hero__label {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hero__artist-name {
+  font-family: var(--font-display);
+  font-size: var(--text-hero);
+  line-height: 0.95;
+  color: var(--color-text-primary);
+  letter-spacing: 0.01em;
+}
+
+/* Botón CTA del héroe */
+.btn-hero {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-5);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--text-base);
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  width: fit-content;
+  transition: background var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast);
+}
+.btn-hero:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-accent);
+}
+.btn-hero:active { transform: translateY(0); }
+
+/* ───────────────────────────────────────────────────────────────────
+   9. SECCIONES DE CONTENIDO  (títulos + filas de tarjetas)
+   ─────────────────────────────────────────────────────────────────── */
+.content-section {
+  padding: var(--space-8) var(--space-8) var(--space-4);
+}
+
+.section-title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-5);
+  letter-spacing: -0.01em;
+}
+
+/* Filas de tarjetas */
+.cards-row {
+  display: grid;
+  gap: var(--space-4);
+}
+
+/* Grid de álbumes/tracks: 5 columnas fijas (como la captura) */
+.cards-row--albums {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Grid de artistas: 5 columnas */
+.cards-row--artists {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+/* Mensaje de vacío */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  padding: var(--space-10);
+}
+
+/* ── Tarjeta de Track/Álbum ── */
+.track-card { position: relative; }
+
+.track-card__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.track-card__cover-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-02);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+.track-card__link:hover .track-card__cover-wrap {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.track-card__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.track-card__link:hover .track-card__cover { transform: scale(1.04); }
+
+/* Overlay de play al hover (oculto por defecto, visible con CSS) */
+.track-card__play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+.track-card__link:hover .track-card__play-overlay { opacity: 1; }
+
+.track-card__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.track-card__sub {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ── Tarjeta de Artista (foto circular) ── */
+.artist-card { }
+
+.artist-card__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+}
+
+.artist-card__photo-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  background: var(--color-surface-02);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow var(--duration-normal) var(--ease-out);
+}
+.artist-card__link:hover .artist-card__photo-wrap {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.artist-card__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.artist-card__link:hover .artist-card__photo { transform: scale(1.06); }
+
+.artist-card__name {
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.artist-card__genre {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   10. PANEL DERECHO  –  info de la canción actual
+   ─────────────────────────────────────────────────────────────────── */
+.right-panel {
+  grid-column: 3;
+  background: var(--color-surface-01);
+  border-left: 1px solid var(--color-surface-03);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-4);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-surface-03) transparent;
+}
+
+/* Portada del álbum */
+.right-panel__album-cover {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.album-cover__img {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-lg);
+  object-fit: cover;
+  box-shadow: var(--shadow-card);
+}
+
+.album-cover__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+/* Info de pista */
+.right-panel__track-info { padding: 0 var(--space-2); }
+
+.track-info__title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.track-info__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.track-info__artist {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+/* Artista relacionado */
+.right-panel__related { padding: 0 var(--space-2); }
+
+.related__heading {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-4);
+  letter-spacing: 0.01em;
+}
+
+.related__artist-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.related__artist-photo {
+  width: 70px;
+  height: 70px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.related__artist-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.related__artist-name {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text-primary);
+}
+
+/* Botón Seguir */
+.btn-follow {
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-surface-03);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  background: var(--color-surface-02);
+  transition: background var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast);
+}
+.btn-follow:hover {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  box-shadow: var(--shadow-accent);
+}
+
+/* Estado vacío del panel derecho */
+.right-panel__empty {
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  padding: var(--space-10) var(--space-4);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   11. FOOTER  –  reproductor global (10vh)
+   ─────────────────────────────────────────────────────────────────── */
+.app-footer {
+  grid-row: 3;
+  background: var(--color-surface-02);
+  border-top: 1px solid var(--color-surface-03);
+  z-index: 100;
+}
+
+.player {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  height: 100%;
+  padding: 0 var(--space-6);
+  gap: var(--space-4);
+}
+
+/* Track info (izquierda) */
+.player__track {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.player__thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-sm);
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.player__meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.player__song-title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player__song-artist {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.player__like-btn {
+  padding: var(--space-1);
+  opacity: 0.5;
+  transition: opacity var(--duration-fast);
+}
+.player__like-btn:hover { opacity: 1; }
+
+/* Controles centrales */
+.player__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.ctrl-btn {
+  padding: var(--space-2);
+  border-radius: var(--radius-full);
+  opacity: 0.65;
+  transition: opacity var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
+}
+.ctrl-btn:hover { opacity: 1; background: var(--color-surface-03); }
+.ctrl-btn:active { transform: scale(0.93); }
+
+/* Botón play resaltado */
+.ctrl-btn--play {
+  padding: var(--space-3);
+  background: var(--color-text-primary);
+  opacity: 1;
+}
+.ctrl-btn--play:hover { background: #d4d4d4; }
+
+/* Controles secundarios (barra + volumen, derecha) */
+.player__secondary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  justify-self: end;
+  width: 200px;
+}
+
+.player__progress,
+.player__volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-03);
+  outline: none;
+  cursor: pointer;
+}
+
+.player__progress::-webkit-slider-thumb,
+.player__volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--color-text-primary);
+  cursor: pointer;
+  transition: background var(--duration-fast), transform var(--duration-fast);
+}
+
+.player__progress::-webkit-slider-thumb:hover,
+.player__volume-slider::-webkit-slider-thumb:hover {
+  background: var(--color-accent);
+  transform: scale(1.3);
+}
+
+.player__volume {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   12. SCROLLBAR GLOBAL (Webkit)
+   ─────────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 6px; height: 6px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: var(--color-surface-03); border-radius: var(--radius-full); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-muted); }
+
+/* ───────────────────────────────────────────────────────────────────
+   13. UTILIDADES
+   ─────────────────────────────────────────────────────────────────── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+}
+
+/* ───────────────────────────────────────────────────────────────────
+   14. RESPONSIVE  (breakpoints de apoyo para pantallas más pequeñas)
+   La SPA está diseñada para 1920×1080, pero aquí se añaden
+   ajustes mínimos para que no se rompa en viewports menores.
+   ─────────────────────────────────────────────────────────────────── */
+@media (max-width: 1280px) {
+  :root {
+    --sidebar-w:     240px;
+    --right-panel-w: 240px;
+  }
+  .cards-row--albums,
+  .cards-row--artists { grid-template-columns: repeat(4, 1fr); }
+}
+
+@media (max-width: 1024px) {
+  :root {
+    --sidebar-w:     200px;
+    --right-panel-w: 0px;   /* ocultar panel derecho en pantallas medianas */
+  }
+  .right-panel { display: none; }
+  .cards-row--albums,
+  .cards-row--artists { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --sidebar-w: 0px;
+  }
+  .sidebar         { display: none; }  /* sidebar colapsado en móvil */
+  .app-body        { grid-template-columns: 1fr; }
+  .player__track   { flex: 1; min-width: 0; }
+  .player__secondary { display: none; }  /* simplificar player en móvil */
+}

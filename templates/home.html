@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – Inicio{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════
+     HOME  –  contenido dinámico del bloque central
+     Se carga dentro de <main class="main-content">
+     ════════════════════════════════════════════ -->
+
+<!-- ── SECCIÓN HÉROE (artista destacado) ── -->
+{% if featured_artist %}
+<section class="hero" aria-label="Artista destacado">
+    <div class="hero__backdrop">
+        {# La imagen de fondo se aplica como inline style para que Django pueda
+           pasar la URL del modelo; el overlay/blur se hace 100% en CSS. #}
+        <div class="hero__bg"
+             style="{% if featured_artist.photo %}background-image: url('{{ featured_artist.photo.url }}');{% endif %}"
+             role="img"
+             aria-label="{{ featured_artist.user.username }}">
+        </div>
+        <div class="hero__overlay"></div>
+    </div>
+
+    <div class="hero__body">
+        <p class="hero__label">Escucha más de…</p>
+        <h1 class="hero__artist-name">{{ featured_artist.user.username }}</h1>
+        <button class="btn-hero">
+            <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs"> Ver artista
+        </button>
+    </div>
+</section><!-- /hero -->
+{% endif %}
+
+<!-- ── SECCIÓN: Escuchadas recientemente ── -->
+<section class="content-section" aria-labelledby="recent-heading">
+    <h2 class="section-title" id="recent-heading">Escuchadas recientemente</h2>
+    <div class="cards-row cards-row--albums">
+        {% for track in recently_played %}
+        <article class="track-card">
+            <a href="{% url 'music:song_detail' track.pk %}" class="track-card__link">
+                <div class="track-card__cover-wrap">
+                    <img src="{% if track.cover %}{{ track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
+                         alt="{{ track.title }}"
+                         class="track-card__cover"
+                         loading="lazy">
+                    <!-- Overlay de play al hover (puro CSS) -->
+                    <div class="track-card__play-overlay" aria-hidden="true">
+                        <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                    </div>
+                </div>
+                <h3 class="track-card__title">{{ track.title }}</h3>
+                <p class="track-card__sub">{{ track.artist.user.username }}</p>
+            </a>
+        </article>
+        {% empty %}
+        <p class="empty-state">Todavía no hay canciones. ¡Sube la primera!</p>
+        {% endfor %}
+    </div>
+</section><!-- /recently played -->
+
+<!-- ── SECCIÓN: Artistas que suelen estar contigo ── -->
+<section class="content-section" aria-labelledby="artists-heading">
+    <h2 class="section-title" id="artists-heading">Artistas que suelen estar contigo</h2>
+    <div class="cards-row cards-row--artists">
+        {% for artist in companion_artists %}
+        <article class="artist-card">
+            <div class="artist-card__link">
+                <div class="artist-card__photo-wrap">
+                    <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-placeholder.png' %}{% endif %}"
+                         alt="{{ artist.user.username }}"
+                         class="artist-card__photo"
+                         loading="lazy">
+                </div>
+                <h3 class="artist-card__name">{{ artist.user.username }}</h3>
+                <p class="artist-card__genre">Artista</p>
+            </div>
+        </article>
+        {% empty %}
+        <p class="empty-state">No hay artistas registrados aún.</p>
+        {% endfor %}
+    </div>
+</section><!-- /companion artists -->
+
+{% endblock %}

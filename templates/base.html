@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SoundMusik{% block title %}{% endblock %}</title>
+
+    {# ── Fuentes ── #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    {# ── CSS principal ── #}
+    <link rel="stylesheet" href="{% static 'css/soundmusik.css' %}">
+
+    {% block extra_head %}{% endblock %}
+</head>
+
+<body>
+<!-- ════════════════════════════════════════════
+     LAYOUT RAÍZ  (header 10vh | body 80vh | footer 10vh)
+     ════════════════════════════════════════════ -->
+<div class="app-shell">
+
+    <!-- ── HEADER (10vh) ── -->
+    <header class="app-header">
+        <!-- Logo -->
+        <div class="header__logo">
+            <img src="{% static 'img/logo-icon.png' %}" alt="SoundMusik logo icon" class="logo__icon">
+            <span class="logo__text"><span class="logo__sound">Sound</span><span class="logo__musik">Musik</span></span>
+        </div>
+
+        <!-- Barra de búsqueda global -->
+        <div class="header__search">
+            <div class="search-bar">
+                <img src="{% static 'img/icon-home.png' %}" alt="Inicio" class="search-bar__home-icon icon--sm">
+                <img src="{% static 'img/icon-search.png' %}" alt="Buscar" class="search-bar__search-icon icon--sm">
+                <input
+                    type="text"
+                    class="search-bar__input"
+                    placeholder="¿Qué suena en tu cabeza?"
+                    name="q"
+                    autocomplete="off"
+                    aria-label="Buscar música"
+                >
+            </div>
+        </div>
+
+        <!-- Controles de cabecera derecha -->
+        <div class="header__controls">
+            <button class="header-btn" aria-label="Cola de reproducción">
+                <img src="{% static 'img/icon-queue.png' %}" alt="" class="icon--sm">
+            </button>
+            <button class="header-btn" aria-label="Pantalla completa">
+                <img src="{% static 'img/icon-fullscreen.png' %}" alt="" class="icon--sm">
+            </button>
+            <!-- Avatar de usuario -->
+            <div class="header__avatar" aria-label="Perfil de usuario">
+                {% if request.user.is_authenticated %}
+                    {% if request.user.listener_profile.avatar %}
+                        <img src="{{ request.user.listener_profile.avatar.url }}" alt="{{ request.user.username }}" class="avatar-img">
+                    {% else %}
+                        <img src="{% static 'img/avatar-default.png' %}" alt="Usuario" class="avatar-img">
+                    {% endif %}
+                {% else %}
+                    <img src="{% static 'img/avatar-default.png' %}" alt="Usuario" class="avatar-img">
+                {% endif %}
+            </div>
+        </div>
+    </header>
+
+    <!-- ── CUERPO CENTRAL (80vh) ── -->
+    <div class="app-body">
+
+        <!-- ────────────────────────────────────────
+             SIDEBAR IZQUIERDO  (~15% ancho)
+             ──────────────────────────────────────── -->
+        <aside class="sidebar" role="navigation" aria-label="Tu biblioteca">
+
+            <!-- Cabecera del sidebar -->
+            <div class="sidebar__header">
+                <h2 class="sidebar__title">Tu banda sonora</h2>
+                <button class="sidebar__add-btn" aria-label="Añadir elemento">
+                    <img src="{% static 'img/icon-plus.png' %}" alt="+" class="icon--sm">
+                </button>
+            </div>
+
+            <!-- Búsqueda interna del sidebar -->
+            <div class="sidebar__search">
+                <img src="{% static 'img/icon-search-small.png' %}" alt="" class="icon--xs">
+                <input
+                    type="text"
+                    class="sidebar__search-input"
+                    placeholder="Hoy toca…"
+                    aria-label="Filtrar biblioteca"
+                >
+            </div>
+
+            <!-- Filtros rápidos -->
+            <div class="sidebar__filters">
+                <button class="filter-chip filter-chip--active">Recientes</button>
+                <button class="filter-chip">Guardados</button>
+            </div>
+
+            <!-- Lista de elementos de biblioteca -->
+            <ul class="sidebar__list">
+                {# Sección "Mis joyas" (playlist Me gusta) #}
+                <li class="sidebar-item">
+                    <div class="sidebar-item__link">
+                        <div class="sidebar-item__thumb sidebar-item__thumb--liked">
+                            <img src="{% static 'img/icon-heart-diamond.png' %}" alt="" class="icon--md">
+                        </div>
+                        <div class="sidebar-item__info">
+                            <span class="sidebar-item__name">Mis joyas</span>
+                            <span class="sidebar-item__sub">Tus "Me gusta"</span>
+                        </div>
+                    </div>
+                </li>
+
+                {# Bucle dinámico sobre los ítems de la biblioteca del usuario #}
+                {% for item in library_items %}
+                <li class="sidebar-item">
+                    <div class="sidebar-item__link {% if item.is_active %}sidebar-item__link--active{% endif %}">
+                        <div class="sidebar-item__thumb">
+                            <img src="{{ item.cover_image.url }}" alt="{{ item.title }}" class="sidebar-item__img">
+                        </div>
+                        <div class="sidebar-item__info">
+                            <span class="sidebar-item__name">{{ item.title }}</span>
+                            <span class="sidebar-item__sub">
+                                {{ item.get_type_display }}
+                                {% if item.artist %} – {{ item.artist.name }}{% endif %}
+                            </span>
+                        </div>
+                    </div>
+                </li>
+                {% endfor %}
+            </ul>
+        </aside><!-- /sidebar -->
+
+        <!-- ────────────────────────────────────────
+             ÁREA PRINCIPAL  (bloque dinámico Django)
+             ──────────────────────────────────────── -->
+        <main class="main-content" id="main-content" role="main">
+            {% block content %}
+            {# Cada vista de Django reemplaza este bloque #}
+            {% endblock %}
+        </main><!-- /main-content -->
+
+        <!-- ────────────────────────────────────────
+             PANEL DERECHO  – Canción actual (~18% ancho)
+             ──────────────────────────────────────── -->
+        <aside class="right-panel" aria-label="Canción actual y artista">
+
+            {% if current_track %}
+            <!-- Álbum / portada grande -->
+            <div class="right-panel__album-cover">
+                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
+                     alt="{{ current_track.title }}"
+                     class="album-cover__img">
+                <p class="album-cover__title">{{ current_track.title }}</p>
+            </div>
+
+            <!-- Info de la pista -->
+            <div class="right-panel__track-info">
+                <h3 class="track-info__title">{{ current_track.title }}</h3>
+                <div class="track-info__meta">
+                    <img src="{% static 'img/icon-diamond.png' %}" alt="" class="icon--xs">
+                    <span class="track-info__artist">{{ current_track.artist.user.username }}</span>
+                </div>
+            </div>
+
+            <!-- Sección "Cancioncita de…" (artista relacionado) -->
+            {% if related_artist %}
+            <div class="right-panel__related">
+                <h4 class="related__heading">Cancioncita de…</h4>
+                <div class="related__artist-card">
+                    <img src="{% if related_artist.photo %}{{ related_artist.photo.url }}{% else %}{% static 'img/artist-placeholder.png' %}{% endif %}"
+                         alt="{{ related_artist.user.username }}"
+                         class="related__artist-photo">
+                    <div class="related__artist-info">
+                        <span class="related__artist-name">{{ related_artist.user.username }}</span>
+                        <button class="btn-follow" data-artist-id="{{ related_artist.pk }}" aria-label="Seguir a {{ related_artist.user.username }}">
+                            + Seguir
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            {% else %}
+            <p class="right-panel__empty">Reproduce algo para empezar 🎵</p>
+            {% endif %}
+
+        </aside><!-- /right-panel -->
+
+    </div><!-- /app-body -->
+
+    <!-- ── FOOTER (10vh) – reproductor global ── -->
+    <footer class="app-footer">
+        <div class="player">
+
+            <!-- Info de la canción actual -->
+            <div class="player__track">
+                {% if current_track %}
+                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb">
+                <div class="player__meta">
+                    <span class="player__song-title">{{ current_track.title }}</span>
+                    <span class="player__song-artist">{{ current_track.artist.user.username }}</span>
+                </div>
+                <button class="player__like-btn" aria-label="Me gusta">
+                    <img src="{% static 'img/icon-heart-outline.png' %}" alt="" class="icon--sm">
+                </button>
+                {% else %}
+                <div class="player__meta">
+                    <span class="player__song-title">No hay canción</span>
+                    <span class="player__song-artist">Selecciona una para reproducir</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Controles centrales -->
+            <div class="player__controls">
+                <button class="ctrl-btn" aria-label="Aleatorio">
+                    <img src="{% static 'img/icon-shuffle.png' %}" alt="" class="icon--sm">
+                </button>
+                <button class="ctrl-btn" aria-label="Anterior">
+                    <img src="{% static 'img/icon-prev.png' %}" alt="" class="icon--sm">
+                </button>
+                <button class="ctrl-btn ctrl-btn--play" aria-label="Reproducir / Pausar">
+                    <img src="{% static 'img/icon-play.png' %}" alt="" class="icon--md">
+                </button>
+                <button class="ctrl-btn" aria-label="Siguiente">
+                    <img src="{% static 'img/icon-next.png' %}" alt="" class="icon--sm">
+                </button>
+                <button class="ctrl-btn" aria-label="Repetir">
+                    <img src="{% static 'img/icon-repeat.png' %}" alt="" class="icon--sm">
+                </button>
+            </div>
+
+            <!-- Controles de volumen y tiempo -->
+            <div class="player__secondary">
+                <input type="range" class="player__progress" min="0" max="100" value="0" aria-label="Progreso de la canción">
+                <div class="player__volume">
+                    <img src="{% static 'img/icon-volume.png' %}" alt="Volumen" class="icon--sm">
+                    <input type="range" class="player__volume-slider" min="0" max="100" value="70" aria-label="Volumen">
+                </div>
+            </div>
+
+        </div>
+    </footer>
+
+</div><!-- /app-shell -->
+
+{% block extra_scripts %}{% endblock %}
+</body>
+</html>

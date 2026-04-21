@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ song.title }}{% endblock %}
+
+{% block content %}
+<div class="song-detail">
+    <img src="{{ song.cover_url }}" alt="Portada de {{ song.title }}" class="song-cover-large">
+    <h2>{{ song.title }}</h2>
+    <p>Artista: {{ song.artist.user.username }}</p>
+    <p>Álbum: {{ song.album.title|default:"Sin álbum" }}</p>
+    <p>Género: {{ song.genre.name|default:"Sin género" }}</p>
+    <p>Reproducciones: {{ song.plays }}</p>
+    <audio id="audio-player" controls>
+        <source src="{{ song.file_url }}" type="audio/mpeg">
+        Tu navegador no soporta el elemento audio.
+    </audio>
+</div>
+{% endblock %}

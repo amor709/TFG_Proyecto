@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Canciones{% endblock %}
+
+{% block content %}
+<h2>Canciones</h2>
+<ul class="song-list">
+{% for song in songs %}
+<li class="song-item">
+    <img src="{{ song.cover_url }}" alt="Portada de {{ song.title }}" class="song-cover">
+    <div class="song-info">
+        <h3><a href="{% url 'music:song_detail' song.pk %}">{{ song.title }}</a></h3>
+        <p>{{ song.artist.user.username }}</p>
+        <p>{{ song.genre.name|default:"Sin género" }}</p>
+    </div>
+</li>
+{% endfor %}
+</ul>
+{% endblock %}
