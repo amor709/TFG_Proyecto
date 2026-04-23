@@ -18,6 +18,6 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='listenerprofile',
             name='avatar',
-            field=models.FileField(blank=True, null=True, upload_to='profiles/'),
+            field=models.FileField(blank=True, null=True, upload_to='m /'),
         ),
     ]

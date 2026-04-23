@@ -4,15 +4,13 @@
                  → Main Content → Hero → Cards → Right Panel → Footer/Player
    ════════════════════════════════════════════════════════════════════ */
 
-/* ───────────────────────────────────────────────────────────────────
-   1. VARIABLES CSS  (paleta · tipografía · espaciados · tiempos)
-   ─────────────────────────────────────────────────────────────────── */
+/* 1. VARIABLES CSS  (paleta · tipografía · espaciados · tiempos)*/
 :root {
   /* Paleta principal */
-  --color-bg:           #0d0d0d;   /* fondo global casi negro */
-  --color-surface-01:   #161616;   /* superficies de primer nivel (sidebar, right panel) */
-  --color-surface-02:   #1f1f1f;   /* superficies de segundo nivel (cards, footer) */
-  --color-surface-03:   #2a2a2a;   /* bordes / separadores / hover suave */
+  --color-bg:         #0d0d0d;   /* fondo global casi negro */
+  --color-surface-01: #0d0d0d;    /* superficies de primer nivel (sidebar, right panel) */
+  --color-surface-02: #494949;    /* superficies de segundo nivel (cards, footer) */
+  --color-surface-03: #292929;    /* bordes / separadores / hover suave */
 
   /* Acento y acciones */
   --color-accent:       #e8212e;   /* rojo SoundMusik */
@@ -77,15 +75,13 @@
   --duration-normal: 250ms;
   --duration-slow:   400ms;
 
-  /* Sombras */
-  --shadow-card:   0 4px 24px rgba(0, 0, 0, 0.5);
-  --shadow-hover:  0 8px 32px rgba(0, 0, 0, 0.7);
-  --shadow-accent: 0 0 20px rgba(232, 33, 46, 0.35);
+  /* Sombras  */
+  /*--shadow-card:   0 4px 24px rgba(0, 0, 0, 0.5);  */
+  /*--shadow-hover:  0 8px 32px rgba(0, 0, 0, 0.7);  */
+  /*--shadow-accent: 0 0 20px rgba(232, 33, 46, 0.35);  */
 }
 
-/* ───────────────────────────────────────────────────────────────────
-   2. RESET Y BASE
-   ─────────────────────────────────────────────────────────────────── */
+/* 2. RESET Y BASE */
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -115,9 +111,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .icon--md { width: var(--icon-md); height: var(--icon-md); object-fit: contain; }
 .icon--lg { width: var(--icon-lg); height: var(--icon-lg); object-fit: contain; }
 
-/* ───────────────────────────────────────────────────────────────────
-   3. APP SHELL  –  contenedor raíz (100vh en 3 filas)
-   ─────────────────────────────────────────────────────────────────── */
+/* 3. APP SHELL  –  contenedor raíz (100vh en 3 filas)*/
 .app-shell {
   display: grid;
   grid-template-rows: var(--header-h) var(--body-h) var(--footer-h);
@@ -126,9 +120,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   overflow: hidden;
 }
 
-/* ───────────────────────────────────────────────────────────────────
-   4. HEADER  (10vh)
-   ─────────────────────────────────────────────────────────────────── */
+/* 4. HEADER  (10vh) */
 .app-header {
   grid-row: 1;
   display: flex;
@@ -186,7 +178,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 
 .search-bar:focus-within {
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-accent);
+  /*box-shadow: var(--shadow-accent);*/
 }
 
 .search-bar__home-icon   { opacity: 0.6; }
@@ -242,9 +234,8 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   overflow: hidden;
 }
 
-/* ───────────────────────────────────────────────────────────────────
-   6. SIDEBAR IZQUIERDO
-   ─────────────────────────────────────────────────────────────────── */
+/* 6. SIDEBAR IZQUIERDO
+   */
 .sidebar {
   grid-column: 1;
   background: var(--color-surface-01);
@@ -487,13 +478,11 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .btn-hero:hover {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-accent);
+  /*box-shadow: var(--shadow-accent);*/
 }
 .btn-hero:active { transform: translateY(0); }
 
-/* ───────────────────────────────────────────────────────────────────
-   9. SECCIONES DE CONTENIDO  (títulos + filas de tarjetas)
-   ─────────────────────────────────────────────────────────────────── */
+/* 9. SECCIONES DE CONTENIDO  (títulos + filas de tarjetas) */
 .content-section {
   padding: var(--space-8) var(--space-8) var(--space-4);
 }
@@ -546,13 +535,13 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   border-radius: var(--radius-md);
   overflow: hidden;
   background: var(--color-surface-02);
-  box-shadow: var(--shadow-card);
+  /*box-shadow: var(--shadow-card);*/
   transition: transform var(--duration-normal) var(--ease-out),
               box-shadow var(--duration-normal) var(--ease-out);
 }
 .track-card__link:hover .track-card__cover-wrap {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
+  /*box-shadow: var(--shadow-hover);*/
 }
 
 .track-card__cover {
@@ -607,13 +596,13 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   border-radius: var(--radius-full);
   overflow: hidden;
   background: var(--color-surface-02);
-  box-shadow: var(--shadow-card);
+  /*box-shadow: var(--shadow-card);*/
   transition: transform var(--duration-normal) var(--ease-out),
               box-shadow var(--duration-normal) var(--ease-out);
 }
 .artist-card__link:hover .artist-card__photo-wrap {
   transform: translateY(-4px);
-  box-shadow: var(--shadow-hover);
+  /*box-shadow: var(--shadow-hover);*/
 }
 
 .artist-card__photo {
@@ -635,9 +624,8 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   color: var(--color-text-secondary);
 }
 
-/* ───────────────────────────────────────────────────────────────────
-   10. PANEL DERECHO  –  info de la canción actual
-   ─────────────────────────────────────────────────────────────────── */
+/* 10. PANEL DERECHO  –  info de la canción actual */
+
 .right-panel {
   grid-column: 3;
   background: var(--color-surface-01);
@@ -663,7 +651,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   aspect-ratio: 1 / 1;
   border-radius: var(--radius-lg);
   object-fit: cover;
-  box-shadow: var(--shadow-card);
+  /*box-shadow: var(--shadow-card);*/
 }
 
 .album-cover__title {
@@ -745,7 +733,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .btn-follow:hover {
   background: var(--color-accent);
   border-color: var(--color-accent);
-  box-shadow: var(--shadow-accent);
+  /*box-shadow: var(--shadow-accent);*/
 }
 
 /* Estado vacío del panel derecho */
@@ -756,9 +744,8 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   padding: var(--space-10) var(--space-4);
 }
 
-/* ───────────────────────────────────────────────────────────────────
-   11. FOOTER  –  reproductor global (10vh)
-   ─────────────────────────────────────────────────────────────────── */
+/* 11. FOOTER  –  reproductor global (10vh) */
+
 .app-footer {
   grid-row: 3;
   background: var(--color-surface-02);

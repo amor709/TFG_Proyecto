@@ -12,15 +12,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     {# ── CSS principal ── #}
-    <link rel="stylesheet" href="{% static 'css/soundmusik.css' %}">
+    <link rel="stylesheet" href="{% static 'css/soundmusik.css' %}?v=1">
 
     {% block extra_head %}{% endblock %}
 </head>
 
 <body>
-<!-- ════════════════════════════════════════════
-     LAYOUT RAÍZ  (header 10vh | body 80vh | footer 10vh)
-     ════════════════════════════════════════════ -->
+<!-- LAYOUT RAÍZ  (header 10vh | body 80vh | footer 10vh)-->
 <div class="app-shell">
 
     <!-- ── HEADER (10vh) ── -->
@@ -102,6 +100,12 @@
                 <button class="filter-chip filter-chip--active">Recientes</button>
                 <button class="filter-chip">Guardados</button>
             </div>
+
+            <ul id="playlist">
+                {% for song in songs %}
+                <li onclick="loadSong({{ forloop.counter0 }})">{{ song.title }}</li>
+                {% endfor %}
+            </ul>
 
             <!-- Lista de elementos de biblioteca -->
             <ul class="sidebar__list">
@@ -202,10 +206,10 @@
             <!-- Info de la canción actual -->
             <div class="player__track">
                 {% if current_track %}
-                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb">
+                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb" id="track-art">
                 <div class="player__meta">
-                    <span class="player__song-title">{{ current_track.title }}</span>
-                    <span class="player__song-artist">{{ current_track.artist.user.username }}</span>
+                    <span class="player__song-title" id="track-title">{{ current_track.title }}</span>
+                    <span class="player__song-artist" id="track-artist">{{ current_track.artist.user.username }}</span>
                 </div>
                 <button class="player__like-btn" aria-label="Me gusta">
                     <img src="{% static 'img/icon-heart-outline.png' %}" alt="" class="icon--sm">
@@ -223,28 +227,31 @@
                 <button class="ctrl-btn" aria-label="Aleatorio">
                     <img src="{% static 'img/icon-shuffle.png' %}" alt="" class="icon--sm">
                 </button>
-                <button class="ctrl-btn" aria-label="Anterior">
+                <button class="ctrl-btn" onclick="prevSong()" aria-label="Anterior">
                     <img src="{% static 'img/icon-prev.png' %}" alt="" class="icon--sm">
                 </button>
-                <button class="ctrl-btn ctrl-btn--play" aria-label="Reproducir / Pausar">
+                <button class="ctrl-btn ctrl-btn--play" onclick="playPause()" aria-label="Reproducir / Pausar">
                     <img src="{% static 'img/icon-play.png' %}" alt="" class="icon--md">
                 </button>
-                <button class="ctrl-btn" aria-label="Siguiente">
+                <button class="ctrl-btn" onclick="nextSong()" aria-label="Siguiente">
                     <img src="{% static 'img/icon-next.png' %}" alt="" class="icon--sm">
                 </button>
-                <button class="ctrl-btn" aria-label="Repetir">
+                <button class="ctrl-btn" onclick="toggleRepeat()" aria-label="Repetir">
                     <img src="{% static 'img/icon-repeat.png' %}" alt="" class="icon--sm">
+                    <span id="repeat-status">OFF</span>
                 </button>
             </div>
 
             <!-- Controles de volumen y tiempo -->
             <div class="player__secondary">
-                <input type="range" class="player__progress" min="0" max="100" value="0" aria-label="Progreso de la canción">
+                <input type="range" class="player__progress" id="seek-slider" min="0" max="100" value="0" aria-label="Progreso de la canción">
                 <div class="player__volume">
                     <img src="{% static 'img/icon-volume.png' %}" alt="Volumen" class="icon--sm">
                     <input type="range" class="player__volume-slider" min="0" max="100" value="70" aria-label="Volumen">
                 </div>
             </div>
+
+            <audio id="main-audio" src=""></audio>
 
         </div>
     </footer>
@@ -252,5 +259,6 @@
 </div><!-- /app-shell -->
 
 {% block extra_scripts %}{% endblock %}
+<script src="{% static 'js/player.js' %}"></script>
 </body>
 </html>
