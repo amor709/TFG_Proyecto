@@ -10,13 +10,14 @@ class PlaylistSongInline(admin.TabularInline):
 
 @admin.register(Playlist)
 class PlaylistAdmin(admin.ModelAdmin):
-    list_display = ('name', 'user', 'is_public', 'created_at', 'get_song_count')
+    list_display = ('id', 'name', 'user', 'is_public', 'created_at', 'get_song_count')
     list_filter = ('is_public', 'created_at', 'user')
     search_fields = ('name', 'description', 'user__username')
     ordering = ('-created_at',)
+    readonly_fields = ('id',)
 
     inlines = [PlaylistSongInline]
-
+    
     def get_song_count(self, obj):
         return obj.songs.count()
     get_song_count.short_description = 'Número de canciones'
@@ -24,7 +25,8 @@ class PlaylistAdmin(admin.ModelAdmin):
 
 @admin.register(PlaylistSong)
 class PlaylistSongAdmin(admin.ModelAdmin):
-    list_display = ('playlist', 'song', 'order')
+    list_display = ('id', 'playlist', 'song', 'order')
     list_filter = ('playlist__user', 'playlist')
     search_fields = ('playlist__name', 'song__title')
     ordering = ('playlist', 'order')
+    readonly_fields = ('id',)

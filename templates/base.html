@@ -6,12 +6,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoundMusik{% block title %}{% endblock %}</title>
 
-    {# ── Fuentes ── #}
+    {#Fuentes#}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    {# ── CSS principal ── #}
     <link rel="stylesheet" href="{% static 'css/soundmusik.css' %}?v=1">
 
     {% block extra_head %}{% endblock %}
@@ -25,15 +24,14 @@
     <header class="app-header">
         <!-- Logo -->
         <div class="header__logo">
-            <img src="{% static 'img/logo-icon.png' %}" alt="SoundMusik logo icon" class="logo__icon">
-            <span class="logo__text"><span class="logo__sound">Sound</span><span class="logo__musik">Musik</span></span>
+            <img src="{% static 'img/logo.png' %}" alt="SoundMusik logo icon" class="logo__icon">
         </div>
 
         <!-- Barra de búsqueda global -->
         <div class="header__search">
             <div class="search-bar">
-                <img src="{% static 'img/icon-home.png' %}" alt="Inicio" class="search-bar__home-icon icon--sm">
-                <img src="{% static 'img/icon-search.png' %}" alt="Buscar" class="search-bar__search-icon icon--sm">
+                <img src="{% static 'img/home-icon.png' %}" alt="Inicio" class="search-bar__home-icon icon--md">
+                <img src="{% static 'img/search-icon.png' %}" alt="Buscar" class="search-bar__search-icon icon--md">
                 <input
                     type="text"
                     class="search-bar__input"
@@ -48,10 +46,10 @@
         <!-- Controles de cabecera derecha -->
         <div class="header__controls">
             <button class="header-btn" aria-label="Cola de reproducción">
-                <img src="{% static 'img/icon-queue.png' %}" alt="" class="icon--sm">
+                <img src="{% static 'img/queue.png' %}" alt="" class="icon--sm">
             </button>
             <button class="header-btn" aria-label="Pantalla completa">
-                <img src="{% static 'img/icon-fullscreen.png' %}" alt="" class="icon--sm">
+                <img src="{% static 'img/fullscreen.png' %}" alt="" class="icon--sm">
             </button>
             <!-- Avatar de usuario -->
             <div class="header__avatar" aria-label="Perfil de usuario">
@@ -59,10 +57,10 @@
                     {% if request.user.listener_profile.avatar %}
                         <img src="{{ request.user.listener_profile.avatar.url }}" alt="{{ request.user.username }}" class="avatar-img">
                     {% else %}
-                        <img src="{% static 'img/avatar-default.png' %}" alt="Usuario" class="avatar-img">
+                        <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
                     {% endif %}
                 {% else %}
-                    <img src="{% static 'img/avatar-default.png' %}" alt="Usuario" class="avatar-img">
+                    <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
                 {% endif %}
             </div>
         </div>
@@ -80,13 +78,13 @@
             <div class="sidebar__header">
                 <h2 class="sidebar__title">Tu banda sonora</h2>
                 <button class="sidebar__add-btn" aria-label="Añadir elemento">
-                    <img src="{% static 'img/icon-plus.png' %}" alt="+" class="icon--sm">
+                    <img src="{% static 'img/addplaylist.png' %}" alt="+" class="icon--sm">
                 </button>
             </div>
 
             <!-- Búsqueda interna del sidebar -->
             <div class="sidebar__search">
-                <img src="{% static 'img/icon-search-small.png' %}" alt="" class="icon--xs">
+                <img src="{% static 'img/search-icon.png' %}" alt="" class="icon--md">
                 <input
                     type="text"
                     class="sidebar__search-input"
@@ -113,7 +111,7 @@
                 <li class="sidebar-item">
                     <div class="sidebar-item__link">
                         <div class="sidebar-item__thumb sidebar-item__thumb--liked">
-                            <img src="{% static 'img/icon-heart-diamond.png' %}" alt="" class="icon--md">
+                            <img src="{% static 'img/diamond-black.png' %}" alt="" class="icon--md">
                         </div>
                         <div class="sidebar-item__info">
                             <span class="sidebar-item__name">Mis joyas</span>
@@ -159,7 +157,7 @@
             {% if current_track %}
             <!-- Álbum / portada grande -->
             <div class="right-panel__album-cover">
-                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
+                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
                      alt="{{ current_track.title }}"
                      class="album-cover__img">
                 <p class="album-cover__title">{{ current_track.title }}</p>
@@ -169,7 +167,7 @@
             <div class="right-panel__track-info">
                 <h3 class="track-info__title">{{ current_track.title }}</h3>
                 <div class="track-info__meta">
-                    <img src="{% static 'img/icon-diamond.png' %}" alt="" class="icon--xs">
+                    <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--xs">
                     <span class="track-info__artist">{{ current_track.artist.user.username }}</span>
                 </div>
             </div>
@@ -179,7 +177,7 @@
             <div class="right-panel__related">
                 <h4 class="related__heading">Cancioncita de…</h4>
                 <div class="related__artist-card">
-                    <img src="{% if related_artist.photo %}{{ related_artist.photo.url }}{% else %}{% static 'img/artist-placeholder.png' %}{% endif %}"
+                    <img src="{% if related_artist.photo %}{{ related_artist.photo.url }}{% else %}{% static 'img/userdefault.png' %}{% endif %}"
                          alt="{{ related_artist.user.username }}"
                          class="related__artist-photo">
                     <div class="related__artist-info">
@@ -206,13 +204,13 @@
             <!-- Info de la canción actual -->
             <div class="player__track">
                 {% if current_track %}
-                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb" id="track-art">
+                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb" id="track-art">
                 <div class="player__meta">
                     <span class="player__song-title" id="track-title">{{ current_track.title }}</span>
                     <span class="player__song-artist" id="track-artist">{{ current_track.artist.user.username }}</span>
                 </div>
                 <button class="player__like-btn" aria-label="Me gusta">
-                    <img src="{% static 'img/icon-heart-outline.png' %}" alt="" class="icon--sm">
+                    <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--sm">
                 </button>
                 {% else %}
                 <div class="player__meta">
@@ -225,20 +223,19 @@
             <!-- Controles centrales -->
             <div class="player__controls">
                 <button class="ctrl-btn" aria-label="Aleatorio">
-                    <img src="{% static 'img/icon-shuffle.png' %}" alt="" class="icon--sm">
+                    <img src="{% static 'img/shuffle.png' %}" alt="" class="icon--sm">
                 </button>
                 <button class="ctrl-btn" onclick="prevSong()" aria-label="Anterior">
-                    <img src="{% static 'img/icon-prev.png' %}" alt="" class="icon--sm">
+                    <img src="{% static 'img/next1.png' %}" alt="" class="icon--sm">
                 </button>
                 <button class="ctrl-btn ctrl-btn--play" onclick="playPause()" aria-label="Reproducir / Pausar">
-                    <img src="{% static 'img/icon-play.png' %}" alt="" class="icon--md">
+                    <img src="{% static 'img/pause.png' %}" alt="" class="icon--lg">
                 </button>
                 <button class="ctrl-btn" onclick="nextSong()" aria-label="Siguiente">
-                    <img src="{% static 'img/icon-next.png' %}" alt="" class="icon--sm">
+                    <img src="{% static 'img/next2.png' %}" alt="" class="icon--sm">
                 </button>
                 <button class="ctrl-btn" onclick="toggleRepeat()" aria-label="Repetir">
-                    <img src="{% static 'img/icon-repeat.png' %}" alt="" class="icon--sm">
-                    <span id="repeat-status">OFF</span>
+                    <img src="{% static 'img/repeat.png' %}" alt="" class="icon--sm">
                 </button>
             </div>
 
@@ -246,7 +243,7 @@
             <div class="player__secondary">
                 <input type="range" class="player__progress" id="seek-slider" min="0" max="100" value="0" aria-label="Progreso de la canción">
                 <div class="player__volume">
-                    <img src="{% static 'img/icon-volume.png' %}" alt="Volumen" class="icon--sm">
+                    <img src="{% static 'img/volume.png' %}" alt="Volumen" class="icon--sm">
                     <input type="range" class="player__volume-slider" min="0" max="100" value="70" aria-label="Volumen">
                 </div>
             </div>
@@ -260,5 +257,6 @@
 
 {% block extra_scripts %}{% endblock %}
 <script src="{% static 'js/player.js' %}"></script>
+<script src="{% static 'js/ajax-player.js' %}"></script>
 </body>
 </html>

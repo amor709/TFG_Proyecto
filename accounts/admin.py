@@ -19,17 +19,18 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(ArtistProfile)
 class ArtistProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'website', 'total_plays')
+    list_display = ('id', 'user', 'website', 'total_plays')
     list_filter = ('total_plays',)
     search_fields = ('user__username', 'user__email', 'bio')
     ordering = ('-total_plays',)
 
-    readonly_fields = ('total_plays',)  # Solo lectura, se calcula automáticamente
+    readonly_fields = ('total_plays', 'id')
 
 
 @admin.register(ListenerProfile)
 class ListenerProfileAdmin(admin.ModelAdmin):
-    list_display = ('user', 'block_explicit')
+    list_display = ('id', 'user', 'block_explicit')
     list_filter = ('block_explicit',)
     search_fields = ('user__username', 'user__email')
     ordering = ('user__username',)
+    readonly_fields = ('id',)
