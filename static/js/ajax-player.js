@@ -1,23 +1,52 @@
 async function playSongA(trackId) {
     try {
-        const response = await fetch(`/music/api/track/${trackId}/`);
+        console.log('Intentando reproducir canción ID:', trackId);
+        const url = `/music/api/track/${trackId}/`;
+        console.log('URL de fetch:', url);
+
+        const response = await fetch(url);
+        console.log('Respuesta status:', response.status);
+
         if (!response.ok) {
-            throw new Error('No se pudo cargar la canción');
+            throw new Error(`Error HTTP ${response.status}: No se pudo cargar la canción`);
         }
+
         const trackData = await response.json();
+        console.log('Datos de la canción recibidos:', trackData);
+        console.log('URL del audio:', trackData.audio_url);
+
         updatePlayer(trackData);
         updateRightPanel(trackData);
 
         // Aqui se reproduce la canción
+        const audio = document.getElementById('main-audio');
+        if (!audio) {
+            throw new Error('No se encontró el elemento de audio (main-audio)');
+        }
+
         if (trackData.audio_url) {
-            const audio = document.getElementById('main-audio');
             audio.src = trackData.audio_url;
-            audio.play();
+
+            // Esperam,os a que el audio esté listo antes de reproducir
+            audio.oncanplay = function() {
+                audio.play().catch(err => {
+                    console.error('Error al reproducir audio:', err);
+                });
+            };
+
+            // Manejo de errores del audio
+            audio.onerror = function() {
+                alert('⚠ No se pudo cargar el archivo de audio. Verifica que exista.');
+            };
+
+            // Cargar el audio
+            audio.load();
+        } else {
+            throw new Error('La canción no tiene archivo de audio (audio_url vacío)');
         }
 
     } catch (error) {
-        console.error('Error al cargar la canción:', error);
-        alert('⚠️ Error al cargar la canción. Intenta de nuevo.');
+        alert('Error: ' + error.message);
     }
 }
 

@@ -23,7 +23,6 @@ class ArtistProfileAdmin(admin.ModelAdmin):
     list_filter = ('total_plays',)
     search_fields = ('user__username', 'user__email', 'bio')
     ordering = ('-total_plays',)
-
     readonly_fields = ('total_plays', 'id')
 
 

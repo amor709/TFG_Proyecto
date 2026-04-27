@@ -5,6 +5,7 @@ from django.conf import settings
 
 class User(AbstractUser):
     email = models.EmailField(unique=True)
+    nickname = models.CharField(max_length=50, blank=True, null=True)
     is_artist = models.BooleanField(default=False)
     is_premium = models.BooleanField(default=False)
     language = models.CharField(max_length=10, default='es')
