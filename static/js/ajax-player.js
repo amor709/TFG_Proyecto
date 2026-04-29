@@ -18,32 +18,54 @@ async function playSongA(trackId) {
         updatePlayer(trackData);
         updateRightPanel(trackData);
 
-        // Aqui se reproduce la canción
-        const audio = document.getElementById('main-audio');
-        if (!audio) {
-            throw new Error('No se encontró el elemento de audio (main-audio)');
-        }
+         // Aqui se reproduce la canción
+         const audio = document.getElementById('main-audio');
+         if (!audio) {
+             throw new Error('No se encontró el elemento de audio (main-audio)');
+         }
 
-        if (trackData.audio_url) {
-            audio.src = trackData.audio_url;
+         if (trackData.audio_url) {
+             audio.src = trackData.audio_url;
 
-            // Esperam,os a que el audio esté listo antes de reproducir
-            audio.oncanplay = function() {
-                audio.play().catch(err => {
-                    console.error('Error al reproducir audio:', err);
-                });
-            };
+             // Esperam,os a que el audio esté listo antes de reproducir
+             audio.oncanplay = function() {
+                 audio.play().catch(err => {
+                     console.error('Error al reproducir audio:', err);
+                 });
+             };
 
-            // Manejo de errores del audio
-            audio.onerror = function() {
-                alert('⚠ No se pudo cargar el archivo de audio. Verifica que exista.');
-            };
+             // Manejo de errores del audio
+             audio.onerror = function() {
+                 alert('⚠ No se pudo cargar el archivo de audio. Verifica que exista.');
+             };
 
-            // Cargar el audio
-            audio.load();
-        } else {
-            throw new Error('La canción no tiene archivo de audio (audio_url vacío)');
-        }
+             // Actualizar barra de progreso visual
+             audio.ontimeupdate = function() {
+                 if (audio.duration) {
+                     const progress = (audio.currentTime / audio.duration) * 100;
+                     document.documentElement.style.setProperty('--progress', progress + '%');
+
+                     // Actualizar slider
+                     const seekSlider = document.getElementById('seek-slider');
+                     if (seekSlider) {
+                         seekSlider.value = progress;
+                     }
+
+                     // Actualizar tiempos
+                     updateTimeDisplay(audio.currentTime, audio.duration);
+                 }
+             };
+
+             // Actualizar duración cuando se carga el metadata
+             audio.onloadedmetadata = function() {
+                 updateTimeDisplay(0, audio.duration);
+             };
+
+             // Cargar el audio
+             audio.load();
+         } else {
+             throw new Error('La canción no tiene archivo de audio (audio_url vacío)');
+         }
 
     } catch (error) {
         alert('Error: ' + error.message);

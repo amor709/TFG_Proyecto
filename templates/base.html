@@ -52,26 +52,35 @@
                 <img src="{% static 'img/fullscreen.png' %}" alt="" class="icon--sm">
             </button>
             <!-- Avatar de usuario -->
-            <div class="header__avatar" aria-label="Perfil de usuario">
-                {% if request.user.is_authenticated %}
-                    {% if request.user.listener_profile.avatar %}
-                        <img src="{{ request.user.listener_profile.avatar.url }}" alt="{{ request.user.username }}" class="avatar-img">
+            <div class="header__avatar-container">
+                <div class="header__avatar" aria-label="Perfil de usuario" onclick="toggleUserDropdown(event)">
+                    {% if request.user.is_authenticated %}
+                        {% if request.user.listener_profile.avatar %}
+                            <img src="{{ request.user.listener_profile.avatar.url }}" alt="{{ request.user.username }}" class="avatar-img">
+                        {% else %}
+                            <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
+                        {% endif %}
                     {% else %}
                         <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
                     {% endif %}
-                {% else %}
-                    <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
+                </div>
+                {% if request.user.is_authenticated %}
+                <div id="user-dropdown" class="user-dropdown hidden">
+                    <a href="#" class="dropdown-item">Perfil</a>
+                    <a href="#" class="dropdown-item">Idioma</a>
+                    <a href="{% url 'logout' %}" class="dropdown-item">Cerrar sesión</a>
+                </div>
                 {% endif %}
             </div>
         </div>
     </header>
 
-    <!-- ── CUERPO CENTRAL (80vh) ── -->
+    <!--  CUERPO CENTRAL ── -->
     <div class="app-body">
 
-        <!-- ────────────────────────────────────────
-             SIDEBAR IZQUIERDO  (~15% ancho)
-             ──────────────────────────────────────── -->
+        <!--
+             SIDEBAR IZQUIERDO
+            -->
         <aside class="sidebar" role="navigation" aria-label="Tu biblioteca">
 
             <!-- Cabecera del sidebar -->
@@ -193,11 +202,11 @@
             <p class="right-panel__empty">Reproduce algo para empezar 🎵</p>
             {% endif %}
 
-        </aside><!-- /right-panel -->
+        </aside>
 
-    </div><!-- /app-body -->
+    </div>
 
-    <!-- ── FOOTER (10vh) – reproductor global ── -->
+    <!-- ── FOOTER  ── -->
     <footer class="app-footer">
         <div class="player">
 
@@ -220,7 +229,6 @@
                 {% endif %}
             </div>
 
-            <!-- Controles centrales -->
             <div class="player__controls">
                 <button class="ctrl-btn" aria-label="Aleatorio">
                     <img src="{% static 'img/shuffle.png' %}" alt="" class="icon--sm">
@@ -244,19 +252,251 @@
                 <input type="range" class="player__progress" id="seek-slider" min="0" max="100" value="0" aria-label="Progreso de la canción">
                 <div class="player__volume">
                     <img src="{% static 'img/volume.png' %}" alt="Volumen" class="icon--sm">
-                    <input type="range" class="player__volume-slider" min="0" max="100" value="70" aria-label="Volumen">
+                    <input type="range" class="player__volume-slider" id="volume-slider" min="0" max="100" value="70" aria-label="Volumen">
                 </div>
             </div>
 
             <audio id="main-audio" src=""></audio>
 
         </div>
+
+        <!-- Barra de progreso visual -->
+        <div class="progress-bar-wrapper">
+            <span class="progress-time current-time">0:00</span>
+            <div class="progress-bar-container">
+                <div class="progress-bar-background"></div>
+                <div class="progress-bar-fill"></div>
+                <input type="range" class="progress-bar-slider" id="progress-bar-slider" min="0" max="100" value="0" aria-label="Progreso de la canción">
+            </div>
+            <span class="progress-time total-time">0:00</span>
+        </div>
     </footer>
 
 </div><!-- /app-shell -->
 
 {% block extra_scripts %}{% endblock %}
-<script src="{% static 'js/player.js' %}"></script>
+
+<script>
+    const playlist = [
+        {% for song in songs %}
+        {
+            title: "{{ song.title }}",
+            url: "{{ song.audio_file.url }}",
+            cover: "{{ song.cover.url }}",
+            artist: "{{ song.artist.user.username }}"
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    let trackIndex = 0;
+    let isRepeating = false;
+    const audio = document.getElementById('main-audio');
+    const seekSlider = document.getElementById('seek-slider');
+    const volumeSlider = document.getElementById('volume-slider');
+
+function toggleUserDropdown(e) {
+    e.stopPropagation();   // ← evita que el clic se propague al document
+    const dropdown = document.getElementById('user-dropdown');
+    dropdown.classList.toggle('hidden');
+}
+
+// Cerrar si se clica fuera
+document.addEventListener('click', function(event) {
+    if (!event.target.closest('.header__avatar-container')) {
+        const dropdowns = document.getElementsByClassName("user-dropdown");
+        for (let i = 0; i < dropdowns.length; i++) {
+            if (!dropdowns[i].classList.contains('hidden')) {
+                dropdowns[i].classList.add('hidden');
+            }
+        }
+    }
+});
+
+    document.addEventListener('DOMContentLoaded', function() {
+        initializePlayer();
+    });
+
+    function initializePlayer() {
+        console.log('🎵 Inicializando reproductor...');
+        if (!audio) {
+            console.error('❌ Elemento de audio no encontrado');
+            return;
+        }
+
+        if (volumeSlider) {
+            console.log('✅ Volumen slider encontrado');
+            audio.volume = volumeSlider.value / 100;
+            document.documentElement.style.setProperty('--volume', volumeSlider.value + '%');
+
+            volumeSlider.addEventListener('input', function(e) {
+                const newVolume = this.value / 100;
+                audio.volume = newVolume;
+                document.documentElement.style.setProperty('--volume', this.value + '%');
+                console.log('Volumen actualizado a:', (newVolume * 100).toFixed(1) + '%');
+            });
+
+            // Evento change para cambios finales
+            volumeSlider.addEventListener('change', function(e) {
+                console.log('Volumen fijado a:', (this.value / 100 * 100).toFixed(1) + '%');
+            });
+        } else {
+            console.warn('⚠Volumen slider NO encontrado');
+        }
+
+        // Configurar barra de progreso / seek
+        if (seekSlider) {
+            console.log('Seek slider encontrado');
+            seekSlider.addEventListener('input', function(e) {
+                if (audio.duration) {
+                    const newTime = (this.value * audio.duration) / 100;
+                    audio.currentTime = newTime;
+                    console.log('📍 Saltando a:', newTime.toFixed(2) + 's');
+                }
+            });
+
+            seekSlider.addEventListener('change', function(e) {
+                console.log(' Posición establecida');
+            });
+        } else {
+            console.warn('⚠️ Seek slider NO encontrado');
+        }
+
+        // Event listener para clic en la barra de progreso
+        const progressContainer = document.querySelector('.progress-bar-container');
+        if (progressContainer) {
+            progressContainer.addEventListener('click', (e) => {
+                const rect = progressContainer.getBoundingClientRect();
+                const clickX = e.clientX - rect.left;
+                const width = rect.width;
+                const percentage = clickX / width;
+                audio.currentTime = percentage * audio.duration;
+                updateProgressBar(percentage * 100);
+                console.log('Clic en barra de progreso:', (percentage * 100).toFixed(1) + '%');
+            });
+        }
+
+        // Actualizar barra al reproducir
+        audio.addEventListener('timeupdate', function() {
+            if (seekSlider && audio.duration) {
+                const progress = (audio.currentTime / audio.duration) * 100;
+                seekSlider.value = progress || 0;
+                updateProgressBar(progress);
+                updateTimeDisplay(audio.currentTime, audio.duration);
+            }
+        });
+
+        // Actualizar duración cuando se carga el metadata
+        audio.addEventListener('loadedmetadata', function() {
+            console.log('📊 Duración de la canción:', formatTime(audio.duration));
+            updateTimeDisplay(audio.currentTime, audio.duration);
+        });
+
+        // Cuando termina la canción
+        audio.addEventListener('ended', function() {
+            console.log('✅ Canción terminada');
+            if (isRepeating) {
+                audio.currentTime = 0;
+                audio.play();
+            } else {
+                nextSong();
+            }
+        });
+
+        console.log('Reproductor inicializado');
+    }
+
+    function loadSong(index) {
+        if (playlist.length === 0) {
+            console.error(' La playlist está vacía');
+            return;
+        }
+        trackIndex = index % playlist.length;
+        const song = playlist[trackIndex];
+        console.log('Cargando canción:', song.title);
+        audio.src = song.url;
+        document.getElementById('track-title').innerText = song.title;
+        document.getElementById('track-art').src = song.cover;
+        document.getElementById('track-artist').innerText = song.artist;
+
+        audio.play().catch(err => {
+            console.error('Error al reproducir:', err);
+        });
+        console.log('▶️ Reproduciendo:', song.title);
+    }
+
+    function playPause() {
+        if (!audio) {
+            console.error(' Audio no disponible');
+            return;
+        }
+
+        console.log('PlayPause llamado. Estado actual:', audio.paused ? 'pausado' : 'reproduciéndose');
+
+        if (audio.paused) {
+            audio.play().catch(err => {
+                console.error(' Error al reproducir:', err);
+            });
+            console.log('▶️ Reproduciendo...');
+        } else {
+            audio.pause();
+        }
+    }
+
+    function restartSong() {
+        if (audio) {
+            audio.currentTime = 0;
+            updateProgressBar(0);
+        }
+    }
+
+    function nextSong() {
+        if (playlist.length > 0) {
+            trackIndex = (trackIndex + 1) % playlist.length;
+            console.log(' Siguiente canción:', trackIndex);
+            loadSong(trackIndex);
+        }
+    }
+
+    function prevSong() {
+        if (playlist.length > 0) {
+            trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;
+            console.log('Canción anterior:', trackIndex);
+            loadSong(trackIndex);
+        }
+    }
+
+    function toggleRepeat() {
+        isRepeating = !isRepeating;
+        console.log('Repetición:', isRepeating ? 'ON' : 'OFF');
+    }
+
+    function updateProgressBar(progress) {
+        // Esta función se llama desde timeupdate para actualizar visualmente la barra
+        // Los estilos se actualizan en CSS con la variable --progress
+        document.documentElement.style.setProperty('--progress', progress + '%');
+    }
+
+    function formatTime(seconds) {
+        if (!seconds || isNaN(seconds)) return '0:00';
+
+        const mins = Math.floor(seconds / 60);
+        const secs = Math.floor(seconds % 60);
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimeDisplay(currentTime, duration) {
+        const currentTimeEl = document.querySelector('.current-time');
+        const totalTimeEl = document.querySelector('.total-time');
+
+        if (currentTimeEl) {
+            currentTimeEl.textContent = formatTime(currentTime);
+        }
+        if (totalTimeEl) {
+            totalTimeEl.textContent = formatTime(duration);
+        }
+    }
+</script>
+
 <script src="{% static 'js/ajax-player.js' %}"></script>
 </body>
 </html>

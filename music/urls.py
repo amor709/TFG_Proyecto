@@ -9,6 +9,6 @@ urlpatterns = [
     path('api/track/<int:track_id>/', views.get_track_data, name='get_track_data'),  # API endpoint
     path('albums/', views.album_list, name='album_list'),
     path('albums/<int:pk>/', views.album_detail, name='album_detail'),
-    path('genres/', views.genre_list, name='genre_list'),
-    path('genres/<int:pk>/', views.genre_detail, name='genre_detail'),
+    path('tags/', views.tag_list, name='tag_list'),
+    path('tags/<int:pk>/', views.tag_detail, name='tag_detail'),
 ]

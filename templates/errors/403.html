@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Acceso Denegado - SoundMusik</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-card__header">
+                <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
+                <h1 class="auth-title">Acceso Denegado</h1>
+                <p class="auth-subtitle">No tienes permisos para acceder a esta página</p>
+            </div>
+
+            <div class="error-content">
+                <p style="color: rgba(255, 255, 255, 0.7); text-align: center; margin-bottom: 2rem;">
+                    Parece que no tienes los permisos necesarios para ver esta página.
+                    Esto puede deberse a que no has iniciado sesión o a restricciones de tu tipo de cuenta.
+                </p>
+
+                <div style="text-align: center;">
+                    {% if user.is_authenticated %}
+                        <a href="{% url 'home' %}" class="btn-submit" style="display: inline-block; text-decoration: none;">Volver al Inicio</a>
+                    {% else %}
+                        <a href="{% url 'register' %}" class="btn-submit" style="display: inline-block; text-decoration: none;">Iniciar Sesión</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

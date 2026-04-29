@@ -1,0 +1,438 @@
+/* ════════════════════════════════════════════════════════════════════
+   album_detail.css  –  Estilos exclusivos de la vista de Detalle de Álbum
+   Importa (o enlaza después de) soundmusik.css para heredar las variables.
+   Arquitectura:
+     1. Contenedor raíz + Backdrop difuminado
+     2. Cabecera del álbum (cover + metadatos)
+     3. Tabla de canciones (tracklist)
+     4. Sección de recomendaciones (rec-cards)
+   ════════════════════════════════════════════════════════════════════ */
+
+
+/* ───────────────────────────────────────────────────────────────────
+   1. CONTENEDOR RAÍZ Y FONDO DINÁMICO
+   ─────────────────────────────────────────────────────────────────── */
+
+/*
+ * .album-detail envuelve TODO el contenido de la vista.
+ * Es `position: relative` para que el backdrop absoluto quede confinado.
+ * min-height: 100% asegura que ocupe al menos el 80vh del main-content.
+ */
+.album-detail {
+  position: relative;
+  min-height: 100%;         /* hereda el 80vh de .main-content */
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Imagen de fondo desenfocada ── */
+.album-detail__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+
+  /* La URL se inyecta como inline style desde Django */
+  background-size: cover;
+  background-position: center top;
+
+  /* Blur intenso + oscurecimiento para que el fondo no compita con el contenido */
+  filter: blur(60px) brightness(0.35) saturate(0.8);
+
+  /* Escala ligeramente para evitar bordes blancos del blur */
+  transform: scale(1.08);
+
+  /* Fija el fondo mientras el contenido hace scroll */
+  will-change: transform;
+}
+
+/* ── Degradado overlay: transparente arriba → negro abajo ── */
+.album-detail__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(13, 13, 13, 0)    0%,
+    rgba(13, 13, 13, 0.25) 30%,
+    rgba(13, 13, 13, 0.75) 65%,
+    rgba(13, 13, 13, 0.97) 100%
+  );
+  pointer-events: none;
+}
+
+/* ── Wrapper interior (sobre el backdrop) ── */
+.album-detail__inner {
+  position: relative;
+  z-index: 2;              /* por encima del backdrop y del overlay */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-8) var(--space-12);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   2. CABECERA DEL ÁLBUM
+   ─────────────────────────────────────────────────────────────────── */
+
+.album-header {
+  display: flex;
+  align-items: flex-end;       /* portada y texto alineados por la base */
+  gap: var(--space-6);
+  padding-top: var(--space-8);
+}
+
+/* ── Carátula ── */
+.album-header__cover-wrap {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-lg);    /* bordes ligeramente redondeados */
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
+}
+
+.album-header__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Metadatos ── */
+.album-header__meta {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-1);  /* alinear línea de stats con la base de la portada */
+}
+
+/* "Álbum" en rojo */
+.album-header__type {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Título H1 – grande y bold */
+.album-header__title {
+  font-family: var(--font-body);
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Nombre del artista – enlace sutil */
+.album-header__artist {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast);
+}
+.album-header__artist:hover { color: var(--color-text-primary); }
+
+/* Línea de estadísticas */
+.album-header__stats {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.album-header__dot {
+  opacity: 0.5;
+  font-size: var(--text-xs);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   3. TABLA DE CANCIONES (TRACKLIST)
+   ─────────────────────────────────────────────────────────────────── */
+
+.tracklist {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+/* ── Cabecera de columnas ── */
+.tracklist__header {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 64px 80px;
+  align-items: center;
+  padding: 0 var(--space-4);
+  height: 36px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Separador horizontal delgado */
+.tracklist__divider {
+  height: 1px;
+  background: var(--color-surface-03);
+  margin-bottom: var(--space-2);
+}
+
+/* ── Lista ── */
+.tracklist__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Fila individual ── */
+.tracklist__row {
+  display: grid;
+  grid-template-columns: 40px 1fr 1fr 64px 80px;
+  align-items: center;
+  padding: 0 var(--space-4);
+  height: 52px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: background var(--duration-fast);
+}
+.tracklist__row:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Columnas compartidas ── */
+.tracklist__col { display: flex; align-items: center; }
+
+/* Número / botón play */
+.tracklist__col--num {
+  justify-content: center;
+  position: relative;
+}
+
+/* El número visible por defecto */
+.track-num {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  transition: opacity var(--duration-fast);
+}
+
+/* El botón play oculto por defecto */
+.track-play-btn {
+  display: none;
+  position: absolute;
+  padding: 0;
+  opacity: 0.9;
+  transition: opacity var(--duration-fast), transform var(--duration-fast);
+}
+.track-play-btn:hover { opacity: 1; transform: scale(1.1); }
+
+/* Al hover de la fila: ocultar número, mostrar play */
+.tracklist__row:hover .track-num        { opacity: 0; }
+.tracklist__row:hover .track-play-btn   { display: flex; }
+
+/* Título de la canción */
+.tracklist__col--title { overflow: hidden; }
+
+.track-title-btn {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+  text-align: left;
+  transition: color var(--duration-fast);
+}
+.tracklist__row:hover .track-title-btn { color: #fff; }
+
+/* Artistas */
+.tracklist__col--artists {
+  overflow: hidden;
+  gap: 0;
+  flex-wrap: nowrap;
+}
+
+.track-artist-link {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color var(--duration-fast);
+}
+.track-artist-link:hover { color: var(--color-text-primary); text-decoration: underline; }
+
+/* Duración */
+.tracklist__col--duration {
+  justify-content: flex-end;
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;
+  padding-right: var(--space-2);
+}
+
+/* Acciones (corazón + tres puntos) */
+.tracklist__col--actions {
+  justify-content: flex-end;
+  gap: var(--space-1);
+  /* Ocultas por defecto, se muestran al hover */
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+.tracklist__row:hover .tracklist__col--actions { opacity: 1; }
+
+/* Excepción: si la canción YA tiene like, el corazón siempre visible */
+.tracklist__row--liked .tracklist__col--actions { opacity: 1; }
+
+.track-action-btn {
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  opacity: 0.6;
+  transition: opacity var(--duration-fast), background var(--duration-fast);
+}
+.track-action-btn:hover { opacity: 1; background: rgba(255,255,255,0.08); }
+
+/* Corazón relleno (canción con like activo) */
+.icon--liked { filter: none; }  /* el icono rojo de la img ya lleva el color */
+
+/* Vacío */
+.tracklist__empty {
+  padding: var(--space-10);
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   4. SECCIÓN DE RECOMENDACIONES
+   ─────────────────────────────────────────────────────────────────── */
+
+.recommendations {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.recommendations__title {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* Grid de tarjetas — 5 columnas como en la captura */
+.recommendations__grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: var(--space-4);
+}
+
+.recommendations__empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-base);
+  padding: var(--space-8);
+}
+
+/* ── Tarjeta de recomendación ── */
+.rec-card { position: relative; }
+
+.rec-card__link {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  text-decoration: none;
+}
+
+.rec-card__cover-wrap {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--color-surface-02);
+  box-shadow: var(--shadow-card);
+  transition: transform var(--duration-normal) var(--ease-out),
+              box-shadow   var(--duration-normal) var(--ease-out);
+}
+.rec-card__link:hover .rec-card__cover-wrap {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.rec-card__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.rec-card__link:hover .rec-card__cover { transform: scale(1.05); }
+
+/* Overlay play al hover */
+.rec-card__play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--duration-normal) var(--ease-out);
+}
+.rec-card__link:hover .rec-card__play-overlay { opacity: 1; }
+
+.rec-card__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.rec-card__artist {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   5. RESPONSIVE  (ajustes para viewports menores)
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Pantallas medianas: reducir grid a 4 columnas */
+@media (max-width: 1280px) {
+  .recommendations__grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+  .album-header__cover-wrap {
+    width: 140px;
+    height: 140px;
+  }
+}
+
+/* Pantallas pequeñas */
+@media (max-width: 900px) {
+  .recommendations__grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .tracklist__row,
+  .tracklist__header {
+    grid-template-columns: 36px 1fr 52px 64px;
+  }
+  /* Ocultar columna de artistas en pantallas estrechas */
+  .tracklist__col--artists { display: none; }
+
+  .album-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

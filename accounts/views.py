@@ -10,7 +10,14 @@ from accounts.models import ArtistProfile, User, ListenerProfile
 from django import forms
 
 
-class CustomUserCreationForm(forms.ModelForm):
+def index_view(request):
+    if request.user.is_authenticated:
+        return redirect('home')
+    else:
+        return redirect('register')
+
+
+class ListenerRegistrationForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
     password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
     avatar = forms.FileField(required=False, label="Foto de perfil")
@@ -21,7 +28,7 @@ class CustomUserCreationForm(forms.ModelForm):
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Primer nombre'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Segundo nombre'}),
-            'nickname': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario (puede repe tirse)'}),
+            'nickname': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
         }
 
@@ -47,6 +54,50 @@ class CustomUserCreationForm(forms.ModelForm):
             if avatar:
                 listener_profile.avatar = avatar
                 listener_profile.save()
+        return user
+
+
+class ArtistRegistrationForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
+    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
+    photo = forms.FileField(required=False, label="Foto de perfil")
+    banner = forms.FileField(required=False, label="Banner de perfil")
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'nickname', 'email', 'password']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Primer nombre'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Segundo nombre'}),
+            'nickname': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        password = cleaned_data.get('password')
+        password_confirm = cleaned_data.get('password_confirm')
+
+        if password and password_confirm and password != password_confirm:
+            raise forms.ValidationError("Las contraseñas no coinciden.")
+
+        return cleaned_data
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.username = self.cleaned_data.get('email')  # Usar email como username
+        user.set_password(self.cleaned_data.get('password'))
+        if commit:
+            user.save()
+            # Crear perfil de artista automáticamente con photo y banner
+            photo = self.cleaned_data.get('photo')
+            banner = self.cleaned_data.get('banner')
+            artist_profile = ArtistProfile.objects.create(user=user)
+            if photo:
+                artist_profile.photo = photo
+            if banner:
+                artist_profile.banner = banner
+            artist_profile.save()
         return user
 
 
@@ -99,8 +150,34 @@ class HomeView(TemplateView):
         return context
 
 
+class RegisterTypeView(TemplateView):
+    template_name = 'accounts/register_type.html'
+
+
+class ListenerRegisterView(CreateView):
+    form_class = ListenerRegistrationForm
+    template_name = 'accounts/register_listener.html'
+    success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        return super().form_valid(form)
+
+
+class ArtistRegisterView(CreateView):
+    form_class = ArtistRegistrationForm
+    template_name = 'accounts/register_artist.html'
+    success_url = reverse_lazy('home')
+
+    def form_valid(self, form):
+        user = form.save()
+        login(self.request, user)
+        return super().form_valid(form)
+
+
 class RegisterView(CreateView):
-    form_class = CustomUserCreationForm
+    form_class = ListenerRegistrationForm
     template_name = 'accounts/register.html'
     success_url = reverse_lazy('home')
 
@@ -135,5 +212,13 @@ def login_view(request):
 def logout_view(request):
     logout(request)
     messages.success(request, "Has cerrado sesión exitosamente.")
-    return redirect('home')
+    return redirect('register')
 
+
+def not_found_view(request, exception=None):
+    print("DEBUG: not_found_view called")
+    return render(request, 'errors/404.html', status=404)
+
+
+def forbidden_view(request, exception=None):
+    return render(request, 'errors/403.html', status=403)

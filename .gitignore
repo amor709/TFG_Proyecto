@@ -10,6 +10,6 @@ __pycache__/
 
 data/
 static/media/
-
+media/
 notas.md
-
+staticfiles/

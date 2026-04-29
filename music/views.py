@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET
-from .models import Song, Album, Genre
+from .models import Song, Album, Tag
 
 
 @require_GET
@@ -47,12 +47,13 @@ def album_detail(request, pk):
     return render(request, 'music/album_detail.html', {'album': album, 'songs': songs})
 
 
-def genre_list(request):
-    genres = Genre.objects.all()
-    return render(request, 'music/genre_list.html', {'genres': genres})
+def tag_list(request):
+    tags = Tag.objects.all()
+    return render(request, 'music/tag_list.html', {'tags': tags})
 
 
-def genre_detail(request, pk):
-    genre = get_object_or_404(Genre, pk=pk)
-    songs = Song.objects.filter(genre=genre)
-    return render(request, 'music/genre_detail.html', {'genre': genre, 'songs': songs})
+def tag_detail(request, pk):
+    tag = get_object_or_404(Tag, pk=pk)
+    songs = Song.objects.filter(tags=tag)
+    albums = Album.objects.filter(tags=tag)
+    return render(request, 'music/tag_detail.html', {'tag': tag, 'songs': songs, 'albums': albums})

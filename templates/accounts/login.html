@@ -1,73 +1,70 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
 {% load static %}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inicia sesión - SoundMusik</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Centro de la página con el formulario -->
+        <div class="auth-card">
+            <div class="auth-card__header">
+                <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
+                <h1 class="auth-title">Bienvenido</h1>
+                <p class="auth-subtitle">Inicia sesión en tu cuenta</p>
+            </div>
 
-{% block title %} – Inicia sesión{% endblock %}
+            <!-- Mostrar mensajes de error -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
 
-{% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/auth.css' %}">
-{% endblock %}
+            <!-- Formulario de login -->
+            <form method="post" class="auth-form">
+                {% csrf_token %}
 
-{% block content %}
-<div class="auth-container">
-    <!-- Centro de la página con el formulario -->
-    <div class="auth-card">
-        <div class="auth-card__header">
-            <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
-            <h1 class="auth-title">Bienvenido</h1>
-            <p class="auth-subtitle">Inicia sesión en tu cuenta</p>
-        </div>
-
-        <!-- Mostrar mensajes de error -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }}">
-                    {{ message }}
+                <!-- Email/Usuario -->
+                <div class="form-group">
+                    <label for="email" class="form-label">Correo electrónico o usuario *</label>
+                    <input
+                        type="email"
+                        id="email"
+                        name="email"
+                        class="form-control"
+                        placeholder="tu@correo.com"
+                        required
+                    >
                 </div>
-            {% endfor %}
-        {% endif %}
 
-        <!-- Formulario de login -->
-        <form method="post" class="auth-form">
-            {% csrf_token %}
+                <!-- Contraseña -->
+                <div class="form-group">
+                    <label for="password" class="form-label">Contraseña *</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        class="form-control"
+                        placeholder="Tu contraseña"
+                        required
+                    >
+                </div>
 
-            <!-- Email/Usuario -->
-            <div class="form-group">
-                <label for="email" class="form-label">Correo electrónico o usuario *</label>
-                <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    class="form-control"
-                    placeholder="tu@correo.com"
-                    required
-                >
+                <!-- Botón de envío -->
+                <button type="submit" class="btn-submit">Iniciar sesión</button>
+            </form>
+
+            <!-- Enlace a registro -->
+            <div class="auth-footer">
+                <p>¿No tienes cuenta? <a href="{% url 'register' %}" class="auth-link">Regístrate aquí</a></p>
             </div>
-
-            <!-- Contraseña -->
-            <div class="form-group">
-                <label for="password" class="form-label">Contraseña *</label>
-                <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    class="form-control"
-                    placeholder="Tu contraseña"
-                    required
-                >
-            </div>
-
-            <!-- Botón de envío -->
-            <button type="submit" class="btn-submit">Iniciar sesión</button>
-        </form>
-
-        <!-- Enlace a registro -->
-        <div class="auth-footer">
-            <p>¿No tienes cuenta? <a href="{% url 'register' %}" class="auth-link">Regístrate aquí</a></p>
         </div>
     </div>
-</div>
-
-{% endblock %}
-
-
-
+</body>
+</html>

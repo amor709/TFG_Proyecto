@@ -24,6 +24,7 @@ class ArtistProfile(models.Model):
     bio = models.TextField(max_length=500, blank=True)
 
     photo = models.FileField(upload_to='profiles/', blank=True, null=True)
+    banner = models.FileField(upload_to='profiles/', blank=True, null=True)
     website = models.URLField(blank=True)
     total_plays = models.PositiveIntegerField(default=0)
 

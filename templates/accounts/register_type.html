@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+{% load static %}
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrarse - SoundMusik</title>
+    <link rel="stylesheet" href="{% static 'css/auth.css' %}">
+</head>
+<body>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-card__header">
+                <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
+                <h1 class="auth-title">Únete a SoundMusik</h1>
+                <p class="auth-subtitle">Elige el tipo de cuenta que deseas crear</p>
+            </div>
+
+            <div class="register-type-options">
+                <a href="{% url 'register_listener' %}" class="register-option">
+                    <div class="option-icon">
+                        <img src="{% static 'img/userdefault.png' %}" alt="Oyente" class="icon--md">
+                    </div>
+                    <h3>Oyente</h3>
+                    <p>Disfruta de la música, crea playlists y sigue a tus artistas favoritos.</p>
+                </a>
+
+                <a href="{% url 'register_artist' %}" class="register-option">
+                    <div class="option-icon">
+                        <img src="{% static 'img/diamond-white.png' %}" alt="Artista" class="icon--md">
+                    </div>
+                    <h3>Artista</h3>
+                    <p>Sube tu música, conecta con fans y construye tu carrera musical.</p>
+                </a>
+            </div>
+
+            <div class="auth-footer">
+                <p>¿Ya tienes cuenta? <a href="{% url 'login' %}" class="auth-link">Inicia sesión aquí</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
