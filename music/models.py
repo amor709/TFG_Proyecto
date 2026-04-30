@@ -27,6 +27,9 @@ class Album(models.Model):
     description = models.TextField(blank=True)
     tags = models.ManyToManyField(Tag, related_name='albums', blank=False)
 
+    def get_type_display(self):
+        return "Álbum"
+
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"
 
@@ -43,6 +46,11 @@ class Song(models.Model):
     explicit = models.BooleanField(default=False)
     release_date = models.DateField()
 
+    def get_type_display(self):
+        if self.album:
+            return "Canción"
+        else:
+            return "Single"
+
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"
-

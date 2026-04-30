@@ -66,6 +66,9 @@
                 </div>
                 {% if request.user.is_authenticated %}
                 <div id="user-dropdown" class="user-dropdown hidden">
+                    {% if request.user.is_artist %}
+                    <a href="{% url 'music:artist_detail_public' request.user.artist_profile.pk %}" class="dropdown-item">Mi perfil de artista</a>
+                    {% endif %}
                     <a href="#" class="dropdown-item">Perfil</a>
                     <a href="#" class="dropdown-item">Idioma</a>
                     <a href="{% url 'logout' %}" class="dropdown-item">Cerrar sesión</a>

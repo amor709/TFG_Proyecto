@@ -8,6 +8,10 @@ urlpatterns = [
     path('', views.song_list, name='song_list'),
     path('api/track/<int:track_id>/', views.get_track_data, name='get_track_data'),
 
+    # Vista de artista
+    path('artist/', views.artist_detail, name='artist_detail'),
+    path('artist/<int:artist_id>/', views.artist_detail, name='artist_detail_public'),
+
     # Vistas de lanzamientos (Sencillos y Álbumes)
     path('create/single/', views.create_single, name='create_single'),
     path('create/album/phase-a/', views.album_phase_a, name='album_phase_a'),

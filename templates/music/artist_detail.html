@@ -1,0 +1,410 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – {{ artist.name }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/artist_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════════════════════════════
+     ARTIST DETAIL  –  Bloque dinámico para <main class="main-content">
+     Contexto Django esperado:
+       · artist            → instancia Artist (.name, .photo, .followers_count, .bio)
+       · top_songs         → QuerySet primeras 6 canciones (Track)
+       · releases          → QuerySet lanzamientos recientes (Album/Single)
+       · albums            → QuerySet álbumes de estudio
+       · singles           → QuerySet singles
+       · features          → QuerySet colaboraciones ("Aparece en...")
+     ════════════════════════════════════════════════════════════════════ -->
+
+<div class="artist-page">
+
+    <!-- ── FONDO DIFUMINADO (imagen de perfil del artista) ── -->
+    <div class="artist-page__backdrop"
+         style="background-image: url('{{ artist.photo.url }}');"
+         aria-hidden="true"></div>
+    <div class="artist-page__overlay" aria-hidden="true"></div>
+
+    <!-- ── CONTENIDO PRINCIPAL ── -->
+    <div class="artist-page__inner">
+
+        <!-- ────────────────────────────────────────────────
+             HERO  –  nombre, seguidores y controles
+             ──────────────────────────────────────────────── -->
+        <header class="artist-hero">
+
+            <!-- Etiqueta de tipo -->
+            <span class="artist-hero__label">Artista</span>
+
+            <!-- Nombre -->
+            <h1 class="artist-hero__name">{{ artist.name }}</h1>
+
+            <!-- Seguidores -->
+            <p class="artist-hero__followers">
+                Más de {{ artist.followers_count|floatformat:0 }} seguidores
+            </p>
+
+            <!-- Controles de acción -->
+            <div class="artist-hero__actions">
+
+                <!-- Reproducción aleatoria -->
+                <button class="btn-shuffle" id="btn-artist-shuffle"
+                        data-artist-id="{{ artist.pk }}"
+                        aria-label="Reproducción aleatoria de {{ artist.name }}">
+                    {# Reemplaza la siguiente etiqueta <img> con tu icono de shuffle #}
+                    <img src="{% static 'img/icon-shuffle.png' %}"
+                         alt=""
+                         class="btn-shuffle__icon icon--sm">
+                    <span>Reproducción Aleatoria</span>
+                </button>
+
+                <!-- Me gusta (seguir artista) -->
+                <button class="artist-action-btn artist-action-btn--like
+                               {% if is_followed %}artist-action-btn--active{% endif %}"
+                        id="btn-artist-like"
+                        data-artist-id="{{ artist.pk }}"
+                        aria-label="{% if is_followed %}Dejar de seguir{% else %}Seguir a {{ artist.name }}{% endif %}">
+                    {# Reemplaza la siguiente etiqueta <img> con tu icono de corazón #}
+                    <img src="{% if is_followed %}{% static 'img/icon-heart-filled.png' %}{% else %}{% static 'img/icon-heart-outline.png' %}{% endif %}"
+                         alt=""
+                         class="icon--md">
+                </button>
+
+                <!-- Más opciones -->
+                <button class="artist-action-btn artist-action-btn--more"
+                        id="btn-artist-more"
+                        data-artist-id="{{ artist.pk }}"
+                        aria-label="Más opciones">
+                    {# Reemplaza la siguiente etiqueta <img> con tu icono de tres puntos #}
+                    <img src="{% static 'img/icon-more-dots.png' %}"
+                         alt="···"
+                         class="icon--md">
+                </button>
+
+            </div><!-- /actions -->
+        </header><!-- /artist-hero -->
+
+
+        <!-- ────────────────────────────────────────────────
+             CANCIONES CON ACCESO ILIMITADO (top songs)
+             6 canciones · 2 columnas · 3 filas c/u
+             ──────────────────────────────────────────────── -->
+        <section class="top-songs" aria-labelledby="top-songs-heading">
+            <h2 class="section-title" id="top-songs-heading">
+                Canciones con acceso ilimitado
+            </h2>
+
+            <div class="top-songs__grid">
+                {% for song in top_songs|slice:":6" %}
+                <article class="top-song-row"
+                         data-track-id="{{ song.pk }}">
+
+                    <!-- Thumbnail -->
+                    <div class="top-song-row__thumb-wrap">
+                        <img src="{{ song.album.cover.url }}"
+                             alt="{{ song.album.title }}"
+                             class="top-song-row__thumb"
+                             loading="lazy">
+                        <!-- Overlay play al hover -->
+                        <div class="top-song-row__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
+                        </div>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="top-song-row__info">
+                        <p class="top-song-row__title">{{ song.title }}</p>
+                        <p class="top-song-row__sub">
+                            {% if song.album %}{{ song.album.title }}{% endif %}
+                            {{ song.artist.name }}
+                        </p>
+                    </div>
+
+                    <!-- Badge explícito -->
+                    {% if song.is_explicit %}
+                    <span class="badge-explicit" aria-label="Contenido explícito">E</span>
+                    {% endif %}
+
+                </article>
+                {% empty %}
+                <p class="empty-state">Sin canciones disponibles.</p>
+                {% endfor %}
+            </div>
+        </section><!-- /top-songs -->
+
+
+        <!-- ────────────────────────────────────────────────
+             LANZAMIENTOS  (carrusel)
+             ──────────────────────────────────────────────── -->
+        <section class="content-section" aria-labelledby="releases-heading">
+            <div class="section-header">
+                <h2 class="section-title" id="releases-heading">Lanzamientos</h2>
+                <div class="section-header__nav">
+                    <button class="carousel-nav-btn" data-target="carousel-releases" data-dir="-1"
+                            aria-label="Anterior">
+                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                    </button>
+                    <button class="carousel-nav-btn" data-target="carousel-releases" data-dir="1"
+                            aria-label="Siguiente">
+                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                    </button>
+                </div>
+            </div>
+
+            <div class="carousel" id="carousel-releases">
+                <div class="carousel__track">
+                    {% for item in releases %}
+                    <article class="track-card carousel__item">
+                        <a href="#" class="track-card__link">
+                            <div class="track-card__cover-wrap">
+                                <img src="{{ item.cover.url }}" alt="{{ item.title }}"
+                                     class="track-card__cover" loading="lazy">
+                                <div class="track-card__play-overlay" aria-hidden="true">
+                                    <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                                </div>
+                            </div>
+                            <h3 class="track-card__title">{{ item.title }}
+                                {% if item.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
+                            </h3>
+                            <p class="track-card__sub">
+                                {{ item.get_type_display }} · {{ item.release_date|date:"Y" }}
+                            </p>
+                        </a>
+                    </article>
+                    {% empty %}
+                    <p class="empty-state">Sin lanzamientos.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </section><!-- /releases -->
+
+
+        <!-- ────────────────────────────────────────────────
+             DISCOGRAFÍA  (álbumes + singles)
+             ──────────────────────────────────────────────── -->
+        <section class="discography" aria-labelledby="discography-heading">
+            <h2 class="discography__main-title" id="discography-heading">Discografía</h2>
+
+            <!-- ·· Álbumes ·· -->
+            <div class="content-section discography__subsection"
+                 aria-labelledby="albums-heading">
+                <div class="section-header">
+                    <h3 class="section-title" id="albums-heading">Álbumes</h3>
+                    <div class="section-header__right">
+                        <div class="section-header__nav">
+                            <button class="carousel-nav-btn" data-target="carousel-albums" data-dir="-1"
+                                    aria-label="Anterior">
+                                <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                            </button>
+                            <button class="carousel-nav-btn" data-target="carousel-albums" data-dir="1"
+                                    aria-label="Siguiente">
+                                <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                            </button>
+                        </div>
+                        <a href="#"
+                           class="btn-see-all">Ver más</a>
+                    </div>
+                </div>
+
+                <div class="carousel" id="carousel-albums">
+                    <div class="carousel__track">
+                        {% for album in albums %}
+                        <article class="track-card carousel__item">
+                            <a href="#" class="track-card__link">
+                                <div class="track-card__cover-wrap">
+                                    <img src="{{ album.cover.url }}" alt="{{ album.title }}"
+                                         class="track-card__cover" loading="lazy">
+                                    <div class="track-card__play-overlay" aria-hidden="true">
+                                        <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                                    </div>
+                                </div>
+                                <h3 class="track-card__title">{{ album.title }}</h3>
+                                <p class="track-card__sub">
+                                    Álbum · {{ album.release_date|date:"Y" }}
+                                </p>
+                            </a>
+                        </article>
+                        {% empty %}
+                        <p class="empty-state">Sin álbumes.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div><!-- /albums -->
+
+            <!-- ·· Singles ·· -->
+            <div class="content-section discography__subsection"
+                 aria-labelledby="singles-heading">
+                <div class="section-header">
+                    <h3 class="section-title" id="singles-heading">Singles</h3>
+                    <div class="section-header__right">
+                        <div class="section-header__nav">
+                            <button class="carousel-nav-btn" data-target="carousel-singles" data-dir="-1"
+                                    aria-label="Anterior">
+                                <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                            </button>
+                            <button class="carousel-nav-btn" data-target="carousel-singles" data-dir="1"
+                                    aria-label="Siguiente">
+                                <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                            </button>
+                        </div>
+                        <a href="#"
+                           class="btn-see-all">Ver más</a>
+                    </div>
+                </div>
+
+                <div class="carousel" id="carousel-singles">
+                    <div class="carousel__track">
+                        {% for single in singles %}
+                        <article class="track-card carousel__item">
+                            <a href="#" class="track-card__link">
+                                <div class="track-card__cover-wrap">
+                                    <img src="{{ single.cover.url }}" alt="{{ single.title }}"
+                                         class="track-card__cover" loading="lazy">
+                                    <div class="track-card__play-overlay" aria-hidden="true">
+                                        <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                                    </div>
+                                </div>
+                                <h3 class="track-card__title">{{ single.title }}
+                                    {% if single.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
+                                </h3>
+                                <p class="track-card__sub">
+                                    Single · {{ single.release_date|date:"Y" }}
+                                </p>
+                            </a>
+                        </article>
+                        {% empty %}
+                        <p class="empty-state">Sin singles.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div><!-- /singles -->
+
+        </section><!-- /discography -->
+
+
+        <!-- ────────────────────────────────────────────────
+             APARECE EN…  (colaboraciones · carrusel)
+             ──────────────────────────────────────────────── -->
+        <section class="content-section" aria-labelledby="features-heading">
+            <div class="section-header">
+                <h2 class="section-title" id="features-heading">Aparece en…</h2>
+                <div class="section-header__nav">
+                    <button class="carousel-nav-btn" data-target="carousel-features" data-dir="-1"
+                            aria-label="Anterior">
+                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                    </button>
+                    <button class="carousel-nav-btn" data-target="carousel-features" data-dir="1"
+                            aria-label="Siguiente">
+                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                    </button>
+                </div>
+            </div>
+
+            <div class="carousel" id="carousel-features">
+                <div class="carousel__track">
+                    {% for item in features %}
+                    <article class="track-card carousel__item">
+                        <a href="#" class="track-card__link">
+                            <div class="track-card__cover-wrap">
+                                <img src="{{ item.cover.url }}" alt="{{ item.title }}"
+                                     class="track-card__cover" loading="lazy">
+                                <div class="track-card__play-overlay" aria-hidden="true">
+                                    <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                                </div>
+                            </div>
+                            <h3 class="track-card__title">{{ item.title }}</h3>
+                            <p class="track-card__sub">{{ item.main_artist.name }}</p>
+                        </a>
+                    </article>
+                    {% empty %}
+                    <p class="empty-state">Sin colaboraciones registradas.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </section><!-- /features -->
+
+
+        <!-- ────────────────────────────────────────────────
+             BIOGRAFÍA
+             ──────────────────────────────────────────────── -->
+        <section class="artist-bio" aria-labelledby="bio-heading">
+            <h2 class="section-title" id="bio-heading">Biografía</h2>
+
+            <div class="artist-bio__body">
+                <!-- Texto de la biografía -->
+                <div class="artist-bio__text">
+                    {{ artist.bio|linebreaksbr }}
+                </div>
+
+                <!-- Foto del artista -->
+                <div class="artist-bio__photo-wrap">
+                    <img src="{{ artist.photo.url }}"
+                         alt="Foto de {{ artist.name }}"
+                         class="artist-bio__photo">
+                </div>
+            </div>
+        </section><!-- /bio -->
+
+    </div><!-- /artist-page__inner -->
+</div><!-- /artist-page -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const artistSongs = [
+{% for song in top_songs %}
+{
+    title: "{{ song.title }}",
+    url: "{{ song.audio_file.url }}",
+    cover: "{{ song.cover.url }}",
+    artist: "{{ song.artist.user.username }}",
+    id: {{ song.pk }}
+}{% if not forloop.last %},{% endif %}
+{% endfor %}
+];
+
+function loadSongByData(songData) {
+    const audio = document.getElementById('main-audio');
+    audio.src = songData.url;
+    document.getElementById('track-title').innerText = songData.title;
+    document.getElementById('track-art').src = songData.cover;
+    document.getElementById('track-artist').innerText = songData.artist;
+    audio.play().catch(err => console.error('Error al reproducir:', err));
+}
+
+// Shuffle button
+document.getElementById('btn-artist-shuffle').addEventListener('click', () => {
+    if (artistSongs.length > 0) {
+        const randomIndex = Math.floor(Math.random() * artistSongs.length);
+        loadSongByData(artistSongs[randomIndex]);
+    }
+});
+
+// Top songs click
+document.querySelectorAll('.top-song-row').forEach((row, index) => {
+    row.addEventListener('click', () => {
+        if (artistSongs[index]) {
+            loadSongByData(artistSongs[index]);
+        }
+    });
+});
+
+// Carruseles
+document.querySelectorAll('.carousel-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.dataset.target;
+        const dir = parseInt(btn.dataset.dir);
+        const track = document.querySelector(`#${id} .carousel__track`);
+        const item = track.querySelector('.carousel__item');
+        const step = item ? item.offsetWidth + 16 : 200; // 16 = var(--space-4)
+        const max = track.scrollWidth - track.parentElement.offsetWidth;
+        let cur = parseInt(track.style.transform?.replace(/[^-\d]/g, '') || 0);
+        cur = Math.min(0, Math.max(-max, cur - dir * step));
+        track.style.transform = `translateX(${cur}px)`;
+    });
+});
+</script>
+{% endblock %}

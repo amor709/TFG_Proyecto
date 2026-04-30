@@ -7,6 +7,7 @@ from django.utils import timezone
 from .models import Song, Album, Tag
 from .forms import SingleForm, AlbumPhaseAForm, AlbumPhaseBForm
 from .decorators import artist_required
+from accounts.models import ArtistProfile
 
 
 @require_GET
@@ -127,3 +128,41 @@ def song_list(request):
     songs = Song.objects.all().order_by('-release_date')
     return render(request, 'music/song_list.html', {'songs': songs})
 
+
+def artist_detail(request, artist_id=None):
+    # Si no se pasa artist_id, usar el propio si es artista
+    if artist_id is None:
+        if not request.user.is_authenticated or not request.user.is_artist:
+            messages.error(request, "No tienes acceso a esta página.")
+            return redirect('music:song_list')
+        artist = request.user.artist_profile
+    else:
+        artist = get_object_or_404(ArtistProfile, pk=artist_id)
+
+    # Datos básicos para mostrar la página
+    top_songs = artist.songs.all()
+    releases = list(artist.albums.all()) + list(artist.songs.filter(album__isnull=True))  # Combinar para releases
+    releases.sort(key=lambda x: x.release_date, reverse=True)  # Ordenar por fecha reciente
+    albums = artist.albums.all()
+    singles = artist.songs.filter(album__isnull=True)
+    features = []  # Por ahora vacío
+
+    # Verificar si el usuario sigue al artista
+    is_followed = False
+    if request.user.is_authenticated and hasattr(request.user, 'listener_profile'):
+        is_followed = request.user.listener_profile.following.filter(pk=artist.pk).exists()
+
+    # Verificar si es el propio perfil (para mostrar botones de edición)
+    is_own_profile = request.user.is_authenticated and request.user.is_artist and artist == request.user.artist_profile
+
+    context = {
+        'artist': artist,
+        'top_songs': top_songs,
+        'releases': releases[:10],  # Limitar a 10 para el carrusel
+        'albums': albums,
+        'singles': singles,
+        'features': features,
+        'is_followed': is_followed,
+        'is_own_profile': is_own_profile,
+    }
+    return render(request, 'music/artist_detail.html', context)

@@ -28,6 +28,14 @@ class ArtistProfile(models.Model):
     website = models.URLField(blank=True)
     total_plays = models.PositiveIntegerField(default=0)
 
+    @property
+    def name(self):
+        return self.user.username
+
+    @property
+    def followers_count(self):
+        return self.followers.count()
+
     def __str__(self):
         return f"Artista: {self.user.username}"
 
