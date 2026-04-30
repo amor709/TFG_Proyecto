@@ -4,11 +4,13 @@ from . import views
 app_name = 'music'
 
 urlpatterns = [
+    # Vista principal
     path('', views.song_list, name='song_list'),
-    path('song/<int:pk>/', views.song_detail, name='song_detail'),
-    path('api/track/<int:track_id>/', views.get_track_data, name='get_track_data'),  # API endpoint
-    path('albums/', views.album_list, name='album_list'),
-    path('albums/<int:pk>/', views.album_detail, name='album_detail'),
-    path('tags/', views.tag_list, name='tag_list'),
-    path('tags/<int:pk>/', views.tag_detail, name='tag_detail'),
+    path('api/track/<int:track_id>/', views.get_track_data, name='get_track_data'),
+
+    # Vistas de lanzamientos (Sencillos y Álbumes)
+    path('create/single/', views.create_single, name='create_single'),
+    path('create/album/phase-a/', views.album_phase_a, name='album_phase_a'),
+    path('create/album/<int:album_id>/phase-b/', views.album_phase_b, name='album_phase_b'),
+    path('album/<int:album_id>/publish/', views.publish_album, name='publish_album'),
 ]

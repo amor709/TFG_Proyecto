@@ -1,0 +1,675 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %} - {{ album.title }} (Fase B){% endblock %}
+
+{% block extra_head %}
+<style>
+    .album-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 2rem;
+    }
+
+    .album-header {
+        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+        display: flex;
+        gap: 2rem;
+        align-items: flex-start;
+    }
+
+    .album-cover {
+        width: 200px;
+        height: 200px;
+        border-radius: 8px;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .album-cover img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .album-info {
+        flex: 1;
+    }
+
+    .phase-badge {
+        display: inline-block;
+        background: #ff1493;
+        color: #fff;
+        padding: 0.4rem 0.8rem;
+        border-radius: 12px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+    }
+
+    .album-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 0.5rem;
+    }
+
+    .album-meta {
+        color: #999;
+        font-size: 0.95rem;
+        margin-bottom: 1rem;
+    }
+
+    .album-description {
+        color: #ccc;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        margin-bottom: 1rem;
+    }
+
+    .album-stats {
+        display: flex;
+        gap: 1.5rem;
+        margin-bottom: 1rem;
+    }
+
+    .stat {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .stat-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #ff1493;
+    }
+
+    .stat-label {
+        font-size: 0.85rem;
+        color: #999;
+    }
+
+    .album-actions {
+        display: flex;
+        gap: 1rem;
+    }
+
+    .btn {
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: #ff1493;
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background: #ff1493cc;
+    }
+
+    .btn-secondary {
+        background: #3a3a3a;
+        color: #fff;
+    }
+
+    .btn-secondary:hover {
+        background: #4a4a4a;
+    }
+
+    /* Sección de añadir canción */
+    .add-track-section {
+        background: #1a1a1a;
+        padding: 2rem;
+        border-radius: 12px;
+        margin-bottom: 2rem;
+    }
+
+    .section-title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #fff;
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .form-control {
+        width: 100%;
+        background: #2a2a2a;
+        border: 1px solid #3a3a3a;
+        color: #fff;
+        padding: 0.75rem;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background: #333;
+        border-color: #ff1493;
+        outline: none;
+    }
+
+    .form-check {
+        margin-bottom: 0.75rem;
+    }
+
+    .form-check input[type="checkbox"] {
+        width: auto;
+        margin-right: 0.5rem;
+        accent-color: #ff1493;
+        cursor: pointer;
+    }
+
+    .form-check label {
+        display: inline;
+        margin: 0;
+        font-weight: 400;
+        color: #ccc;
+        cursor: pointer;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        background: #2a2a2a;
+        border: 2px dashed #3a3a3a;
+        border-radius: 6px;
+        padding: 1.5rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-wrapper:hover {
+        border-color: #ff1493;
+        background: #2f2f2f;
+    }
+
+    .file-input-wrapper input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-input-text {
+        color: #999;
+        font-size: 0.95rem;
+    }
+
+    .file-input-text strong {
+        color: #fff;
+    }
+
+    .tags-section {
+        background: #0a0a0a;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 0.5rem;
+    }
+
+    .collaborative-artists {
+        background: #0a0a0a;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 0.5rem;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    /* Lista de canciones */
+    .tracks-section {
+        background: #1a1a1a;
+        padding: 2rem;
+        border-radius: 12px;
+    }
+
+    .tracks-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .track-item {
+        background: #0a0a0a;
+        padding: 1.5rem;
+        border-radius: 8px;
+        margin-bottom: 1rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: all 0.2s ease;
+        border-left: 4px solid #3a3a3a;
+    }
+
+    .track-item:hover {
+        border-left-color: #ff1493;
+        background: #1a1a1a;
+    }
+
+    .track-info {
+        flex: 1;
+    }
+
+    .track-number {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #ff1493;
+        margin-right: 1rem;
+        min-width: 40px;
+    }
+
+    .track-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 0.25rem;
+    }
+
+    .track-collaborators {
+        font-size: 0.9rem;
+        color: #999;
+    }
+
+    .track-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.5rem;
+    }
+
+    .track-tag {
+        background: #2a2a2a;
+        color: #ff1493;
+        padding: 0.25rem 0.6rem;
+        border-radius: 12px;
+        font-size: 0.8rem;
+    }
+
+    .track-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+
+    .btn-small {
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.85rem;
+        transition: all 0.2s ease;
+    }
+
+    .btn-delete {
+        background: #660000;
+        color: #ffcccc;
+    }
+
+    .btn-delete:hover {
+        background: #880000;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 2rem;
+        color: #999;
+    }
+
+    .empty-state-icon {
+        font-size: 3rem;
+        margin-bottom: 1rem;
+    }
+
+    .error-message {
+        background: #660000;
+        border: 1px solid #ff6666;
+        color: #ffcccc;
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-list li {
+        color: #ffcccc;
+        margin-bottom: 0.3rem;
+    }
+
+    .publish-btn {
+        width: 100%;
+        padding: 1rem;
+        background: #00dd00;
+        color: #000;
+        border: none;
+        border-radius: 8px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        margin-top: 1rem;
+    }
+
+    .publish-btn:hover {
+        background: #00ff00;
+        transform: translateY(-2px);
+    }
+
+    .publish-btn:disabled {
+        background: #666;
+        color: #999;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .info-box {
+        background: #1a3a3a;
+        border-left: 4px solid #00ccff;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-bottom: 1.5rem;
+        color: #ccc;
+        font-size: 0.95rem;
+    }
+
+    .info-box strong {
+        color: #00ccff;
+    }
+
+    .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+
+    @media (max-width: 768px) {
+        .album-header {
+            flex-direction: column;
+        }
+
+        .form-row {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="album-container">
+    <!-- Encabezado del Álbum -->
+    <div class="album-header">
+        <div class="album-cover">
+            <img src="{{ album.cover.url }}" alt="{{ album.title }}">
+        </div>
+        <div class="album-info">
+            <span class="phase-badge">FASE B - Gestión de Tracks</span>
+            <h1 class="album-title">{{ album.title }}</h1>
+            <div class="album-meta">
+                📅 {{ album.release_date|date:"d M Y" }} • {{ album.songs.count }} canción{{ album.songs.count|pluralize }}
+            </div>
+            {% if album.description %}
+            <p class="album-description">{{ album.description }}</p>
+            {% endif %}
+            <div class="album-stats">
+                <div class="stat">
+                    <div class="stat-value">{{ album.songs.count }}</div>
+                    <div class="stat-label">Canciones</div>
+                </div>
+                {% if album.tags.all %}
+                <div class="stat">
+                    <div class="stat-value">{{ album.tags.count }}</div>
+                    <div class="stat-label">Géneros</div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    {% if messages %}
+    <div class="messages" style="margin-bottom: 1.5rem;">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- Formulario para añadir canción -->
+    <div class="add-track-section">
+        <h2 class="section-title">➕ Agregar Canción</h2>
+
+        <div class="info-box">
+            <strong>ℹ️ Información:</strong> Agrega tus canciones una por una. Los tags que asignes aquí se añadirán automáticamente a los metatados del álbum. La portada del álbum se usará para todas las canciones si no especificas una diferente.
+        </div>
+
+        <form method="post" enctype="multipart/form-data" id="add-track-form" novalidate>
+            {% csrf_token %}
+
+            <div class="form-row">
+                <!-- Título de la Canción -->
+                <div class="form-group">
+                    <label for="id_title">{{ form.title.label }}</label>
+                    {{ form.title }}
+                    {% if form.title.errors %}
+                    <div class="error-message">
+                        <ul class="error-list">
+                            {% for error in form.title.errors %}
+                            <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Contenido Explícito -->
+                <div class="form-group">
+                    <label>Información</label>
+                    <div class="form-check" style="background: #2a2a2a; padding: 0.75rem; border-radius: 6px;">
+                        <label for="id_explicit">
+                            {{ form.explicit }} {{ form.explicit.label }}
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Archivo de Audio -->
+            <div class="form-group">
+                <label for="id_audio_file">{{ form.audio_file.label }}</label>
+                <div class="file-input-wrapper" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                    <input type="file" name="audio_file" id="id_audio_file" accept="audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4" onchange="handleAudioChange(event)">
+                    <div class="file-input-text">
+                        <strong>Arrastra tu audio aquí</strong> o haz clic para seleccionar
+                    </div>
+                </div>
+                {% if form.audio_file.errors %}
+                <div class="error-message">
+                    <ul class="error-list">
+                        {% for error in form.audio_file.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Tags/Géneros de la Canción -->
+            <div class="form-group">
+                <label>{{ form.tags.label }}</label>
+                <div class="tags-section">
+                    {{ form.tags }}
+                </div>
+                {% if form.tags.errors %}
+                <div class="error-message">
+                    <ul class="error-list">
+                        {% for error in form.tags.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Artistas Colaboradores -->
+            <div class="form-group">
+                <label>{{ form.collaborators.label }}</label>
+                <div class="collaborative-artists">
+                    {{ form.collaborators }}
+                </div>
+                {% if form.collaborators.errors %}
+                <div class="error-message">
+                    <ul class="error-list">
+                        {% for error in form.collaborators.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Botón para agregar -->
+            <button type="submit" class="btn btn-primary" style="width: 100%;">✅ Agregar Canción al Álbum</button>
+        </form>
+    </div>
+
+    <!-- Lista de Canciones Agregadas -->
+    <div class="tracks-section">
+        <h2 class="section-title">🎵 Canciones del Álbum</h2>
+
+        {% if songs %}
+        <ul class="tracks-list">
+            {% for song in songs %}
+            <li class="track-item">
+                <span class="track-number">#{{ forloop.counter }}</span>
+                <div class="track-info">
+                    <div class="track-title">{{ song.title }}</div>
+                    {% if song.collaborators.all %}
+                    <div class="track-collaborators">
+                        Con: {% for collab in song.collaborators.all %}{{ collab.user.username }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                    </div>
+                    {% endif %}
+                    {% if song.tags.all %}
+                    <div class="track-tags">
+                        {% for tag in song.tags.all %}
+                        <span class="track-tag">{{ tag.name }}</span>
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="track-actions">
+                    <form method="post" action="#" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="button" class="btn-small btn-delete" onclick="deleteSong({{ song.id }})">🗑️ Eliminar</button>
+                    </form>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <!-- Etiquetas actuales del Álbum (sincronizadas automáticamente) -->
+        {% if album.tags.all %}
+        <div style="background: #0a0a0a; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem;">
+            <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;">📌 Géneros del Álbum (Auto-sincronizados)</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                {% for tag in album.tags.all %}
+                <span style="background: #2a2a2a; color: #ff1493; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">{{ tag.name }}</span>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">🎵</div>
+            <p>Aún no hay canciones. Agrega tu primera canción para comenzar.</p>
+        </div>
+        {% endif %}
+
+        <!-- Botón de Publicación -->
+        {% if songs %}
+        <a href="{% url 'music:publish_album' album.pk %}" class="publish-btn">
+            🚀 Publicar Álbum
+        </a>
+        {% else %}
+        <button class="publish-btn" disabled title="Debes agregar al menos una canción para publicar">
+            🚀 Publicar Álbum (Agrega canciones primero)
+        </button>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    function handleDrop(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const zone = event.currentTarget;
+        zone.classList.remove('dragover');
+
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            const input = zone.querySelector('input[type="file"]');
+            input.files = files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add('dragover');
+    }
+
+    function handleDragLeave(event) {
+        event.currentTarget.classList.remove('dragover');
+    }
+
+    function handleAudioChange(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const zone = event.target.parentElement;
+            zone.querySelector('.file-input-text').innerHTML = `<strong>✅ ${file.name}</strong> seleccionado`;
+        }
+    }
+
+    function deleteSong(songId) {
+        if (confirm('¿Estás seguro de que deseas eliminar esta canción?')) {
+            // Implementar eliminación con AJAX o redirección
+            console.log('Eliminar canción:', songId);
+        }
+    }
+
+    // Añadir estilos para el estado dragover
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .file-input-wrapper.dragover {
+            border-color: #ff1493;
+            background: #2f2828;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}
+

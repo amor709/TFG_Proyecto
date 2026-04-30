@@ -12,4 +12,5 @@ data/
 static/media/
 media/
 notas.md
+notas/
 staticfiles/

@@ -1,12 +1,17 @@
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
-from django.views.decorators.http import require_GET
+from django.views.decorators.http import require_GET, require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
 from .models import Song, Album, Tag
+from .forms import SingleForm, AlbumPhaseAForm, AlbumPhaseBForm
+from .decorators import artist_required
 
 
 @require_GET
 def get_track_data(request, track_id):
-    """ REOCRDATORIO DE FUNCION: eSTO datos de una canción en JSON para cargar sin recargar página. Asi creamos el efecto AJAX"""
+    """Obtiene datos de una canción en JSON para cargar sin recargar página."""
     try:
         track = get_object_or_404(Song, pk=track_id)
         data = {
@@ -26,34 +31,99 @@ def get_track_data(request, track_id):
         return JsonResponse({'error': 'Canción no encontrada'}, status=404)
 
 
+@artist_required
+@require_http_methods(["GET", "POST"])
+def create_single(request):
+    if request.method == 'POST':
+        form = SingleForm(request.POST, request.FILES)
+        if form.is_valid():
+            song = form.save(commit=False)
+            song.artist = request.user.artist_profile
+            song.album = None  # Asegurar que no tenga álbum
+            song.duration = timezone.timedelta(seconds=0)
+
+            song.save()
+            form.save_m2m()  # Guardar relaciones ManyToMany
+
+            messages.success(request, f"¡Sencillo '{song.title}' creado exitosamente!")
+            return redirect('music:song_list')
+    else:
+        form = SingleForm()
+
+    return render(request, 'music/create_single.html', {'form': form})
+
+
+@artist_required
+@require_http_methods(["GET", "POST"])
+def album_phase_a(request):
+    """Vista para la Configuración del Contenedor """
+    if request.method == 'POST':
+        form = AlbumPhaseAForm(request.POST, request.FILES)
+        if form.is_valid():
+            album = form.save(commit=False)
+            album.artist = request.user.artist_profile
+            album.is_draft = True
+            album.completed = False
+            album.save()
+
+            messages.success(request, f"¡Álbum '{album.title}' creado! Ahora agrega tus canciones.")
+            return redirect('music:album_phase_b', album_id=album.pk)
+    else:
+        form = AlbumPhaseAForm()
+
+    return render(request, 'music/album_phase_a.html', {'form': form})
+
+
+@artist_required
+@require_http_methods(["GET", "POST"])
+def album_phase_b(request, album_id):
+    """Vista para la gestión de tracks) FAswe B."""
+    album = get_object_or_404(Album, pk=album_id, artist=request.user.artist_profile)
+
+    if request.method == 'POST':
+        form = AlbumPhaseBForm(request.POST, request.FILES, artist=request.user.artist_profile)
+        if form.is_valid():
+            song = form.save(commit=False)
+            song.artist = request.user.artist_profile
+            song.album = album
+            song.release_date = album.release_date
+
+            # Usar portada del álbum si no se especifica
+            if not request.FILES.get('cover'):
+                song.cover = album.cover
+
+            song.save()
+            form.save_m2m()  # Guardar tags y colaboradores
+
+            messages.success(request, f"¡Canción '{song.title}' agregada al álbum!")
+            return redirect('music:album_phase_b', album_id=album.pk)
+    else:
+        form = AlbumPhaseBForm(artist=request.user.artist_profile)
+
+    songs = album.songs.all()
+    return render(request, 'music/album_phase_b.html', {
+        'album': album,
+        'form': form,
+        'songs': songs
+    })
+
+
+@artist_required
+@require_http_methods(["GET"])
+def publish_album(request, album_id):
+    """Vista para publicar un álbum (pasar de borrador a publicado)."""
+    album = get_object_or_404(Album, pk=album_id, artist=request.user.artist_profile)
+
+    if not album.songs.exists():
+        messages.error(request, "El álbum debe tener al menos una canción para publicarse.")
+        return redirect('music:album_phase_b', album_id=album.pk)
+
+    album.mark_completed()
+    messages.success(request, f"¡Álbum '{album.title}' publicado exitosamente!")
+    return redirect('music:song_list')
+
+
 def song_list(request):
     songs = Song.objects.all().order_by('-release_date')
     return render(request, 'music/song_list.html', {'songs': songs})
 
-
-def song_detail(request, pk):
-    song = get_object_or_404(Song, pk=pk)
-    return render(request, 'music/song_detail.html', {'song': song})
-
-
-def album_list(request):
-    albums = Album.objects.all().order_by('-release_date')
-    return render(request, 'music/album_list.html', {'albums': albums})
-
-
-def album_detail(request, pk):
-    album = get_object_or_404(Album, pk=pk)
-    songs = album.songs.all()
-    return render(request, 'music/album_detail.html', {'album': album, 'songs': songs})
-
-
-def tag_list(request):
-    tags = Tag.objects.all()
-    return render(request, 'music/tag_list.html', {'tags': tags})
-
-
-def tag_detail(request, pk):
-    tag = get_object_or_404(Tag, pk=pk)
-    songs = Song.objects.filter(tags=tag)
-    albums = Album.objects.filter(tags=tag)
-    return render(request, 'music/tag_detail.html', {'tag': tag, 'songs': songs, 'albums': albums})
