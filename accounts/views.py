@@ -8,6 +8,7 @@ from django.urls import reverse_lazy
 from music.models import Song
 from accounts.models import ArtistProfile, User, ListenerProfile
 from django import forms
+from accounts.forms import ArtistProfileForm
 
 
 def index_view(request):
@@ -39,6 +40,11 @@ class ListenerRegistrationForm(forms.ModelForm):
 
         if password and password_confirm and password != password_confirm:
             raise forms.ValidationError("Las contraseñas no coinciden.")
+
+        # Validar email único
+        email = cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este correo electrónico ya está en uso.")
 
         return cleaned_data
 
@@ -81,18 +87,26 @@ class ArtistRegistrationForm(forms.ModelForm):
         if password and password_confirm and password != password_confirm:
             raise forms.ValidationError("Las contraseñas no coinciden.")
 
+        # Validar email único
+        email = cleaned_data.get('email')
+        if email and User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Este correo electrónico ya está en uso.")
+
         return cleaned_data
 
     def save(self, commit=True):
         user = super().save(commit=False)
         user.username = self.cleaned_data.get('email')  # Usar email como username
+        user.is_artist = True  # Marcar como artista
         user.set_password(self.cleaned_data.get('password'))
         if commit:
             user.save()
             # Crear perfil de artista automáticamente con photo y banner
             photo = self.cleaned_data.get('photo')
             banner = self.cleaned_data.get('banner')
-            artist_profile = ArtistProfile.objects.create(user=user)
+            artist_profile = ArtistProfile.objects.filter(user=user).first()
+            if not artist_profile:
+                artist_profile = ArtistProfile.objects.create(user=user)
             if photo:
                 artist_profile.photo = photo
             if banner:
@@ -159,6 +173,11 @@ class ListenerRegisterView(CreateView):
     template_name = 'accounts/register_listener.html'
     success_url = reverse_lazy('home')
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
@@ -170,6 +189,11 @@ class ArtistRegisterView(CreateView):
     template_name = 'accounts/register_artist.html'
     success_url = reverse_lazy('home')
 
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
+
     def form_valid(self, form):
         user = form.save()
         login(self.request, user)
@@ -180,6 +204,11 @@ class RegisterView(CreateView):
     form_class = ListenerRegistrationForm
     template_name = 'accounts/register.html'
     success_url = reverse_lazy('home')
+
+    def dispatch(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect('home')
+        return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
         user = form.save()
@@ -213,6 +242,26 @@ def logout_view(request):
     logout(request)
     messages.success(request, "Has cerrado sesión exitosamente.")
     return redirect('register')
+
+
+@login_required(login_url='login')
+def edit_artist_profile(request):
+    if not request.user.is_artist:
+        messages.error(request, "No tienes permisos para editar un perfil de artista.")
+        return redirect('home')
+
+    artist_profile = request.user.artist_profile
+
+    if request.method == 'POST':
+        form = ArtistProfileForm(request.POST, request.FILES, instance=artist_profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Perfil actualizado exitosamente.")
+            return redirect('music:artist_detail_public', pk=artist_profile.pk)
+    else:
+        form = ArtistProfileForm(instance=artist_profile)
+
+    return render(request, 'accounts/edit_artist_profile.html', {'form': form})
 
 
 def not_found_view(request, exception=None):

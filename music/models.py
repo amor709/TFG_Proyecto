@@ -26,9 +26,17 @@ class Album(models.Model):
     release_date = models.DateField()
     description = models.TextField(blank=True)
     tags = models.ManyToManyField(Tag, related_name='albums', blank=False)
+    is_draft = models.BooleanField(default=True)
+    completed = models.BooleanField(default=False)
 
     def get_type_display(self):
         return "Álbum"
+
+    def mark_completed(self):
+        """Marca el álbum como completado y no borrador."""
+        self.is_draft = False
+        self.completed = True
+        self.save()
 
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"
@@ -39,7 +47,7 @@ class Song(models.Model):
     artist = models.ForeignKey('accounts.ArtistProfile', on_delete=models.CASCADE, related_name='songs')
     album = models.ForeignKey(Album, on_delete=models.SET_NULL, null=True, blank=True, related_name='songs')
     tags = models.ManyToManyField(Tag, related_name='songs', blank=False)
-    duration = models.DurationField()
+    duration = models.DurationField(default='00:00:00')
     audio_file = models.FileField(upload_to='audio/', blank=True, null=True)
     cover = models.FileField(upload_to='covers/', blank=True, null=True)
     plays = models.PositiveIntegerField(default=0)
@@ -51,6 +59,11 @@ class Song(models.Model):
             return "Canción"
         else:
             return "Single"
+
+    @property
+    def is_explicit(self):
+        """Alias para el campo explicit para manener compatibilidad."""
+        return self.explicit
 
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"

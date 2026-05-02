@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar Perfil de Artista{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/edit_artist_profile.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <h1>Editar Perfil de Artista</h1>
+    <form method="post" enctype="multipart/form-data" class="edit-profile-form" id="edit-form">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="{{ form.bio.id_for_label }}">Biografía</label>
+            {{ form.bio }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.photo.id_for_label }}">Foto de perfil</label>
+            {{ form.photo }}
+        </div>
+        <div class="form-group">
+            <label for="{{ form.banner.id_for_label }}">Banner de perfil</label>
+            {{ form.banner }}
+            <div id="cropper-container" style="display: none;">
+                <img id="cropper-image" src="" alt="Imagen a recortar">
+                <button type="button" id="crop-btn">Recortar y Aplicar</button>
+                <button type="button" id="cancel-crop-btn">Cancelar</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="{{ form.website.id_for_label }}">Sitio web</label>
+            {{ form.website }}
+        </div>
+        <button type="submit" class="btn-submit">Guardar Cambios</button>
+    </form>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const bannerInput = document.getElementById('{{ form.banner.id_for_label }}');
+    const cropperContainer = document.getElementById('cropper-container');
+    const cropperImage = document.getElementById('cropper-image');
+    const cropBtn = document.getElementById('crop-btn');
+    const cancelCropBtn = document.getElementById('cancel-crop-btn');
+    const form = document.getElementById('edit-form');
+    let cropper;
+
+    bannerInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                cropperImage.src = event.target.result;
+                cropperContainer.style.display = 'block';
+                if (cropper) {
+                    cropper.destroy();
+                }
+                cropper = new Cropper(cropperImage, {
+                    aspectRatio: 11 / 3,
+                    viewMode: 1,
+                    responsive: true,
+                    restore: false,
+                    checkCrossOrigin: false,
+                    checkOrientation: false,
+                    modal: true,
+                    guides: true,
+                    center: true,
+                    highlight: false,
+                    background: false,
+                    autoCropArea: 0.8,
+                });
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+
+    cropBtn.addEventListener('click', function() {
+        if (cropper) {
+            cropper.getCroppedCanvas().toBlob(function(blob) {
+                // Crear un nuevo archivo con el blob recortado
+                const croppedFile = new File([blob], 'banner_cropped.png', { type: 'image/png' });
+                // Crear un DataTransfer para asignar el archivo al input
+                const dt = new DataTransfer();
+                dt.items.add(croppedFile);
+                bannerInput.files = dt.files;
+                cropperContainer.style.display = 'none';
+                cropper.destroy();
+                cropper = null;
+            });
+        }
+    });
+
+    cancelCropBtn.addEventListener('click', function() {
+        cropperContainer.style.display = 'none';
+        if (cropper) {
+            cropper.destroy();
+            cropper = null;
+        }
+        bannerInput.value = '';
+    });
+
+    form.addEventListener('submit', function(e) {
+        if (cropperContainer.style.display === 'block') {
+            e.preventDefault();
+            alert('Por favor, recorta la imagen del banner antes de guardar.');
+        }
+    });
+});
+</script>
+{% endblock %}

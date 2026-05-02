@@ -1,4 +1,4 @@
-{% extends "base.html" %}
+okenebt{% extends "base.html" %}
 {% load static %}
 
 {% block title %} – {{ artist.name }}{% endblock %}
@@ -8,16 +8,7 @@
 {% endblock %}
 
 {% block content %}
-<!-- ════════════════════════════════════════════════════════════════════
-     ARTIST DETAIL  –  Bloque dinámico para <main class="main-content">
-     Contexto Django esperado:
-       · artist            → instancia Artist (.name, .photo, .followers_count, .bio)
-       · top_songs         → QuerySet primeras 6 canciones (Track)
-       · releases          → QuerySet lanzamientos recientes (Album/Single)
-       · albums            → QuerySet álbumes de estudio
-       · singles           → QuerySet singles
-       · features          → QuerySet colaboraciones ("Aparece en...")
-     ════════════════════════════════════════════════════════════════════ -->
+
 
 <div class="artist-page">
 
@@ -82,6 +73,14 @@
                          alt="···"
                          class="icon--md">
                 </button>
+
+es en                {% if is_own_profile %}
+                <!-- Editar perfil -->
+                <a href="{% url 'edit_artist_profile' %}" class="artist-action-btn artist-action-btn--edit"
+                   aria-label="Editar perfil">
+                    <img src="{% static 'img/icon-edit.png' %}" alt="Editar" class="icon--md">
+                </a>
+                {% endif %}
 
             </div><!-- /actions -->
         </header><!-- /artist-hero -->
@@ -193,6 +192,11 @@
                 <div class="section-header">
                     <h3 class="section-title" id="albums-heading">Álbumes</h3>
                     <div class="section-header__right">
+                        {% if is_own_profile %}
+                        <a href="{% url 'music:album_phase_a' %}" class="btn-add-album" aria-label="Añadir álbum">
+                            <img src="{% static 'img/icon-add.png' %}" alt="Añadir" class="icon--sm">
+                        </a>
+                        {% endif %}
                         <div class="section-header__nav">
                             <button class="carousel-nav-btn" data-target="carousel-albums" data-dir="-1"
                                     aria-label="Anterior">
@@ -239,6 +243,11 @@
                 <div class="section-header">
                     <h3 class="section-title" id="singles-heading">Singles</h3>
                     <div class="section-header__right">
+                        {% if is_own_profile %}
+                        <a href="{% url 'music:create_single' %}" class="btn-add-single" aria-label="Añadir canción">
+                            <img src="{% static 'img/icon-add.png' %}" alt="Añadir" class="icon--sm">
+                        </a>
+                        {% endif %}
                         <div class="section-header__nav">
                             <button class="carousel-nav-btn" data-target="carousel-singles" data-dir="-1"
                                     aria-label="Anterior">

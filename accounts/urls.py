@@ -9,4 +9,5 @@ urlpatterns = [
     path('register/artist/', views.ArtistRegisterView.as_view(), name='register_artist'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('edit-artist-profile/', views.edit_artist_profile, name='edit_artist_profile'),
 ]
