@@ -5,10 +5,13 @@ from django.views.generic import TemplateView, CreateView
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.urls import reverse_lazy
-from music.models import Song
-from accounts.models import ArtistProfile, User, ListenerProfile
+from music.models import Song, Album
+from accounts.models import ArtistProfile, User, ListenerProfile, ListeningHistory, UserTag
 from django import forms
 from accounts.forms import ArtistProfileForm
+from playlists.models import Playlist
+from django.utils import timezone
+from datetime import timedelta
 
 
 def index_view(request):
@@ -123,44 +126,75 @@ class HomeView(TemplateView):
         return super().get(request, *args, **kwargs)
 
     def get_context_data(self, **kwargs):
-        print("DEBUG: HomeView.get_context_data() llamado")
         context = super().get_context_data(**kwargs)
+        user = self.request.user
 
         # Artista destacado (el primero disponible o uno aleatorio)
-        featured_artist = ArtistProfile.objects.first()
-        print(f"DEBUG: featured_artist = {featured_artist}")
+        featured_artist = ArtistProfile.objects.order_by('?').first()
         context['featured_artist'] = featured_artist
 
-        # Canciones escuchadas recientemente (las más populares por ahora)
-        recently_played = Song.objects.all().order_by('-plays')[:6]
-        print(f"DEBUG: recently_played = {list(recently_played)}")
-        context['recently_played'] = recently_played
+        if user.is_authenticated:
+            # Escuchadas recientemente: 10 aleatorias de las últimas 30 escuchadas
+            recent_history = ListeningHistory.objects.filter(user=user).order_by('-played_at')[:30]
+            if recent_history:
+                recent_song_ids = [h.song_id for h in recent_history]
+                recently_played = Song.objects.filter(id__in=recent_song_ids).order_by('?')[:10]
+            else:
+                recently_played = Song.objects.all().order_by('?')[:10]
+            context['recently_played'] = recently_played
 
-        # Artistas relacionados (todos disponibles)
-        companion_artists = ArtistProfile.objects.all()[:5]
-        print(f"DEBUG: companion_artists = {list(companion_artists)}")
-        context['companion_artists'] = companion_artists
+            # Artistas que suelen estar contigo: 5 aleatorios de los más escuchados el último mes
+            one_month_ago = timezone.now() - timedelta(days=30)
+            monthly_history = ListeningHistory.objects.filter(user=user, played_at__gte=one_month_ago)
+            if monthly_history:
+                artist_counts = {}
+                for h in monthly_history:
+                    artist_id = h.song.artist_id
+                    artist_counts[artist_id] = artist_counts.get(artist_id, 0) + 1
+                top_artist_ids = sorted(artist_counts, key=artist_counts.get, reverse=True)[:10]  # top 10, then random 5
+                companion_artists = ArtistProfile.objects.filter(id__in=top_artist_ids).order_by('?')[:5]
+            else:
+                companion_artists = ArtistProfile.objects.all().order_by('?')[:5]
+            context['companion_artists'] = companion_artists
+
+            # Recomendaciones para tus oídos: 5 álbumes aleatorios con tags de canciones escuchadas el último mes
+            user_tags = UserTag.objects.filter(user=user, last_listened__gte=one_month_ago - timedelta(days=30))
+            if user_tags:
+                tag_ids = [ut.tag_id for ut in user_tags]
+                recommended_albums = Album.objects.filter(tags__id__in=tag_ids).distinct().order_by('?')[:5]
+            else:
+                recommended_albums = Album.objects.all().order_by('?')[:5]
+            context['recommended_albums'] = recommended_albums
+
+            # Vuelve a los brazos de tu música: 5 canciones aleatorias de las últimas escuchadas ese mes
+            if monthly_history:
+                monthly_song_ids = list(set([h.song_id for h in monthly_history]))
+                back_to_music = Song.objects.filter(id__in=monthly_song_ids).order_by('?')[:5]
+            else:
+                back_to_music = Song.objects.all().order_by('?')[:5]
+            context['back_to_music'] = back_to_music
+
+            # Tus playlists: todas las playlists del usuario
+            user_playlists = Playlist.objects.filter(user=user).order_by('-created_at')[:10]
+            context['user_playlists'] = user_playlists
+        else:
+            # Para usuarios no autenticados, mostrar datos por defecto
+            context['recently_played'] = Song.objects.all().order_by('-plays')[:10]
+            context['companion_artists'] = ArtistProfile.objects.all().order_by('?')[:5]
+            context['recommended_albums'] = Album.objects.all().order_by('?')[:5]
+            context['back_to_music'] = Song.objects.all().order_by('?')[:5]
+            context['user_playlists'] = []
 
         # Canción actual (si hay alguna)
-        current_track = Song.objects.first()
+        current_track = Song.objects.order_by('?').first()
         context['current_track'] = current_track
 
         # Artista relacionado
         if current_track:
-            context['related_artist'] = ArtistProfile.objects.exclude(
-                pk=current_track.artist.pk
-            ).first()
+            context['related_artist'] = ArtistProfile.objects.exclude(pk=current_track.artist.pk).order_by('?').first()
         else:
             context['related_artist'] = None
 
-        # Items de biblioteca del usuario
-        if hasattr(self, 'request') and self.request.user.is_authenticated:
-            # Aquí se cargaría la biblioteca real del usuario
-            context['library_items'] = []
-        else:
-            context['library_items'] = []
-
-        print(f"DEBUG: Context keys = {list(context.keys())}")
         return context
 
 

@@ -36,51 +36,223 @@
 <!-- ── SECCIÓN: Escuchadas recientemente ── -->
 <section class="content-section" aria-labelledby="recent-heading">
     <h2 class="section-title" id="recent-heading">Escuchadas recientemente</h2>
-    <div class="cards-row cards-row--albums">
-        {% for track in recently_played %}
-        <article class="track-card">
-            <div class="track-card__link" onclick="playSongA({{ track.pk }}); return false;" style="cursor: pointer;">
-                <div class="track-card__cover-wrap">
-                    <img src="{% if track.cover %}{{ track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
-                         alt="{{ track.title }}"
-                         class="track-card__cover"
-                         loading="lazy">
-                    <!-- Overlay de play al hover (puro CSS) -->
-                    <div class="track-card__play-overlay" aria-hidden="true">
-                        <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+    <div class="carousel" id="carousel-recent">
+        <div class="carousel__track">
+            {% for track in recently_played %}
+            <article class="track-card carousel__item">
+                <div class="track-card__link" onclick="playSongA({{ track.pk }}); return false;" style="cursor: pointer;">
+                    <div class="track-card__cover-wrap">
+                        <img src="{% if track.cover %}{{ track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
+                             alt="{{ track.title }}"
+                             class="track-card__cover"
+                             loading="lazy">
+                        <!-- Overlay de play al hover (puro CSS) -->
+                        <div class="track-card__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                        </div>
                     </div>
+                    <h3 class="track-card__title">{{ track.title }}</h3>
+                    <p class="track-card__sub">{{ track.artist.user.username }}</p>
                 </div>
-                <h3 class="track-card__title">{{ track.title }}</h3>
-                <p class="track-card__sub">{{ track.artist.user.username }}</p>
-            </div>
-        </article>
-        {% empty %}
-        <p class="empty-state">Todavía no hay canciones. ¡Sube la primera!</p>
-        {% endfor %}
+            </article>
+            {% empty %}
+            <p class="empty-state">Todavía no hay canciones escuchadas.</p>
+            {% endfor %}
+        </div>
     </div>
+    {% if recently_played|length > 5 %}
+    <div class="section-header__nav">
+        <button class="carousel-nav-btn" data-target="carousel-recent" data-dir="-1"
+                aria-label="Anterior">
+            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+        </button>
+        <button class="carousel-nav-btn" data-target="carousel-recent" data-dir="1"
+                aria-label="Siguiente">
+            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+        </button>
+    </div>
+    {% endif %}
 </section><!-- /recently played -->
 
 <!-- ── SECCIÓN: Artistas que suelen estar contigo ── -->
 <section class="content-section" aria-labelledby="artists-heading">
     <h2 class="section-title" id="artists-heading">Artistas que suelen estar contigo</h2>
-    <div class="cards-row cards-row--artists">
-        {% for artist in companion_artists %}
-        <article class="artist-card">
-            <div class="artist-card__link">
-                <div class="artist-card__photo-wrap">
-                    <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-placeholder.png' %}{% endif %}"
-                         alt="{{ artist.user.username }}"
-                         class="artist-card__photo"
-                         loading="lazy">
+    <div class="carousel" id="carousel-artists">
+        <div class="carousel__track">
+            {% for artist in companion_artists %}
+            <article class="artist-card carousel__item">
+                <div class="artist-card__link">
+                    <div class="artist-card__photo-wrap">
+                        <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-placeholder.png' %}{% endif %}"
+                             alt="{{ artist.user.username }}"
+                             class="artist-card__photo"
+                             loading="lazy">
+                    </div>
+                    <h3 class="artist-card__name">{{ artist.user.username }}</h3>
+                    <p class="artist-card__genre">Artista</p>
                 </div>
-                <h3 class="artist-card__name">{{ artist.user.username }}</h3>
-                <p class="artist-card__genre">Artista</p>
-            </div>
-        </article>
-        {% empty %}
-        <p class="empty-state">No hay artistas registrados aún.</p>
-        {% endfor %}
+            </article>
+            {% empty %}
+            <p class="empty-state">No hay artistas registrados aún.</p>
+            {% endfor %}
+        </div>
     </div>
+    {% if companion_artists|length > 5 %}
+    <div class="section-header__nav">
+        <button class="carousel-nav-btn" data-target="carousel-artists" data-dir="-1"
+                aria-label="Anterior">
+            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+        </button>
+        <button class="carousel-nav-btn" data-target="carousel-artists" data-dir="1"
+                aria-label="Siguiente">
+            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+        </button>
+    </div>
+    {% endif %}
 </section><!-- /companion artists -->
 
+<!-- ── SECCIÓN: Recomendaciones para tus oídos ── -->
+<section class="content-section" aria-labelledby="recommendations-heading">
+    <h2 class="section-title" id="recommendations-heading">Recomendaciones para tus oídos</h2>
+    <div class="carousel" id="carousel-recommendations">
+        <div class="carousel__track">
+            {% for album in recommended_albums %}
+            <article class="track-card carousel__item">
+                <a href="#" class="track-card__link">
+                    <div class="track-card__cover-wrap">
+                        <img src="{% if album.cover %}{{ album.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
+                             alt="{{ album.title }}"
+                             class="track-card__cover"
+                             loading="lazy">
+                        <div class="track-card__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                        </div>
+                    </div>
+                    <h3 class="track-card__title">{{ album.title }}</h3>
+                    <p class="track-card__sub">
+                        Álbum · {{ album.release_date|date:"Y" }}
+                    </p>
+                </a>
+            </article>
+            {% empty %}
+            <p class="empty-state">No hay recomendaciones disponibles.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% if recommended_albums|length > 5 %}
+    <div class="section-header__nav">
+        <button class="carousel-nav-btn" data-target="carousel-recommendations" data-dir="-1"
+                aria-label="Anterior">
+            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+        </button>
+        <button class="carousel-nav-btn" data-target="carousel-recommendations" data-dir="1"
+                aria-label="Siguiente">
+            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+        </button>
+    </div>
+    {% endif %}
+</section><!-- /recommendations -->
+
+<!-- ── SECCIÓN: Vuelve a los brazos de tu música ── -->
+<section class="content-section" aria-labelledby="back-to-music-heading">
+    <h2 class="section-title" id="back-to-music-heading">Vuelve a los brazos de tu música</h2>
+    <div class="carousel" id="carousel-back-to-music">
+        <div class="carousel__track">
+            {% for track in back_to_music %}
+            <article class="track-card carousel__item">
+                <div class="track-card__link" onclick="playSongA({{ track.pk }}); return false;" style="cursor: pointer;">
+                    <div class="track-card__cover-wrap">
+                        <img src="{% if track.cover %}{{ track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
+                             alt="{{ track.title }}"
+                             class="track-card__cover"
+                             loading="lazy">
+                        <div class="track-card__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                        </div>
+                    </div>
+                    <h3 class="track-card__title">{{ track.title }}</h3>
+                    <p class="track-card__sub">{{ track.artist.user.username }}</p>
+                </div>
+            </article>
+            {% empty %}
+            <p class="empty-state">No hay canciones recientes.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% if back_to_music|length > 5 %}
+    <div class="section-header__nav">
+        <button class="carousel-nav-btn" data-target="carousel-back-to-music" data-dir="-1"
+                aria-label="Anterior">
+            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+        </button>
+        <button class="carousel-nav-btn" data-target="carousel-back-to-music" data-dir="1"
+                aria-label="Siguiente">
+            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+        </button>
+    </div>
+    {% endif %}
+</section><!-- /back to music -->
+
+<!-- ── SECCIÓN: Tus playlists ── -->
+{% if user.is_authenticated %}
+<section class="content-section" aria-labelledby="playlists-heading">
+    <h2 class="section-title" id="playlists-heading">Tus playlists</h2>
+    <div class="carousel" id="carousel-playlists">
+        <div class="carousel__track">
+            {% for playlist in user_playlists %}
+            <article class="track-card carousel__item">
+                <a href="#" class="track-card__link">
+                    <div class="track-card__cover-wrap">
+                        <img src="{% static 'img/playlist-placeholder.png' %}"
+                             alt="{{ playlist.name }}"
+                             class="track-card__cover"
+                             loading="lazy">
+                        <div class="track-card__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                        </div>
+                    </div>
+                    <h3 class="track-card__title">{{ playlist.name }}</h3>
+                    <p class="track-card__sub">
+                        Playlist · {{ playlist.created_at|date:"M Y" }}
+                    </p>
+                </a>
+            </article>
+            {% empty %}
+            <p class="empty-state">No tienes playlists aún.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% if user_playlists|length > 5 %}
+    <div class="section-header__nav">
+        <button class="carousel-nav-btn" data-target="carousel-playlists" data-dir="-1"
+                aria-label="Anterior">
+            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+        </button>
+        <button class="carousel-nav-btn" data-target="carousel-playlists" data-dir="1"
+                aria-label="Siguiente">
+            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+        </button>
+    </div>
+    {% endif %}
+</section><!-- /playlists -->
+{% endif %}
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Carruseles
+document.querySelectorAll('.carousel-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const id = btn.dataset.target;
+        const dir = parseInt(btn.dataset.dir);
+        const track = document.querySelector(`#${id} .carousel__track`);
+        const item = track.querySelector('.carousel__item');
+        const step = item ? item.offsetWidth + 16 : 200; // 16 = var(--space-4)
+        const max = track.scrollWidth - track.parentElement.offsetWidth;
+        let cur = parseInt(track.style.transform?.replace(/[^-\d]/g, '') || 0);
+        cur = Math.min(0, Math.max(-max, cur - dir * step));
+        track.style.transform = `translateX(${cur}px)`;
+    });
+});
+</script>
 {% endblock %}

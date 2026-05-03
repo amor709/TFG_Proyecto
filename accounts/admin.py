@@ -28,8 +28,8 @@ class ArtistProfileAdmin(admin.ModelAdmin):
 
 @admin.register(ListenerProfile)
 class ListenerProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'block_explicit')
-    list_filter = ('block_explicit',)
+    list_display = ('id', 'user')
+    list_filter = ()
     search_fields = ('user__username', 'user__email')
     ordering = ('user__username',)
     readonly_fields = ('id',)

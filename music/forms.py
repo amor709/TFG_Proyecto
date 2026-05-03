@@ -44,9 +44,15 @@ class SingleForm(forms.ModelForm):
 
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'tag-checkboxes'}),
         required=True,
         label="Géneros/Tags"
+    )
+    collaborators = forms.ModelMultipleChoiceField(
+        queryset=None,  # Se establece en __init__
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'collaborator-checkboxes'}),
+        required=False,
+        label="Artistas Colaboradores"
     )
     cover = forms.FileField(
         validators=[ImageAspectRatioValidator()],
@@ -63,7 +69,7 @@ class SingleForm(forms.ModelForm):
 
     class Meta:
         model = Song
-        fields = ['title', 'tags', 'release_date', 'cover', 'audio_file', 'explicit']
+        fields = ['title', 'tags', 'collaborators', 'release_date', 'cover', 'audio_file']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -74,15 +80,24 @@ class SingleForm(forms.ModelForm):
                 'class': 'form-control',
                 'type': 'date'
             }),
-            'explicit': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            })
         }
         labels = {
             'title': 'Título del Sencillo',
             'release_date': 'Fecha de Lanzamiento',
-            'explicit': 'Contenido Explícito'
         }
+
+    def __init__(self, *args, artist=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Configurar los colaboradores disponibles (otros artistas)
+        if artist:
+            self.fields['collaborators'].queryset = (
+                __import__('accounts.models', fromlist=['ArtistProfile']).ArtistProfile.objects
+                .exclude(pk=artist.pk)
+            )
+        else:
+            self.fields['collaborators'].queryset = (
+                __import__('accounts.models', fromlist=['ArtistProfile']).ArtistProfile.objects.all()
+            )
 
 
 class AlbumPhaseAForm(forms.ModelForm):
@@ -126,13 +141,13 @@ class AlbumPhaseBForm(forms.ModelForm):
 
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'tag-checkboxes'}),
         required=True,
         label="Géneros/Tags de esta Canción"
     )
     collaborators = forms.ModelMultipleChoiceField(
         queryset=None,  # Se establece en __init__
-        widget=forms.CheckboxSelectMultiple,
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'collaborator-checkboxes'}),
         required=False,
         label="Artistas Colaboradores"
     )
@@ -144,20 +159,16 @@ class AlbumPhaseBForm(forms.ModelForm):
 
     class Meta:
         model = Song
-        fields = ['title', 'tags', 'collaborators', 'audio_file', 'explicit']
+        fields = ['title', 'tags', 'collaborators', 'audio_file']
         widgets = {
             'title': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Título de la Canción',
                 'required': True
             }),
-            'explicit': forms.CheckboxInput(attrs={
-                'class': 'form-check-input'
-            })
         }
         labels = {
             'title': 'Título de la Canción',
-            'explicit': 'Contenido Explícito'
         }
 
     def __init__(self, *args, artist=None, **kwargs):
@@ -172,5 +183,3 @@ class AlbumPhaseBForm(forms.ModelForm):
             self.fields['collaborators'].queryset = (
                 __import__('accounts.models', fromlist=['ArtistProfile']).ArtistProfile.objects.all()
             )
-
-

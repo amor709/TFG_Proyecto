@@ -1,0 +1,235 @@
+.release-container {
+        max-width: 600px;
+        margin: 2rem auto;
+        padding: 2rem;
+        background: #1a1a1a;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+
+    .release-header {
+        text-align: center;
+        margin-bottom: 2rem;
+    }
+
+    .release-header h1 {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: #fff;
+    }
+
+    .release-header p {
+        color: #999;
+        font-size: 1rem;
+    }
+
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+
+    .form-group label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        color: #fff;
+        font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        margin-bottom: 0.5rem;
+    }
+
+    .form-control {
+        background: #2a2a2a;
+        border: 1px solid #3a3a3a;
+        color: #fff;
+        padding: 0.75rem;
+        border-radius: 6px;
+        font-size: 0.95rem;
+        transition: all 0.2s ease;
+    }
+
+    .form-control:focus {
+        background: #333;
+        border-color: #e8212e;
+        color: #fff;
+        outline: none;
+    }
+
+    .form-control::placeholder {
+        color: #666;
+    }
+
+    .help-text {
+        font-size: 0.85rem;
+        color: #999;
+        margin-top: 0.3rem;
+    }
+
+    .tags-section {
+        background: #0a0a0a;
+        padding: 1rem;
+        border-radius: 6px;
+        margin-top: 0.5rem;
+    }
+
+    .form-check {
+        margin-bottom: 0.75rem;
+    }
+
+    .form-check input[type="checkbox"] {
+        width: auto;
+        margin-right: 0.5rem;
+        accent-color: #e8212e;
+        cursor: pointer;
+    }
+
+    .form-check label {
+        display: inline;
+        margin: 0;
+        font-weight: 400;
+        color: #ccc;
+        cursor: pointer;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        background: #2a2a2a;
+        border: 2px dashed #3a3a3a;
+        border-radius: 6px;
+        padding: 2rem;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-wrapper:hover {
+        border-color: #e8212e;
+        background: #2f2f2f;
+    }
+
+    .file-input-wrapper input[type="file"] {
+        position: absolute;
+        left: 0;
+        top: 0;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-input-text {
+        color: #999;
+    }
+
+    .file-input-text strong {
+        color: #fff;
+    }
+
+    .file-preview {
+        margin-top: 1rem;
+        text-align: center;
+    }
+
+    .preview-image {
+        max-width: 200px;
+        max-height: 200px;
+        border-radius: 6px;
+        margin-top: 0.5rem;
+    }
+
+    .btn-group {
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+    }
+
+    .btn {
+        flex: 1;
+        padding: 0.85rem 1.5rem;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+        background: #e8212e;
+        color: #fff;
+    }
+
+    .btn-primary:hover {
+        background: #e8212e;
+        transform: translateY(-2px);
+    }
+
+    .btn-primary:disabled {
+        background: #666;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .btn-secondary {
+        background: #3a3a3a;
+        color: #fff;
+    }
+
+    .btn-secondary:hover {
+        background: #4a4a4a;
+    }
+
+    .error-message {
+        background: #660000;
+        border: 1px solid #ff6666;
+        color: #ffcccc;
+        padding: 0.75rem;
+        border-radius: 6px;
+        margin-bottom: 1rem;
+        font-size: 0.9rem;
+    }
+
+    .error-list {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .error-list li {
+        color: #ffcccc;
+        margin-bottom: 0.3rem;
+    }
+
+    /* Estilos para botones de tags */
+    .tag-checkboxes {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .tag-checkboxes label {
+        display: inline-block;
+        background: #2a2a2a;
+        color: #fff;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border: 2px solid transparent;
+        font-size: 0.9rem;
+    }
+
+    .tag-checkboxes input[type="checkbox"] {
+        display: none;
+    }
+
+    .tag-checkboxes label.selected {
+        background: #e8212e;
+        color: #fff;
+    }

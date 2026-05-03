@@ -10,6 +10,21 @@ from .decorators import artist_required
 from accounts.models import ArtistProfile
 
 
+def update_album_tags(album):
+    """Actualiza los tags del álbum basado en las tags de sus canciones."""
+    all_tags = set()
+    for song in album.songs.all():
+        all_tags.update(song.tags.all())
+    
+    # Remover "Nulo" si hay otros tags
+    nulo_tag = Tag.objects.filter(name="Nulo").first()
+    if nulo_tag and all_tags:
+        album.tags.remove(nulo_tag)
+    
+    # Actualizar tags
+    album.tags.set(all_tags or [nulo_tag] if nulo_tag else [])
+
+
 @require_GET
 def get_track_data(request, track_id):
     """Obtiene datos de una canción en JSON para cargar sin recargar página."""
@@ -66,6 +81,11 @@ def album_phase_a(request):
             album.is_draft = True
             album.completed = False
             album.save()
+            form.save_m2m()  # Guardar relaciones ManyToMany
+
+            # Asignar tag "Nulo" inicialmente
+            nulo_tag, created = Tag.objects.get_or_create(name="Nulo")
+            album.tags.add(nulo_tag)
 
             messages.success(request, f"¡Álbum '{album.title}' creado! Ahora agrega tus canciones.")
             return redirect('music:album_phase_b', album_id=album.pk)
@@ -95,6 +115,9 @@ def album_phase_b(request, album_id):
 
             song.save()
             form.save_m2m()  # Guardar tags y colaboradores
+
+            # Actualizar tags del álbum basado en las canciones
+            update_album_tags(album)
 
             messages.success(request, f"¡Canción '{song.title}' agregada al álbum!")
             return redirect('music:album_phase_b', album_id=album.pk)
@@ -129,6 +152,22 @@ def song_list(request):
     return render(request, 'music/song_list.html', {'songs': songs})
 
 
+@artist_required
+@require_http_methods(["POST"])
+def delete_song(request, song_id):
+    """Elimina una canción del álbum."""
+    song = get_object_or_404(Song, pk=song_id, artist=request.user.artist_profile)
+    album = song.album
+
+    if album:
+        song.delete()
+        # Actualizar tags del álbum
+        update_album_tags(album)
+        return JsonResponse({'success': True, 'message': 'Canción eliminada exitosamente'})
+    else:
+        return JsonResponse({'success': False, 'message': 'Esta canción no pertenece a ningún álbum'}, status=400)
+
+
 def artist_detail(request, artist_id=None):
     # Si no se pasa artist_id, usar el propio si es artista
     if artist_id is None:
@@ -140,12 +179,13 @@ def artist_detail(request, artist_id=None):
         artist = get_object_or_404(ArtistProfile, pk=artist_id)
 
     # Datos básicos para mostrar la página
-    top_songs = artist.songs.all()
+    top_songs = artist.songs.all().order_by('-plays')[:6]  # Ordenar por plays
     releases = list(artist.albums.all()) + list(artist.songs.filter(album__isnull=True))  # Combinar para releases
     releases.sort(key=lambda x: x.release_date, reverse=True)  # Ordenar por fecha reciente
     albums = artist.albums.all()
     singles = artist.songs.filter(album__isnull=True)
-    features = []  # Por ahora vacío
+    # Features: canciones donde el artista es colaborador
+    features = Song.objects.filter(collaborators=artist).distinct()[:10]
 
     # Verificar si el usuario sigue al artista
     is_followed = False

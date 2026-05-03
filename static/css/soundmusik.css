@@ -446,39 +446,36 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .hero {
   position: relative;
   width: 100%;
-  height: 280px;          /* ~35% de 80vh a 1080px de alto */
+  height: 400px;
+  margin-bottom: var(--space-8);
+  border-radius: var(--radius-xl);
   overflow: hidden;
-  display: flex;
-  align-items: flex-end;
+  background: var(--color-surface-02);
 }
 
 /* Fondo con imagen + efectos */
 .hero__backdrop {
   position: absolute;
   inset: 0;
-  z-index: 0;
 }
 
 .hero__bg {
   width: 100%;
   height: 100%;
   background-size: cover;
-  background-position: center 25%;  /* Encuadra los rostros */
-  filter: blur(0px) brightness(0.7);  /* Oscurecer sin desenfoque como en el original */
-  transform: scale(1.03);            /* Evita bordes del blur si se activa */
-  transition: filter var(--duration-slow) var(--ease-out);
+  background-position: center;
+  filter: blur(20px) brightness(0.3);
+  transform: scale(1.1);
 }
 
-/* Gradiente oscuro de la parte inferior (para legibilidad del texto) */
 .hero__overlay {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     to bottom,
-    rgba(13, 13, 13, 0)   0%,
-    rgba(13, 13, 13, 0.15) 40%,
-    rgba(13, 13, 13, 0.7)  75%,
-    rgba(13, 13, 13, 0.92) 100%
+    rgba(13, 13, 13, 0.5) 0%,
+    rgba(13, 13, 13, 0) 60%,
+    rgba(13, 13, 13, 1) 100%
   );
 }
 
@@ -486,26 +483,30 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .hero__body {
   position: relative;
   z-index: 1;
-  padding: var(--space-8) var(--space-10);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  justify-content: flex-end;
+  height: 100%;
+  padding: var(--space-8);
 }
 
 .hero__label {
   font-size: var(--text-sm);
-  color: var(--color-text-secondary);
-  font-weight: 400;
-  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--color-accent);
   text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--space-2);
 }
 
 .hero__artist-name {
   font-family: var(--font-display);
   font-size: var(--text-hero);
-  line-height: 0.95;
+  font-weight: 800;
   color: var(--color-text-primary);
-  letter-spacing: 0.01em;
+  line-height: 1.0;
+  letter-spacing: -0.025em;
+  margin: 0 0 var(--space-4) 0;
 }
 
 /* Botón CTA del héroe */
@@ -513,35 +514,45 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-5);
+  padding: var(--space-3) var(--space-6);
   background: var(--color-accent);
   color: #fff;
   font-size: var(--text-base);
-  font-weight: 600;
+  font-weight: 700;
   border-radius: var(--radius-full);
-  width: fit-content;
-  transition: background var(--duration-fast), transform var(--duration-fast), box-shadow var(--duration-fast);
+  border: none;
+  cursor: pointer;
+  transition: background var(--duration-fast), transform var(--duration-fast);
 }
+
 .btn-hero:hover {
   background: var(--color-accent-hover);
   transform: translateY(-1px);
-  box-shadow: var(--shadow-accent);
 }
-.btn-hero:active { transform: translateY(0); }
+
+.btn-hero:active {
+  transform: scale(0.97);
+}
 
 /* ───────────────────────────────────────────────────────────────────
    9. SECCIONES DE CONTENIDO  (títulos + filas de tarjetas)
    ─────────────────────────────────────────────────────────────────── */
 .content-section {
-  padding: var(--space-8) var(--space-8) var(--space-4) var(--space-8);
+  margin-bottom: var(--space-12);
 }
 
 .section-title {
-  font-size: var(--text-lg);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
   font-weight: 700;
   color: var(--color-text-primary);
-  margin-bottom: var(--space-5);
-  letter-spacing: -0.01em;
+  margin-bottom: var(--space-6);
+}
+
+.section-header__nav {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
 }
 
 /* Filas de tarjetas */
@@ -1110,3 +1121,166 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   background: var(--color-accent);
 }
 
+/* ───────────────────────────────────────────────────────────────────
+   HOME PAGE STYLES
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Hero section */
+.hero {
+  position: relative;
+  width: 100%;
+  height: 400px;
+  margin-bottom: var(--space-8);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  background: var(--color-surface-02);
+}
+
+.hero__backdrop {
+  position: absolute;
+  inset: 0;
+}
+
+.hero__bg {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  filter: blur(20px) brightness(0.3);
+  transform: scale(1.1);
+}
+
+.hero__overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(13, 13, 13, 0.5) 0%,
+    rgba(13, 13, 13, 0) 60%,
+    rgba(13, 13, 13, 1) 100%
+  );
+}
+
+.hero__body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  height: 100%;
+  padding: var(--space-8);
+}
+
+.hero__label {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  margin-bottom: var(--space-2);
+}
+
+.hero__artist-name {
+  font-family: var(--font-display);
+  font-size: var(--text-hero);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.0;
+  letter-spacing: -0.025em;
+  margin: 0 0 var(--space-4) 0;
+}
+
+.btn-hero {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: var(--text-base);
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: background var(--duration-fast), transform var(--duration-fast);
+}
+
+.btn-hero:hover {
+  background: var(--color-accent-hover);
+  transform: translateY(-1px);
+}
+
+.btn-hero:active {
+  transform: scale(0.97);
+}
+
+/* Content sections */
+.content-section {
+  margin-bottom: var(--space-12);
+}
+
+.section-title {
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-6);
+}
+
+.section-header__nav {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-4);
+}
+
+/* Carousel */
+.carousel {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.carousel__track {
+  display: flex;
+  gap: var(--space-4);
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+
+.carousel__item {
+  flex: 0 0 auto;
+  width: 200px; /* Adjust based on card size */
+}
+
+/* Carousel navigation buttons */
+.carousel-nav-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface-02);
+  border: none;
+  color: var(--color-text-primary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.75;
+  transition: opacity var(--duration-fast), background var(--duration-fast);
+}
+
+.carousel-nav-btn:hover {
+  opacity: 1;
+  background: var(--color-surface-03);
+}
+
+.carousel-nav-btn:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+
+/* Empty state */
+.empty-state {
+  color: var(--color-text-secondary);
+  font-size: var(--text-base);
+  text-align: center;
+  padding: var(--space-8);
+}

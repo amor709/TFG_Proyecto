@@ -61,8 +61,8 @@ class AlbumAdmin(admin.ModelAdmin):
 @admin.register(Song)
 class SongAdmin(admin.ModelAdmin):
     form = SongForm
-    list_display = ('id', 'title', 'artist', 'album', 'duration', 'plays', 'explicit', 'release_date')
-    list_filter = ('explicit', 'release_date', 'artist', 'album')
+    list_display = ('id', 'title', 'artist', 'album', 'duration', 'plays', 'release_date')
+    list_filter = ('release_date', 'artist', 'album')
     search_fields = ('title', 'artist__user__username', 'album__title')
     ordering = ('-release_date',)
     

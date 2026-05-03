@@ -92,7 +92,7 @@ es en                {% if is_own_profile %}
              ──────────────────────────────────────────────── -->
         <section class="top-songs" aria-labelledby="top-songs-heading">
             <h2 class="section-title" id="top-songs-heading">
-                Canciones con acceso ilimitado
+                Canciones mas escuchadas
             </h2>
 
             <div class="top-songs__grid">
@@ -121,18 +121,13 @@ es en                {% if is_own_profile %}
                         </p>
                     </div>
 
-                    <!-- Badge explícito -->
-                    {% if song.is_explicit %}
-                    <span class="badge-explicit" aria-label="Contenido explícito">E</span>
-                    {% endif %}
 
                 </article>
                 {% empty %}
                 <p class="empty-state">Sin canciones disponibles.</p>
                 {% endfor %}
             </div>
-        </section><!-- /top-songs -->
-
+        </section>
 
         <!-- ────────────────────────────────────────────────
              LANZAMIENTOS  (carrusel)
@@ -164,9 +159,7 @@ es en                {% if is_own_profile %}
                                     <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
                                 </div>
                             </div>
-                            <h3 class="track-card__title">{{ item.title }}
-                                {% if item.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
-                            </h3>
+                            <h3 class="track-card__title">{{ item.title }}</h3>
                             <p class="track-card__sub">
                                 {{ item.get_type_display }} · {{ item.release_date|date:"Y" }}
                             </p>
@@ -275,9 +268,7 @@ es en                {% if is_own_profile %}
                                         <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
                                     </div>
                                 </div>
-                                <h3 class="track-card__title">{{ single.title }}
-                                    {% if single.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
-                                </h3>
+                                <h3 class="track-card__title">{{ single.title }}</h3>
                                 <p class="track-card__sub">
                                     Single · {{ single.release_date|date:"Y" }}
                                 </p>

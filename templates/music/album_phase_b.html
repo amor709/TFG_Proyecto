@@ -4,420 +4,7 @@
 {% block title %} - {{ album.title }} (Fase B){% endblock %}
 
 {% block extra_head %}
-<style>
-    .album-container {
-        max-width: 900px;
-        margin: 2rem auto;
-        padding: 2rem;
-    }
-
-    .album-header {
-        background: linear-gradient(135deg, #1a1a1a 0%, #0a0a0a 100%);
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-        display: flex;
-        gap: 2rem;
-        align-items: flex-start;
-    }
-
-    .album-cover {
-        width: 200px;
-        height: 200px;
-        border-radius: 8px;
-        overflow: hidden;
-        flex-shrink: 0;
-    }
-
-    .album-cover img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    .album-info {
-        flex: 1;
-    }
-
-    .phase-badge {
-        display: inline-block;
-        background: #ff1493;
-        color: #fff;
-        padding: 0.4rem 0.8rem;
-        border-radius: 12px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-    }
-
-    .album-title {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 0.5rem;
-    }
-
-    .album-meta {
-        color: #999;
-        font-size: 0.95rem;
-        margin-bottom: 1rem;
-    }
-
-    .album-description {
-        color: #ccc;
-        font-size: 0.95rem;
-        line-height: 1.5;
-        margin-bottom: 1rem;
-    }
-
-    .album-stats {
-        display: flex;
-        gap: 1.5rem;
-        margin-bottom: 1rem;
-    }
-
-    .stat {
-        display: flex;
-        flex-direction: column;
-        gap: 0.25rem;
-    }
-
-    .stat-value {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #ff1493;
-    }
-
-    .stat-label {
-        font-size: 0.85rem;
-        color: #999;
-    }
-
-    .album-actions {
-        display: flex;
-        gap: 1rem;
-    }
-
-    .btn {
-        padding: 0.75rem 1.5rem;
-        border: none;
-        border-radius: 6px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-    }
-
-    .btn-primary {
-        background: #ff1493;
-        color: #fff;
-    }
-
-    .btn-primary:hover {
-        background: #ff1493cc;
-    }
-
-    .btn-secondary {
-        background: #3a3a3a;
-        color: #fff;
-    }
-
-    .btn-secondary:hover {
-        background: #4a4a4a;
-    }
-
-    /* Sección de añadir canción */
-    .add-track-section {
-        background: #1a1a1a;
-        padding: 2rem;
-        border-radius: 12px;
-        margin-bottom: 2rem;
-    }
-
-    .section-title {
-        font-size: 1.3rem;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 1.5rem;
-    }
-
-    .form-group {
-        margin-bottom: 1.5rem;
-    }
-
-    .form-group label {
-        display: block;
-        font-weight: 600;
-        margin-bottom: 0.5rem;
-        color: #fff;
-        font-size: 0.95rem;
-    }
-
-    .form-control {
-        width: 100%;
-        background: #2a2a2a;
-        border: 1px solid #3a3a3a;
-        color: #fff;
-        padding: 0.75rem;
-        border-radius: 6px;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-    }
-
-    .form-control:focus {
-        background: #333;
-        border-color: #ff1493;
-        outline: none;
-    }
-
-    .form-check {
-        margin-bottom: 0.75rem;
-    }
-
-    .form-check input[type="checkbox"] {
-        width: auto;
-        margin-right: 0.5rem;
-        accent-color: #ff1493;
-        cursor: pointer;
-    }
-
-    .form-check label {
-        display: inline;
-        margin: 0;
-        font-weight: 400;
-        color: #ccc;
-        cursor: pointer;
-    }
-
-    .file-input-wrapper {
-        position: relative;
-        background: #2a2a2a;
-        border: 2px dashed #3a3a3a;
-        border-radius: 6px;
-        padding: 1.5rem;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
-
-    .file-input-wrapper:hover {
-        border-color: #ff1493;
-        background: #2f2f2f;
-    }
-
-    .file-input-wrapper input[type="file"] {
-        position: absolute;
-        left: 0;
-        top: 0;
-        opacity: 0;
-        width: 100%;
-        height: 100%;
-        cursor: pointer;
-    }
-
-    .file-input-text {
-        color: #999;
-        font-size: 0.95rem;
-    }
-
-    .file-input-text strong {
-        color: #fff;
-    }
-
-    .tags-section {
-        background: #0a0a0a;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-top: 0.5rem;
-    }
-
-    .collaborative-artists {
-        background: #0a0a0a;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-top: 0.5rem;
-        max-height: 200px;
-        overflow-y: auto;
-    }
-
-    /* Lista de canciones */
-    .tracks-section {
-        background: #1a1a1a;
-        padding: 2rem;
-        border-radius: 12px;
-    }
-
-    .tracks-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .track-item {
-        background: #0a0a0a;
-        padding: 1.5rem;
-        border-radius: 8px;
-        margin-bottom: 1rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        transition: all 0.2s ease;
-        border-left: 4px solid #3a3a3a;
-    }
-
-    .track-item:hover {
-        border-left-color: #ff1493;
-        background: #1a1a1a;
-    }
-
-    .track-info {
-        flex: 1;
-    }
-
-    .track-number {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #ff1493;
-        margin-right: 1rem;
-        min-width: 40px;
-    }
-
-    .track-title {
-        font-size: 1.1rem;
-        font-weight: 600;
-        color: #fff;
-        margin-bottom: 0.25rem;
-    }
-
-    .track-collaborators {
-        font-size: 0.9rem;
-        color: #999;
-    }
-
-    .track-tags {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.5rem;
-        margin-top: 0.5rem;
-    }
-
-    .track-tag {
-        background: #2a2a2a;
-        color: #ff1493;
-        padding: 0.25rem 0.6rem;
-        border-radius: 12px;
-        font-size: 0.8rem;
-    }
-
-    .track-actions {
-        display: flex;
-        gap: 0.5rem;
-    }
-
-    .btn-small {
-        padding: 0.5rem 1rem;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.85rem;
-        transition: all 0.2s ease;
-    }
-
-    .btn-delete {
-        background: #660000;
-        color: #ffcccc;
-    }
-
-    .btn-delete:hover {
-        background: #880000;
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 2rem;
-        color: #999;
-    }
-
-    .empty-state-icon {
-        font-size: 3rem;
-        margin-bottom: 1rem;
-    }
-
-    .error-message {
-        background: #660000;
-        border: 1px solid #ff6666;
-        color: #ffcccc;
-        padding: 0.75rem;
-        border-radius: 6px;
-        margin-bottom: 1rem;
-    }
-
-    .error-list {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-    }
-
-    .error-list li {
-        color: #ffcccc;
-        margin-bottom: 0.3rem;
-    }
-
-    .publish-btn {
-        width: 100%;
-        padding: 1rem;
-        background: #00dd00;
-        color: #000;
-        border: none;
-        border-radius: 8px;
-        font-weight: 700;
-        font-size: 1rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        margin-top: 1rem;
-    }
-
-    .publish-btn:hover {
-        background: #00ff00;
-        transform: translateY(-2px);
-    }
-
-    .publish-btn:disabled {
-        background: #666;
-        color: #999;
-        cursor: not-allowed;
-        transform: none;
-    }
-
-    .info-box {
-        background: #1a3a3a;
-        border-left: 4px solid #00ccff;
-        padding: 1rem;
-        border-radius: 6px;
-        margin-bottom: 1.5rem;
-        color: #ccc;
-        font-size: 0.95rem;
-    }
-
-    .info-box strong {
-        color: #00ccff;
-    }
-
-    .form-row {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 1rem;
-    }
-
-    @media (max-width: 768px) {
-        .album-header {
-            flex-direction: column;
-        }
-
-        .form-row {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/album_phase_b.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -428,10 +15,10 @@
             <img src="{{ album.cover.url }}" alt="{{ album.title }}">
         </div>
         <div class="album-info">
-            <span class="phase-badge">FASE B - Gestión de Tracks</span>
+            <span class="phase-badge">Gestión de Tracks</span>
             <h1 class="album-title">{{ album.title }}</h1>
             <div class="album-meta">
-                📅 {{ album.release_date|date:"d M Y" }} • {{ album.songs.count }} canción{{ album.songs.count|pluralize }}
+                {{ album.release_date|date:"d M Y" }} • {{ album.songs.count }} canción{{ album.songs.count|pluralize }}
             </div>
             {% if album.description %}
             <p class="album-description">{{ album.description }}</p>
@@ -461,11 +48,8 @@
 
     <!-- Formulario para añadir canción -->
     <div class="add-track-section">
-        <h2 class="section-title">➕ Agregar Canción</h2>
+        <h2 class="section-title">Agregar Canción</h2>
 
-        <div class="info-box">
-            <strong>ℹ️ Información:</strong> Agrega tus canciones una por una. Los tags que asignes aquí se añadirán automáticamente a los metatados del álbum. La portada del álbum se usará para todas las canciones si no especificas una diferente.
-        </div>
 
         <form method="post" enctype="multipart/form-data" id="add-track-form" novalidate>
             {% csrf_token %}
@@ -484,16 +68,6 @@
                         </ul>
                     </div>
                     {% endif %}
-                </div>
-
-                <!-- Contenido Explícito -->
-                <div class="form-group">
-                    <label>Información</label>
-                    <div class="form-check" style="background: #2a2a2a; padding: 0.75rem; border-radius: 6px;">
-                        <label for="id_explicit">
-                            {{ form.explicit }} {{ form.explicit.label }}
-                        </label>
-                    </div>
                 </div>
             </div>
 
@@ -537,6 +111,9 @@
             <!-- Artistas Colaboradores -->
             <div class="form-group">
                 <label>{{ form.collaborators.label }}</label>
+                <div class="collaborator-search">
+                    <input type="text" placeholder="Buscar artistas..." id="collaborator-search-input">
+                </div>
                 <div class="collaborative-artists">
                     {{ form.collaborators }}
                 </div>
@@ -552,19 +129,19 @@
             </div>
 
             <!-- Botón para agregar -->
-            <button type="submit" class="btn btn-primary" style="width: 100%;">✅ Agregar Canción al Álbum</button>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Agregar Canción al Álbum</button>
         </form>
     </div>
 
     <!-- Lista de Canciones Agregadas -->
     <div class="tracks-section">
-        <h2 class="section-title">🎵 Canciones del Álbum</h2>
+        <h2 class="section-title">Canciones del Álbum</h2>
 
         {% if songs %}
         <ul class="tracks-list">
             {% for song in songs %}
-            <li class="track-item">
-                <span class="track-number">#{{ forloop.counter }}</span>
+            <li class="track-item" data-song-id="{{ song.id }}">
+                <span class="track-number">{{ forloop.counter }}</span>
                 <div class="track-info">
                     <div class="track-title">{{ song.title }}</div>
                     {% if song.collaborators.all %}
@@ -593,10 +170,10 @@
         <!-- Etiquetas actuales del Álbum (sincronizadas automáticamente) -->
         {% if album.tags.all %}
         <div style="background: #0a0a0a; padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem;">
-            <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;">📌 Géneros del Álbum (Auto-sincronizados)</h3>
+            <h3 style="color: #fff; margin-bottom: 1rem; font-size: 1.1rem;">Géneros del Álbum</h3>
             <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
                 {% for tag in album.tags.all %}
-                <span style="background: #2a2a2a; color: #ff1493; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">{{ tag.name }}</span>
+                <span style="background: #2a2a2a; color: #e8212e; padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9rem;">{{ tag.name }}</span>
                 {% endfor %}
             </div>
         </div>
@@ -612,11 +189,11 @@
         <!-- Botón de Publicación -->
         {% if songs %}
         <a href="{% url 'music:publish_album' album.pk %}" class="publish-btn">
-            🚀 Publicar Álbum
+            Publicar Álbum
         </a>
         {% else %}
         <button class="publish-btn" disabled title="Debes agregar al menos una canción para publicar">
-            🚀 Publicar Álbum (Agrega canciones primero)
+            Agrega las canciones!
         </button>
         {% endif %}
     </div>
@@ -650,16 +227,87 @@
         const file = event.target.files[0];
         if (file) {
             const zone = event.target.parentElement;
-            zone.querySelector('.file-input-text').innerHTML = `<strong>✅ ${file.name}</strong> seleccionado`;
+            zone.querySelector('.file-input-text').innerHTML = `<strong> ${file.name}</strong> seleccionado`;
         }
     }
 
     function deleteSong(songId) {
-        if (confirm('¿Estás seguro de que deseas eliminar esta canción?')) {
-            // Implementar eliminación con AJAX o redirección
-            console.log('Eliminar canción:', songId);
-        }
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(`/music/song/${songId}/delete/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrftoken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Remover el elemento de la lista
+                const trackItem = document.querySelector(`[data-song-id="${songId}"]`);
+                if (trackItem) {
+                    trackItem.remove();
+                }
+                // Recargar la página para actualizar los tags del álbum
+                location.reload();
+            } else {
+                alert('Error: ' + data.message);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al eliminar la canción');
+        });
     }
+
+    // Barra de búsqueda para colaboradores
+    document.getElementById('collaborator-search-input').addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const checkboxes = document.querySelectorAll('.collaborator-checkboxes label');
+        checkboxes.forEach(label => {
+            const text = label.textContent.toLowerCase();
+            if (text.includes(searchTerm)) {
+                label.style.display = 'inline-block';
+            } else {
+                label.style.display = 'none';
+            }
+        });
+    });
+
+    // Manejar cambio de color en botones de colaboradores
+    document.querySelectorAll('.collaborator-checkboxes input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.classList.add('selected');
+            } else {
+                label.classList.remove('selected');
+            }
+        });
+        // Aplicar estado inicial
+        const label = checkbox.nextElementSibling;
+        if (checkbox.checked) {
+            label.classList.add('selected');
+        }
+    });
+
+    // Manejar cambio de color en botones de tags
+    document.querySelectorAll('.tag-checkboxes input[type="checkbox"]').forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const label = this.nextElementSibling;
+            if (this.checked) {
+                label.classList.add('selected');
+            } else {
+                label.classList.remove('selected');
+            }
+        });
+        // Aplicar estado inicial
+        const label = checkbox.nextElementSibling;
+        if (checkbox.checked) {
+            label.classList.add('selected');
+        }
+    });
 
     // Añadir estilos para el estado dragover
     const style = document.createElement('style');
@@ -672,4 +320,3 @@
     document.head.appendChild(style);
 </script>
 {% endblock %}
-

@@ -48,9 +48,33 @@ class ListenerProfile(models.Model):
     )
 
     avatar = models.FileField(upload_to='profiles/', blank=True, null=True)
-    block_explicit = models.BooleanField(default=False)
 
     following = models.ManyToManyField(ArtistProfile, blank=True, related_name='followers')
 
     def __str__(self):
         return f"Oyente: {self.user.username}"
+
+
+class ListeningHistory(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='listening_history')
+    song = models.ForeignKey('music.Song', on_delete=models.CASCADE)
+    played_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-played_at']
+
+    def __str__(self):
+        return f"{self.user.username} listened to {self.song.title}"
+
+
+class UserTag(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='user_tags')
+    tag = models.ForeignKey('music.Tag', on_delete=models.CASCADE)
+    last_listened = models.DateTimeField(auto_now=True)
+    listen_count = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        unique_together = ('user', 'tag')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.tag.name}"

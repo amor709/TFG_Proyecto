@@ -17,4 +17,5 @@ urlpatterns = [
     path('create/album/phase-a/', views.album_phase_a, name='album_phase_a'),
     path('create/album/<int:album_id>/phase-b/', views.album_phase_b, name='album_phase_b'),
     path('album/<int:album_id>/publish/', views.publish_album, name='publish_album'),
+    path('song/<int:song_id>/delete/', views.delete_song, name='delete_song'),
 ]
