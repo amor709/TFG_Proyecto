@@ -3,12 +3,16 @@
 
 {% block title %} – {{ album.title }}{% endblock %}
 
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/album_detail.css' %}">
+{% endblock %}
+
 {% block content %}
 <!-- ════════════════════════════════════════════════════════════════════
      ALBUM DETAIL  –  Bloque dinámico cargado en <main class="main-content">
      Contexto Django esperado:
        · album          → instancia del modelo Album
-       · songs          → QuerySet de Track ordenado por track_number
+       · songs          → QuerySet de Track ordenado por ID
        · recommended    → QuerySet de Track (recomendaciones del mismo artista)
      ════════════════════════════════════════════════════════════════════ -->
 
@@ -46,9 +50,9 @@
                 <h1 class="album-header__title">{{ album.title }}</h1>
 
                 <!-- Artista principal -->
-                <a href="{% url 'artists:detail' album.artist.slug %}"
+                <a href="{% url 'music:artist_detail_public' album.artist.pk %}"
                    class="album-header__artist">
-                    {{ album.artist.name }}
+                    {{ album.artist.user.username }}
                 </a>
 
                 <!-- Línea de datos rápidos -->
@@ -89,7 +93,7 @@
                     <!-- Número de pista -->
                     <span class="tracklist__col tracklist__col--num">
                         <!-- El número se oculta al hover y aparece el play; se maneja con CSS -->
-                        <span class="track-num">{{ song.track_number }}</span>
+                        <span class="track-num">{{ forloop.counter }}</span>
                         <button class="track-play-btn" aria-label="Reproducir {{ song.title }}">
                             <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
                         </button>
@@ -107,11 +111,11 @@
                     <!-- Artistas colaboradores -->
                     <span class="tracklist__col tracklist__col--artists">
                         {% for artist in song.featured_artists.all %}
-                            <a href="{% url 'artists:detail' artist.slug %}"
-                               class="track-artist-link">{{ artist.name }}</a>{% if not forloop.last %}, {% endif %}
+                            <a href="{% url 'music:artist_detail_public' artist.pk %}"
+                               class="track-artist-link">{{ artist.user.username }}</a>{% if not forloop.last %}, {% endif %}
                         {% empty %}
-                            <a href="{% url 'artists:detail' album.artist.slug %}"
-                               class="track-artist-link">{{ album.artist.name }}</a>
+                            <a href="{% url 'music:artist_detail_public' album.artist.pk %}"
+                               class="track-artist-link">{{ album.artist.user.username }}</a>
                         {% endfor %}
                     </span>
 
@@ -153,16 +157,16 @@
              ──────────────────────────────────────────────── -->
         <section class="recommendations" aria-labelledby="rec-heading">
             <h2 class="recommendations__title" id="rec-heading">
-                Si te quedaste con más ganas de {{ album.artist.name }}…
+                Si te quedaste con más ganas de {{ album.artist.user.username }}…
             </h2>
 
             <div class="recommendations__grid">
                 {% for item in recommended %}
                 <article class="rec-card">
-                    <a href="{% url 'albums:detail' item.album.pk %}" class="rec-card__link">
+                    <a href="{% if item.album %}{% url 'music:album_detail' item.album.pk %}{% else %}#{% endif %}" class="rec-card__link">
                         <div class="rec-card__cover-wrap">
-                            <img src="{{ item.album.cover.url }}"
-                                 alt="{{ item.album.title }}"
+                            <img src="{% if item.album %}{{ item.album.cover.url }}{% else %}{{ item.cover.url }}{% endif %}"
+                                 alt="{% if item.album %}{{ item.album.title }}{% else %}{{ item.title }}{% endif %}"
                                  class="rec-card__cover"
                                  loading="lazy">
                             <!-- Overlay play en hover -->
@@ -170,8 +174,8 @@
                                 <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
                             </div>
                         </div>
-                        <h3 class="rec-card__title">{{ item.title }}</h3>
-                        <p class="rec-card__artist">{{ item.artist.name }}</p>
+                        <h3 class="rec-card__title">{% if item.album %}{{ item.album.title }}{% else %}{{ item.title }}{% endif %}</h3>
+                        <p class="rec-card__artist">{{ item.artist.user.username }}</p>
                     </a>
                 </article>
                 {% empty %}

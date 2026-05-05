@@ -39,6 +39,26 @@ class Album(models.Model):
         self.completed = True
         self.save()
 
+    @property
+    def track_count(self):
+        """Retorna el número de canciones en el álbum."""
+        return self.songs.count()
+
+    @property
+    def total_duration_display(self):
+        """Retorna la duración total del álbum en formato legible."""
+        total_seconds = sum(
+            int(song.duration.total_seconds())
+            for song in self.songs.all()
+        )
+        hours = total_seconds // 3600
+        minutes = (total_seconds % 3600) // 60
+
+        if hours > 0:
+            return f"{hours}h {minutes}m"
+        else:
+            return f"{minutes}m"
+
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"
 
@@ -60,6 +80,26 @@ class Song(models.Model):
             return "Canción"
         else:
             return "Single"
+
+    @property
+    def duration_display(self):
+        """Retorna la duración en formato mm:ss"""
+        total_seconds = int(self.duration.total_seconds())
+        minutes = total_seconds // 60
+        seconds = total_seconds % 60
+        return f"{minutes}:{seconds:02d}"
+
+    @property
+    def is_liked(self):
+        """Retorna True si la canción tiene like (placeholder para futuro)."""
+        # TODO: Implementar sistema de likes cuando exista el modelo
+        return False
+
+    @property
+    def featured_artists(self):
+        """Retorna los artistas colaboradores (excluding the main artist)"""
+        # Para compatibilidad, retornar los colaboradores
+        return self.collaborators
 
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"

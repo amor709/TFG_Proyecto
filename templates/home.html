@@ -114,27 +114,27 @@
     <h2 class="section-title" id="recommendations-heading">Recomendaciones para tus oídos</h2>
     <div class="carousel" id="carousel-recommendations">
         <div class="carousel__track">
-            {% for album in recommended_albums %}
-            <article class="track-card carousel__item">
-                <a href="#" class="track-card__link">
-                    <div class="track-card__cover-wrap">
-                        <img src="{% if album.cover %}{{ album.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
-                             alt="{{ album.title }}"
-                             class="track-card__cover"
-                             loading="lazy">
-                        <div class="track-card__play-overlay" aria-hidden="true">
-                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
-                        </div>
-                    </div>
-                    <h3 class="track-card__title">{{ album.title }}</h3>
-                    <p class="track-card__sub">
-                        Álbum · {{ album.release_date|date:"Y" }}
-                    </p>
-                </a>
-            </article>
-            {% empty %}
-            <p class="empty-state">No hay recomendaciones disponibles.</p>
-            {% endfor %}
+             {% for album in recommended_albums %}
+             <article class="track-card carousel__item">
+                 <a href="{% url 'music:album_detail' album.pk %}" class="track-card__link">
+                     <div class="track-card__cover-wrap">
+                         <img src="{% if album.cover %}{{ album.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
+                              alt="{{ album.title }}"
+                              class="track-card__cover"
+                              loading="lazy">
+                         <div class="track-card__play-overlay" aria-hidden="true">
+                             <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                         </div>
+                     </div>
+                     <h3 class="track-card__title">{{ album.title }}</h3>
+                     <p class="track-card__sub">
+                         Álbum · {{ album.release_date|date:"Y" }}
+                     </p>
+                 </a>
+             </article>
+             {% empty %}
+             <p class="empty-state">No hay recomendaciones disponibles.</p>
+             {% endfor %}
         </div>
     </div>
     {% if recommended_albums|length > 5 %}

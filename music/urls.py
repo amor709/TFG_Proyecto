@@ -12,6 +12,9 @@ urlpatterns = [
     path('artist/', views.artist_detail, name='artist_detail'),
     path('artist/<int:artist_id>/', views.artist_detail, name='artist_detail_public'),
 
+    # Vista de álbum
+    path('album/<int:album_id>/', views.album_detail, name='album_detail'),
+
     # Vistas de lanzamientos (Sencillos y Álbumes)
     path('create/single/', views.create_single, name='create_single'),
     path('create/album/phase-a/', views.album_phase_a, name='album_phase_a'),

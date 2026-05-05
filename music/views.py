@@ -1,13 +1,50 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import JsonResponse
 from django.views.decorators.http import require_GET, require_http_methods
-from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.utils import timezone
+from datetime import timedelta
 from .models import Song, Album, Tag
 from .forms import SingleForm, AlbumPhaseAForm, AlbumPhaseBForm
 from .decorators import artist_required
 from accounts.models import ArtistProfile
+from mutagen.wave import WAVE
+from mutagen.flac import FLAC
+from mutagen.oggvorbis import OggVorbis
+from mutagen.mp3 import MP3
+from mutagen.mp4 import MP4
+
+
+def get_audio_duration(audio_file):
+    """
+    Extrae la duración real de un archivo de audio.
+    Retorna un timedelta con la duración.
+    Soporta: MP3, WAV, OGG, FLAC, MP4
+    """
+    try:
+        filename = audio_file.name.lower()
+
+        # Intentar diferentes formatos basados en extensión
+        if filename.endswith('.mp3'):
+            audio = MP3(audio_file)
+        elif filename.endswith('.wav'):
+            audio = WAVE(audio_file)
+        elif filename.endswith('.ogg'):
+            audio = OggVorbis(audio_file)
+        elif filename.endswith('.flac'):
+            audio = FLAC(audio_file)
+        elif filename.endswith(('.mp4', '.m4a')):
+            audio = MP4(audio_file)
+        else:
+            # Si no reconoce el formato, retornar 0
+            return timedelta(seconds=0)
+
+        # Obtener duración en segundos
+        duration_seconds = int(audio.info.length)
+        return timedelta(seconds=duration_seconds)
+    except Exception as e:
+        # Si hay error al leer la duración, retornar 0
+        print(f"Error extrayendo duración de audio: {e}")
+        return timedelta(seconds=0)
 
 
 def update_album_tags(album):
@@ -56,7 +93,13 @@ def create_single(request):
             song = form.save(commit=False)
             song.artist = request.user.artist_profile
             song.album = None  # Asegurar que no tenga álbum
-            song.duration = timezone.timedelta(seconds=0)
+
+            # Extraer duración real del archivo de audio
+            if 'audio_file' in request.FILES:
+                audio_file = request.FILES['audio_file']
+                song.duration = get_audio_duration(audio_file)
+            else:
+                song.duration = timedelta(seconds=0)
 
             song.save()
             form.save_m2m()  # Guardar relaciones ManyToMany
@@ -112,6 +155,13 @@ def album_phase_b(request, album_id):
             # Usar portada del álbum si no se especifica
             if not request.FILES.get('cover'):
                 song.cover = album.cover
+
+            # Extraer duración real del archivo de audio
+            if 'audio_file' in request.FILES:
+                audio_file = request.FILES['audio_file']
+                song.duration = get_audio_duration(audio_file)
+            else:
+                song.duration = timedelta(seconds=0)
 
             song.save()
             form.save_m2m()  # Guardar tags y colaboradores
@@ -206,3 +256,27 @@ def artist_detail(request, artist_id=None):
         'is_own_profile': is_own_profile,
     }
     return render(request, 'music/artist_detail.html', context)
+
+
+def album_detail(request, album_id):
+    """
+    Vista para mostrar los detalles de un álbum con su lista de canciones
+    y recomendaciones de otros álbumes del mismo artista.
+    """
+    album = get_object_or_404(Album, pk=album_id)
+
+    # Obtener todas las canciones del álbum ordenadas por ID (orden de creación)
+    songs = album.songs.all().order_by('id')
+
+    # Obtener recomendaciones: otras canciones del mismo artista de otros álbumes
+    recommended = Song.objects.filter(
+        artist=album.artist
+    ).exclude(album=album).select_related('album')[:10]
+
+    context = {
+        'album': album,
+        'songs': songs,
+        'recommended': recommended,
+    }
+    return render(request, 'music/album_detail.html', context)
+
