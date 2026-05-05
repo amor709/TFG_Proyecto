@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
+from django.utils import timezone
 
 
 class User(AbstractUser):
@@ -78,3 +79,61 @@ class UserTag(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.tag.name}"
+
+
+class PlaybackSession(models.Model):
+    """
+    Modelo para gestionar sesiones activas de reproducción.
+    Evita que un usuario esté escuchando en múltiples dispositivos/pestañas simultáneamente.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='playback_sessions'
+    )
+
+    # Identificador único de la sesión (generado por el cliente)
+    session_id = models.CharField(max_length=255, unique=True)
+
+    # Track actual en reproducción
+    track_id = models.IntegerField(null=True, blank=True)
+    track_title = models.CharField(max_length=255, blank=True)
+    track_artist = models.CharField(max_length=255, blank=True)
+
+    # Información adicional de la canción
+    cover_url = models.URLField(blank=True, null=True)
+
+    # Tiempo actual de reproducción
+    current_time = models.FloatField(default=0.0)
+
+    # Estado de reproducción
+    is_playing = models.BooleanField(default=False)
+
+    # Información de dispositivo
+    device_info = models.CharField(max_length=255, blank=True)
+    user_agent = models.TextField(blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    last_activity = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-last_activity']
+        verbose_name = 'Sesión de reproducción'
+        verbose_name_plural = 'Sesiones de reproducción'
+
+    def __str__(self):
+        return f"Sesión de {self.user.username} - {self.session_id[:10]}"
+
+    @property
+    def is_active(self):
+        """Verificar si la sesión está activa (menos de 30 minutos de inactividad)"""
+        from datetime import timedelta
+        timeout = timedelta(minutes=30)
+        return (timezone.now() - self.last_activity) < timeout
+
+    def mark_active(self):
+        """Marcar sesión como activa actualizando timestamp"""
+        self.last_activity = timezone.now()
+        self.save(update_fields=['last_activity'])

@@ -45,7 +45,7 @@ okenebt{% extends "base.html" %}
                         data-artist-id="{{ artist.pk }}"
                         aria-label="Reproducción aleatoria de {{ artist.name }}">
                     {# Reemplaza la siguiente etiqueta <img> con tu icono de shuffle #}
-                    <img src="{% static 'img/icon-shuffle.png' %}"
+                    <img src="{% static 'img/shuffle.png' %}"
                          alt=""
                          class="btn-shuffle__icon icon--sm">
                     <span>Reproducción Aleatoria</span>
@@ -58,7 +58,7 @@ okenebt{% extends "base.html" %}
                         data-artist-id="{{ artist.pk }}"
                         aria-label="{% if is_followed %}Dejar de seguir{% else %}Seguir a {{ artist.name }}{% endif %}">
                     {# Reemplaza la siguiente etiqueta <img> con tu icono de corazón #}
-                    <img src="{% if is_followed %}{% static 'img/icon-heart-filled.png' %}{% else %}{% static 'img/icon-heart-outline.png' %}{% endif %}"
+                    <img src="{% if is_followed %}{% static 'img/icon-heart-filled.png' %}{% else %}{% static 'img/diamond-white.png' %}{% endif %}"
                          alt=""
                          class="icon--md">
                 </button>
@@ -69,16 +69,16 @@ okenebt{% extends "base.html" %}
                         data-artist-id="{{ artist.pk }}"
                         aria-label="Más opciones">
                     {# Reemplaza la siguiente etiqueta <img> con tu icono de tres puntos #}
-                    <img src="{% static 'img/icon-more-dots.png' %}"
+                    <img src="{% static 'img/dots.png' %}"
                          alt="···"
                          class="icon--md">
                 </button>
 
-es en                {% if is_own_profile %}
+               {% if is_own_profile %}
                 <!-- Editar perfil -->
                 <a href="{% url 'edit_artist_profile' %}" class="artist-action-btn artist-action-btn--edit"
                    aria-label="Editar perfil">
-                    <img src="{% static 'img/icon-edit.png' %}" alt="Editar" class="icon--md">
+                    <img src="{% static 'img/pencil.png' %}" alt="Editar" class="icon--md">
                 </a>
                 {% endif %}
 
@@ -138,11 +138,11 @@ es en                {% if is_own_profile %}
                 <div class="section-header__nav">
                     <button class="carousel-nav-btn" data-target="carousel-releases" data-dir="-1"
                             aria-label="Anterior">
-                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                        <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
                     </button>
                     <button class="carousel-nav-btn" data-target="carousel-releases" data-dir="1"
                             aria-label="Siguiente">
-                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                        <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
                     </button>
                 </div>
             </div>
@@ -187,17 +187,17 @@ es en                {% if is_own_profile %}
                     <div class="section-header__right">
                         {% if is_own_profile %}
                         <a href="{% url 'music:album_phase_a' %}" class="btn-add-album" aria-label="Añadir álbum">
-                            <img src="{% static 'img/icon-add.png' %}" alt="Añadir" class="icon--sm">
+                            <img src="{% static 'img/addplaylist.png' %}" alt="Añadir" class="icon--sm">
                         </a>
                         {% endif %}
                         <div class="section-header__nav">
                             <button class="carousel-nav-btn" data-target="carousel-albums" data-dir="-1"
                                     aria-label="Anterior">
-                                <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                                <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
                             </button>
                             <button class="carousel-nav-btn" data-target="carousel-albums" data-dir="1"
                                     aria-label="Siguiente">
-                                <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                                <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
                             </button>
                         </div>
                         <a href="#"
@@ -238,17 +238,17 @@ es en                {% if is_own_profile %}
                     <div class="section-header__right">
                         {% if is_own_profile %}
                         <a href="{% url 'music:create_single' %}" class="btn-add-single" aria-label="Añadir canción">
-                            <img src="{% static 'img/icon-add.png' %}" alt="Añadir" class="icon--sm">
+                            <img src="{% static 'img/addplaylist.png' %}" alt="Añadir" class="icon--sm">
                         </a>
                         {% endif %}
                         <div class="section-header__nav">
                             <button class="carousel-nav-btn" data-target="carousel-singles" data-dir="-1"
                                     aria-label="Anterior">
-                                <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                                <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
                             </button>
                             <button class="carousel-nav-btn" data-target="carousel-singles" data-dir="1"
                                     aria-label="Siguiente">
-                                <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                                <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
                             </button>
                         </div>
                         <a href="#"
@@ -293,11 +293,11 @@ es en                {% if is_own_profile %}
                 <div class="section-header__nav">
                     <button class="carousel-nav-btn" data-target="carousel-features" data-dir="-1"
                             aria-label="Anterior">
-                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                        <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
                     </button>
                     <button class="carousel-nav-btn" data-target="carousel-features" data-dir="1"
                             aria-label="Siguiente">
-                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                        <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
                     </button>
                 </div>
             </div>

@@ -172,7 +172,6 @@
                 <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
                      alt="{{ current_track.title }}"
                      class="album-cover__img">
-                <p class="album-cover__title">{{ current_track.title }}</p>
             </div>
 
             <!-- Info de la pista -->
@@ -425,6 +424,26 @@ document.addEventListener('click', function(event) {
             console.error('Error al reproducir:', err);
         });
         console.log('▶️ Reproduciendo:', song.title);
+
+        // Guardar en el sistema de persistencia
+        if (typeof audioPlayerSync !== 'undefined' && audioPlayerSync) {
+            audioPlayerSync.setCurrentTrack(trackIndex, {
+                title: song.title,
+                artist: song.artist,
+                cover: song.cover,
+                url: song.url
+            });
+        }
+
+        // Actualizar paneles inmediatamente después de cargar la canción
+        if (typeof playerPanelsUpdater !== 'undefined' && playerPanelsUpdater) {
+            setTimeout(() => {
+                playerPanelsUpdater.updatePanels();
+            }, 100);
+        }
+
+        // Disparar evento para actualizar paneles
+        document.dispatchEvent(new CustomEvent('trackChanged'));
     }
 
     function playPause() {
@@ -512,12 +531,35 @@ document.addEventListener('click', function(event) {
             document.getElementById('track-art').src = data.cover;
             document.getElementById('track-artist').innerText = data.artist;
             audio.play().catch(err => console.error('Error al reproducir:', err));
+
+            // Guardar en el sistema de persistencia
+            if (typeof audioPlayerSync !== 'undefined' && audioPlayerSync) {
+                audioPlayerSync.setCurrentTrack(trackId, {
+                    title: data.title,
+                    artist: data.artist,
+                    cover: data.cover,
+                    url: data.audio_url
+                });
+            }
+
+            // Actualizar paneles inmediatamente después de cargar la canción
+            if (typeof playerPanelsUpdater !== 'undefined' && playerPanelsUpdater) {
+                setTimeout(() => {
+                    playerPanelsUpdater.updatePanels();
+                }, 100);
+            }
+
+            // Disparar evento para actualizar paneles
+            document.dispatchEvent(new CustomEvent('trackChanged'));
         } catch (error) {
             console.error('Error loading song:', error);
         }
     }
 </script>
 
+<script src="{% static 'js/playback-state.js' %}"></script>
+<script src="{% static 'js/audio-player-sync.js' %}"></script>
+<script src="{% static 'js/update-player-panels.js' %}"></script>
 <script src="{% static 'js/ajax-player.js' %}"></script>
 </body>
 </html>

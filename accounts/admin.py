@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User, ArtistProfile, ListenerProfile
+from .models import User, ArtistProfile, ListenerProfile, PlaybackSession
 
 
 @admin.register(User)
@@ -33,3 +33,13 @@ class ListenerProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email')
     ordering = ('user__username',)
     readonly_fields = ('id',)
+
+
+@admin.register(PlaybackSession)
+class PlaybackSessionAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'session_id', 'track_title', 'is_playing', 'is_active', 'last_activity')
+    list_filter = ('is_playing', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'session_id', 'track_title', 'track_artist')
+    ordering = ('-last_activity',)
+    readonly_fields = ('created_at', 'updated_at', 'session_id', 'id')
+

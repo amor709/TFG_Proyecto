@@ -429,28 +429,29 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   7. MAIN CONTENT  –  área dinámica (bloque Django)
-   ─────────────────────────────────────────────────────────────────── */
+    7. MAIN CONTENT  –  área dinámica (bloque Django)
+    ─────────────────────────────────────────────────────────────────── */
 .main-content {
-  grid-column: 2;
-  overflow-y: auto;
-  overflow-x: hidden;
-  background: var(--color-bg);
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-surface-03) transparent;
+   grid-column: 2;
+   overflow-y: auto;
+   overflow-x: hidden;
+   background: var(--color-bg);
+   scrollbar-width: thin;
+   scrollbar-color: var(--color-surface-03) transparent;
+   padding: 0 var(--space-8);
 }
 
 /* ───────────────────────────────────────────────────────────────────
-   8. HÉROE  –  banner del artista destacado
-   ─────────────────────────────────────────────────────────────────── */
+    8. HÉROE  –  banner del artista destacado
+    ─────────────────────────────────────────────────────────────────── */
 .hero {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  margin-bottom: var(--space-8);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  background: var(--color-surface-02);
+   position: relative;
+   width: 100%;
+   height: 400px;
+   margin: var(--space-8) 0 var(--space-8) 0;
+   border-radius: var(--radius-xl);
+   overflow: hidden;
+   background: var(--color-surface-02);
 }
 
 /* Fondo con imagen + efectos */
@@ -464,7 +465,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   height: 100%;
   background-size: cover;
   background-position: center;
-  filter: blur(20px) brightness(0.3);
+  filter: blur(10px) brightness(0.8);
   transform: scale(1.1);
 }
 
@@ -514,6 +515,9 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
+  width: auto;           /* Que se ajuste al texto */
+  max-width: 250px;      /* Que nunca pase de 250px */
+  justify-content: center;
   padding: var(--space-3) var(--space-6);
   background: var(--color-accent);
   color: #fff;
@@ -1127,13 +1131,13 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 
 /* Hero section */
 .hero {
-  position: relative;
-  width: 100%;
-  height: 400px;
-  margin-bottom: var(--space-8);
-  border-radius: var(--radius-xl);
-  overflow: hidden;
-  background: var(--color-surface-02);
+   position: relative;
+   width: 100%;
+   height: 400px;
+   margin: var(--space-8) 0 var(--space-8) 0;
+   border-radius: var(--radius-xl);
+   overflow: hidden;
+   background: var(--color-surface-02);
 }
 
 .hero__backdrop {
@@ -1191,18 +1195,20 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 }
 
 .btn-hero {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding: var(--space-3) var(--space-6);
-  background: var(--color-accent);
-  color: #fff;
-  font-size: var(--text-base);
-  font-weight: 700;
-  border-radius: var(--radius-full);
-  border: none;
-  cursor: pointer;
-  transition: background var(--duration-fast), transform var(--duration-fast);
+   display: inline-flex;
+   align-items: center;
+   gap: var(--space-2);
+   width: auto;           /* Que se ajuste al texto */
+   max-width: 250px;      /* Que nunca pase de 250px */
+   padding: var(--space-3) var(--space-6);
+   background: var(--color-accent);
+   color: #fff;
+   font-size: var(--text-base);
+   font-weight: 700;
+   border-radius: var(--radius-full);
+   border: none;
+   cursor: pointer;
+   transition: background var(--duration-fast), transform var(--duration-fast);
 }
 
 .btn-hero:hover {

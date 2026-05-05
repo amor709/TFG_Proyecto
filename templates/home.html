@@ -13,10 +13,8 @@
 {% if featured_artist %}
 <section class="hero" aria-label="Artista destacado">
     <div class="hero__backdrop">
-        {# La imagen de fondo se aplica como inline style para que Django pueda
-           pasar la URL del modelo; el overlay/blur se hace 100% en CSS. #}
         <div class="hero__bg"
-             style="{% if featured_artist.photo %}background-image: url('{{ featured_artist.photo.url }}');{% endif %}"
+             style="{% if featured_artist.banner %}background-image: url('{{ featured_artist.banner.url }}');{% endif %}"
              role="img"
              aria-label="{{ featured_artist.user.username }}">
         </div>
@@ -27,7 +25,7 @@
         <p class="hero__label">Escucha más de…</p>
         <h1 class="hero__artist-name">{{ featured_artist.user.username }}</h1>
         <button class="btn-hero">
-            <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs"> Ver artista
+            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs"> Ver artista
         </button>
     </div>
 </section><!-- /hero -->
@@ -64,11 +62,11 @@
     <div class="section-header__nav">
         <button class="carousel-nav-btn" data-target="carousel-recent" data-dir="-1"
                 aria-label="Anterior">
-            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
         </button>
         <button class="carousel-nav-btn" data-target="carousel-recent" data-dir="1"
                 aria-label="Siguiente">
-            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
         </button>
     </div>
     {% endif %}
@@ -101,11 +99,11 @@
     <div class="section-header__nav">
         <button class="carousel-nav-btn" data-target="carousel-artists" data-dir="-1"
                 aria-label="Anterior">
-            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
         </button>
         <button class="carousel-nav-btn" data-target="carousel-artists" data-dir="1"
                 aria-label="Siguiente">
-            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
         </button>
     </div>
     {% endif %}
@@ -143,11 +141,11 @@
     <div class="section-header__nav">
         <button class="carousel-nav-btn" data-target="carousel-recommendations" data-dir="-1"
                 aria-label="Anterior">
-            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
         </button>
         <button class="carousel-nav-btn" data-target="carousel-recommendations" data-dir="1"
                 aria-label="Siguiente">
-            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
         </button>
     </div>
     {% endif %}
@@ -183,11 +181,11 @@
     <div class="section-header__nav">
         <button class="carousel-nav-btn" data-target="carousel-back-to-music" data-dir="-1"
                 aria-label="Anterior">
-            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
         </button>
         <button class="carousel-nav-btn" data-target="carousel-back-to-music" data-dir="1"
                 aria-label="Siguiente">
-            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
         </button>
     </div>
     {% endif %}
@@ -226,11 +224,11 @@
     <div class="section-header__nav">
         <button class="carousel-nav-btn" data-target="carousel-playlists" data-dir="-1"
                 aria-label="Anterior">
-            <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
         </button>
         <button class="carousel-nav-btn" data-target="carousel-playlists" data-dir="1"
                 aria-label="Siguiente">
-            <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
         </button>
     </div>
     {% endif %}
