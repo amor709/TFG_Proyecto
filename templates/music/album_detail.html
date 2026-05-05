@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – {{ album.title }}{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════════════════════════════
+     ALBUM DETAIL  –  Bloque dinámico cargado en <main class="main-content">
+     Contexto Django esperado:
+       · album          → instancia del modelo Album
+       · songs          → QuerySet de Track ordenado por track_number
+       · recommended    → QuerySet de Track (recomendaciones del mismo artista)
+     ════════════════════════════════════════════════════════════════════ -->
+
+<div class="album-detail">
+
+    <!-- ── FONDO DIFUMINADO (capa absoluta detrás de todo) ── -->
+    <div class="album-detail__backdrop"
+         style="background-image: url('{{ album.cover.url }}');"
+         aria-hidden="true">
+    </div>
+    <!-- Overlay de degradado sobre el fondo -->
+    <div class="album-detail__overlay" aria-hidden="true"></div>
+
+    <!-- ── CONTENIDO (relativo, por encima del backdrop) ── -->
+    <div class="album-detail__inner">
+
+        <!-- ────────────────────────────────────────────────
+             CABECERA DEL ÁLBUM
+             ──────────────────────────────────────────────── -->
+        <header class="album-header">
+
+            <!-- Carátula -->
+            <div class="album-header__cover-wrap">
+                <img src="{{ album.cover.url }}"
+                     alt="Portada de {{ album.title }}"
+                     class="album-header__cover">
+            </div>
+
+            <!-- Metadatos -->
+            <div class="album-header__meta">
+                <!-- Etiqueta de tipo (Álbum / Single / EP…) -->
+                <span class="album-header__type">{{ album.get_type_display }}</span>
+
+                <!-- Título -->
+                <h1 class="album-header__title">{{ album.title }}</h1>
+
+                <!-- Artista principal -->
+                <a href="{% url 'artists:detail' album.artist.slug %}"
+                   class="album-header__artist">
+                    {{ album.artist.name }}
+                </a>
+
+                <!-- Línea de datos rápidos -->
+                <p class="album-header__stats">
+                    <span>{{ album.track_count }} Canciones</span>
+                    <span class="album-header__dot">•</span>
+                    <span>{{ album.total_duration_display }}</span>
+                    <span class="album-header__dot">•</span>
+                    <span>{{ album.release_date|date:"j F Y" }}</span>
+                </p>
+            </div>
+        </header><!-- /album-header -->
+
+        <!-- ────────────────────────────────────────────────
+             TABLA DE CANCIONES
+             ──────────────────────────────────────────────── -->
+        <section class="tracklist" aria-label="Lista de canciones">
+
+            <!-- Cabecera de columnas -->
+            <div class="tracklist__header" role="row" aria-hidden="true">
+                <span class="tracklist__col tracklist__col--num">#</span>
+                <span class="tracklist__col tracklist__col--title">Título</span>
+                <span class="tracklist__col tracklist__col--artists">Artistas</span>
+                <span class="tracklist__col tracklist__col--duration">Duración</span>
+                <span class="tracklist__col tracklist__col--actions"></span>
+            </div>
+
+            <!-- Separador -->
+            <div class="tracklist__divider"></div>
+
+            <!-- Filas de canciones -->
+            <ol class="tracklist__list">
+                {% for song in songs %}
+                <li class="tracklist__row {% if song.is_liked %}tracklist__row--liked{% endif %}"
+                    data-track-id="{{ song.pk }}"
+                    role="row">
+
+                    <!-- Número de pista -->
+                    <span class="tracklist__col tracklist__col--num">
+                        <!-- El número se oculta al hover y aparece el play; se maneja con CSS -->
+                        <span class="track-num">{{ song.track_number }}</span>
+                        <button class="track-play-btn" aria-label="Reproducir {{ song.title }}">
+                            <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
+                        </button>
+                    </span>
+
+                    <!-- Título -->
+                    <span class="tracklist__col tracklist__col--title">
+                        <button class="track-title-btn"
+                                data-track-id="{{ song.pk }}"
+                                aria-label="Reproducir {{ song.title }}">
+                            {{ song.title }}
+                        </button>
+                    </span>
+
+                    <!-- Artistas colaboradores -->
+                    <span class="tracklist__col tracklist__col--artists">
+                        {% for artist in song.featured_artists.all %}
+                            <a href="{% url 'artists:detail' artist.slug %}"
+                               class="track-artist-link">{{ artist.name }}</a>{% if not forloop.last %}, {% endif %}
+                        {% empty %}
+                            <a href="{% url 'artists:detail' album.artist.slug %}"
+                               class="track-artist-link">{{ album.artist.name }}</a>
+                        {% endfor %}
+                    </span>
+
+                    <!-- Duración -->
+                    <span class="tracklist__col tracklist__col--duration">
+                        {{ song.duration_display }}
+                    </span>
+
+                    <!-- Acciones -->
+                    <span class="tracklist__col tracklist__col--actions">
+                        <!-- Botón "Me gusta" -->
+                        <button class="track-action-btn track-like-btn"
+                                data-track-id="{{ song.pk }}"
+                                aria-label="{% if song.is_liked %}Quitar de Me gusta{% else %}Añadir a Me gusta{% endif %}">
+                            {% if song.is_liked %}
+                                <img src="{% static 'img/icon-heart-filled.png' %}" alt="Me gusta" class="icon--sm icon--liked">
+                            {% else %}
+                                <img src="{% static 'img/icon-heart-outline.png' %}" alt="Me gusta" class="icon--sm">
+                            {% endif %}
+                        </button>
+
+                        <!-- Botón "Más opciones" -->
+                        <button class="track-action-btn track-more-btn"
+                                data-track-id="{{ song.pk }}"
+                                aria-label="Más opciones para {{ song.title }}">
+                            <img src="{% static 'img/icon-more-dots.png' %}" alt="···" class="icon--sm">
+                        </button>
+                    </span>
+
+                </li>
+                {% empty %}
+                <li class="tracklist__empty">Este álbum no tiene canciones todavía.</li>
+                {% endfor %}
+            </ol>
+        </section><!-- /tracklist -->
+
+        <!-- ────────────────────────────────────────────────
+             SECCIÓN DE RECOMENDACIONES
+             ──────────────────────────────────────────────── -->
+        <section class="recommendations" aria-labelledby="rec-heading">
+            <h2 class="recommendations__title" id="rec-heading">
+                Si te quedaste con más ganas de {{ album.artist.name }}…
+            </h2>
+
+            <div class="recommendations__grid">
+                {% for item in recommended %}
+                <article class="rec-card">
+                    <a href="{% url 'albums:detail' item.album.pk %}" class="rec-card__link">
+                        <div class="rec-card__cover-wrap">
+                            <img src="{{ item.album.cover.url }}"
+                                 alt="{{ item.album.title }}"
+                                 class="rec-card__cover"
+                                 loading="lazy">
+                            <!-- Overlay play en hover -->
+                            <div class="rec-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="rec-card__title">{{ item.title }}</h3>
+                        <p class="rec-card__artist">{{ item.artist.name }}</p>
+                    </a>
+                </article>
+                {% empty %}
+                <p class="recommendations__empty">No hay más recomendaciones por ahora.</p>
+                {% endfor %}
+            </div>
+        </section><!-- /recommendations -->
+
+    </div><!-- /album-detail__inner -->
+</div><!-- /album-detail -->
+
+{% endblock %}
