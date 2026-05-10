@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'accounts.apps.AccountsConfig',
     'music',
     'playlists',
+    'search',
 ]
 
 AUTH_USER_MODEL = 'accounts.User'

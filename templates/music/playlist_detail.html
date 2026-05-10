@@ -1,0 +1,188 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – {{ playlist.title }}{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════════════════════════════
+     PLAYLIST DETAIL  –  Bloque dinámico para <main class="main-content">
+     Contexto Django esperado:
+       · playlist       → instancia Playlist (.title, .cover, .owner,
+                          .description, .track_count, .total_duration_display,
+                          .updated_at, .is_liked)
+       · songs          → QuerySet de PlaylistTrack ordenado por posición
+                          cada ítem: .track (Track), .track.album, .track.artist,
+                          .track.featured_artists, .track.duration_display,
+                          .track.is_explicit, .track.is_liked
+     ════════════════════════════════════════════════════════════════════ -->
+
+<div class="playlist-detail">
+
+    <!-- ── FONDO DIFUMINADO (portada de la playlist) ── -->
+    <div class="playlist-detail__backdrop"
+         style="background-image: url('{{ playlist.cover.url }}');"
+         aria-hidden="true"></div>
+    <div class="playlist-detail__overlay" aria-hidden="true"></div>
+
+    <!-- ── CONTENIDO sobre el backdrop ── -->
+    <div class="playlist-detail__inner">
+
+        <!-- ────────────────────────────────────────────────
+             CABECERA DE LA PLAYLIST
+             ──────────────────────────────────────────────── -->
+        <header class="pl-header">
+
+            <!-- Portada -->
+            <div class="pl-header__cover-wrap">
+                <img src="{{ playlist.cover.url }}"
+                     alt="Portada de {{ playlist.title }}"
+                     class="pl-header__cover">
+            </div>
+
+            <!-- Metadatos -->
+            <div class="pl-header__meta">
+
+                <!-- Etiqueta de tipo -->
+                <span class="pl-header__type">Playlist</span>
+
+                <!-- Título -->
+                <h1 class="pl-header__title">{{ playlist.title }}</h1>
+
+                <!-- Propietario -->
+                <p class="pl-header__owner">
+                    {% if playlist.is_own %}
+                        Tuya
+                    {% else %}
+                        <a href="{% url 'users:profile' playlist.owner.username %}"
+                           class="pl-header__owner-link">{{ playlist.owner.username }}</a>
+                    {% endif %}
+                </p>
+
+                <!-- Descripción (opcional) -->
+                {% if playlist.description %}
+                <p class="pl-header__description">{{ playlist.description }}</p>
+                {% endif %}
+
+                <!-- Línea de stats -->
+                <p class="pl-header__stats">
+                    <span>{{ playlist.track_count }} canción{{ playlist.track_count|pluralize:",es" }}</span>
+                    {% if playlist.total_duration_display %}
+                    <span class="pl-header__dot">•</span>
+                    <span>{{ playlist.total_duration_display }}</span>
+                    {% endif %}
+                    {% if playlist.updated_at %}
+                    <span class="pl-header__dot">•</span>
+                    <span>Actualizada {{ playlist.updated_at|date:"j M Y" }}</span>
+                    {% endif %}
+                </p>
+
+            </div>
+        </header><!-- /pl-header -->
+
+
+        <!-- ────────────────────────────────────────────────
+             TABLA DE CANCIONES
+             Mismas columnas que el álbum + columna de álbum
+             ──────────────────────────────────────────────── -->
+        <section class="tracklist" aria-label="Canciones de la playlist">
+
+            <!-- Cabecera de columnas -->
+            <div class="tracklist__header pl-tracklist__header" role="row" aria-hidden="true">
+                <span class="tracklist__col tracklist__col--num">#</span>
+                <span class="tracklist__col tracklist__col--title">Título</span>
+                <span class="tracklist__col tracklist__col--album">Álbum</span>
+                <span class="tracklist__col tracklist__col--duration">Duración</span>
+                <span class="tracklist__col tracklist__col--actions"></span>
+            </div>
+
+            <div class="tracklist__divider"></div>
+
+            <!-- Filas -->
+            <ol class="tracklist__list">
+                {% for entry in songs %}
+                {% with song=entry.track %}
+                <li class="tracklist__row {% if song.is_liked %}tracklist__row--liked{% endif %}"
+                    data-track-id="{{ song.pk }}"
+                    role="row">
+
+                    <!-- Número -->
+                    <span class="tracklist__col tracklist__col--num">
+                        <span class="track-num">{{ forloop.counter }}</span>
+                        <button class="track-play-btn"
+                                aria-label="Reproducir {{ song.title }}">
+                            <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
+                        </button>
+                    </span>
+
+                    <!-- Título + artista (thumbnail incluido) -->
+                    <span class="tracklist__col tracklist__col--title pl-col-title">
+
+                        <!-- Miniatura del álbum -->
+                        <div class="pl-track-thumb-wrap">
+                            <img src="{{ song.album.cover.url }}"
+                                 alt="{{ song.album.title }}"
+                                 class="pl-track-thumb"
+                                 loading="lazy">
+                        </div>
+
+                        <!-- Texto -->
+                        <div class="pl-track-text">
+                            <button class="track-title-btn" data-track-id="{{ song.pk }}">
+                                {{ song.title }}
+                                {% if song.is_explicit %}
+                                <span class="badge-explicit">E</span>
+                                {% endif %}
+                            </button>
+                            <span class="pl-track-artist">
+                                <a href="{% url 'artists:detail' song.artist.slug %}"
+                                   class="track-artist-link">{{ song.artist.name }}</a>
+                                {% for feat in song.featured_artists.all %}
+                                , <a href="{% url 'artists:detail' feat.slug %}"
+                                     class="track-artist-link">{{ feat.name }}</a>
+                                {% endfor %}
+                            </span>
+                        </div>
+                    </span>
+
+                    <!-- Álbum -->
+                    <span class="tracklist__col tracklist__col--album">
+                        <a href="{% url 'albums:detail' song.album.pk %}"
+                           class="pl-album-link">{{ song.album.title }}</a>
+                    </span>
+
+                    <!-- Duración -->
+                    <span class="tracklist__col tracklist__col--duration">
+                        {{ song.duration_display }}
+                    </span>
+
+                    <!-- Acciones -->
+                    <span class="tracklist__col tracklist__col--actions">
+                        <button class="track-action-btn track-like-btn"
+                                data-track-id="{{ song.pk }}"
+                                aria-label="{% if song.is_liked %}Quitar Me gusta{% else %}Me gusta{% endif %}">
+                            {% if song.is_liked %}
+                                <img src="{% static 'img/icon-heart-filled.png' %}" alt="" class="icon--sm icon--liked">
+                            {% else %}
+                                <img src="{% static 'img/icon-heart-outline.png' %}" alt="" class="icon--sm">
+                            {% endif %}
+                        </button>
+                        <button class="track-action-btn track-more-btn"
+                                data-track-id="{{ song.pk }}"
+                                aria-label="Más opciones">
+                            <img src="{% static 'img/icon-more-dots.png' %}" alt="···" class="icon--sm">
+                        </button>
+                    </span>
+
+                </li>
+                {% endwith %}
+                {% empty %}
+                <li class="tracklist__empty">Esta playlist no tiene canciones todavía.</li>
+                {% endfor %}
+            </ol>
+
+        </section><!-- /tracklist -->
+
+    </div><!-- /playlist-detail__inner -->
+</div><!-- /playlist-detail -->
+
+{% endblock %}

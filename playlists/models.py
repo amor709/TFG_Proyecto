@@ -8,6 +8,20 @@ class Playlist(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_public = models.BooleanField(default=False)
     songs = models.ManyToManyField('music.Song', through='PlaylistSong', related_name='playlists')
+    cover = models.FileField(upload_to='covers/', blank=True, null=True)
+    saved_by = models.ManyToManyField('accounts.User', related_name='saved_playlists', blank=True)
+
+    @property
+    def owner(self):
+        return self.user
+
+    @property
+    def track_count(self):
+        return self.songs.count()
+
+    @property
+    def save_count(self):
+        return self.saved_by.count()
 
     def __str__(self):
         return f"{self.name} - {self.user.username}"

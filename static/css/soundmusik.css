@@ -512,21 +512,21 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 
 /* Botón CTA del héroe */
 .btn-hero {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  width: auto;           /* Que se ajuste al texto */
-  max-width: 250px;      /* Que nunca pase de 250px */
-  justify-content: center;
-  padding: var(--space-3) var(--space-6);
-  background: var(--color-accent);
-  color: #fff;
-  font-size: var(--text-base);
-  font-weight: 700;
-  border-radius: var(--radius-full);
-  border: none;
-  cursor: pointer;
-  transition: background var(--duration-fast), transform var(--duration-fast);
+   display: inline-flex;
+   align-items: center;
+   gap: var(--space-2);
+   width: auto;           /* Que se ajuste al texto */
+   max-width: 250px;      /* Que nunca pase de 250px */
+   justify-content: center;
+   padding: var(--space-2) var(--space-4);
+   background: var(--color-accent);
+   color: #fff;
+   font-size: var(--text-sm);
+   font-weight: 700;
+   border-radius: var(--radius-full);
+   border: none;
+   cursor: pointer;
+   transition: background var(--duration-fast), transform var(--duration-fast);
 }
 
 .btn-hero:hover {
@@ -1200,10 +1200,10 @@ img    { display: block; max-width: 100%; object-fit: cover; }
    gap: var(--space-2);
    width: auto;           /* Que se ajuste al texto */
    max-width: 250px;      /* Que nunca pase de 250px */
-   padding: var(--space-3) var(--space-6);
+   padding: var(--space-2) var(--space-4);
    background: var(--color-accent);
    color: #fff;
-   font-size: var(--text-base);
+   font-size: var(--text-sm);
    font-weight: 700;
    border-radius: var(--radius-full);
    border: none;
@@ -1290,3 +1290,98 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   text-align: center;
   padding: var(--space-8);
 }
+
+/* ───────────────────────────────────────────────────────────────────
+   SIDEBAR MEJORADO – Estilos adicionales
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Estado de carga */
+.sidebar__list--loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* Mensaje del sidebar */
+.sidebar-message {
+  padding: var(--space-4);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-02);
+}
+
+.sidebar-message--error {
+  color: var(--color-accent);
+  background: rgba(232, 33, 46, 0.1);
+}
+
+/* Placeholder para imagen sin cover */
+.sidebar-item__placeholder {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, var(--color-surface-02) 0%, var(--color-surface-03) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+/* Elemento fijo del sidebar (ej: "Mis Joyas") */
+.sidebar-item--fixed .sidebar-item__link {
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-surface-03);
+  margin-bottom: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+/* Animación de carga / spinner suave */
+@keyframes sidebar-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.sidebar__list--loading .sidebar-item {
+  animation: sidebar-pulse 1.5s ease-in-out infinite;
+}
+
+/* Mejora de scroll del sidebar */
+.sidebar {
+  scrollbar-gutter: stable;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background: var(--color-surface-03);
+  border-radius: var(--radius-full);
+}
+
+.sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
+
+/* Transiciones suaves en items */
+.sidebar-item {
+  transition: transform var(--duration-fast) var(--ease-out),
+              background var(--duration-fast) var(--ease-out);
+}
+
+.sidebar-item:active {
+  transform: scale(0.98);
+}
+
+/* Link activo del sidebar */
+.sidebar-item__link--active {
+  background: var(--color-surface-03);
+  border-left: 3px solid var(--color-accent);
+  padding-left: calc(var(--space-2) - 3px);
+}
+

@@ -81,7 +81,7 @@ def player_context(request):
         context['related_artist'] = ArtistProfile.objects.order_by('?').first()
 
     # Items de biblioteca del usuario (para el sidebar)
-    if request.user.is_authenticated:
+    if request.user.is_authenticated and not request.user.is_artist:
         # Combinar playlists del usuario con álbumes/artistas seguidos
         user_playlists = Playlist.objects.filter(user=request.user)[:10]
         library_items = []

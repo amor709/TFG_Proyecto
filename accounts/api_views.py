@@ -319,3 +319,60 @@ def get_playlist(request):
         return JsonResponse({
             'error': str(e)
         }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def add_to_listening_history(request):
+    """
+    Agregar una canción al historial de escucha del usuario
+    POST /accounts/api/add-to-history/
+    """
+    try:
+        data = json.loads(request.body)
+        song_id = data.get('song_id')
+
+        if not song_id:
+            return JsonResponse({
+                'error': 'song_id requerido'
+            }, status=400)
+
+        # Verificar que la canción existe
+        try:
+            song = Song.objects.get(pk=song_id)
+        except Song.DoesNotExist:
+            return JsonResponse({
+                'error': 'Canción no encontrada'
+            }, status=404)
+
+        # Crear entrada en el historial
+        history_entry, created = ListeningHistory.objects.get_or_create(
+            user=request.user,
+            song=song,
+            defaults={'played_at': timezone.now()}
+        )
+
+        # Si ya existía, actualizar el timestamp
+        if not created:
+            history_entry.played_at = timezone.now()
+            history_entry.save()
+
+        # Mantener solo las últimas 100 entradas por usuario
+        ListeningHistory.objects.filter(user=request.user).order_by('-played_at')[100:].delete()
+
+        logger.info(f'Canción agregada al historial: {request.user.username} - {song.title}')
+
+        return JsonResponse({
+            'status': 'success',
+            'created': created
+        })
+
+    except json.JSONDecodeError:
+        return JsonResponse({
+            'error': 'JSON inválido'
+        }, status=400)
+    except Exception as e:
+        logger.error(f'Error al agregar canción al historial: {str(e)}')
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)

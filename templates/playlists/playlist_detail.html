@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – {{ playlist.name }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/playlist_detail.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="playlist-detail">
+    <!-- Fondo difuminado -->
+    {% if playlist.cover %}
+    <div class="playlist-detail__backdrop" style="background-image: url('{{ playlist.cover.url }}');"></div>
+    {% endif %}
+    <div class="playlist-detail__overlay"></div>
+
+    <div class="playlist-detail__inner">
+        <!-- Encabezado de playlist -->
+        <header class="playlist-detail__header">
+            <div class="playlist-detail__cover-wrap">
+                {% if playlist.cover %}
+                <img src="{{ playlist.cover.url }}" alt="{{ playlist.name }}" class="playlist-detail__cover">
+                {% else %}
+                <div class="playlist-detail__cover playlist-detail__cover--placeholder">
+                    <img src="{% static 'img/icon-playlist.png' %}" alt="" class="icon--lg">
+                </div>
+                {% endif %}
+            </div>
+            <div class="playlist-detail__info">
+                <h1 class="playlist-detail__title">{{ playlist.name }}</h1>
+                <p class="playlist-detail__description">{{ playlist.description }}</p>
+                <div class="playlist-detail__meta">
+                    <span>{{ playlist.track_count }} canción{{ playlist.track_count|pluralize:",es" }}</span>
+                    {% if playlist.owner %} · Creada por {{ playlist.owner.username }}{% endif %}
+                    {% if playlist.is_public %} · {{ playlist.save_count }} guardada{{ playlist.save_count|pluralize:",s" }}{% endif %}
+                </div>
+                {% if user.is_authenticated %}
+                <div class="playlist-detail__actions">
+                    {% if user == playlist.user %}
+                    <button class="btn btn--primary">Editar</button>
+                    {% else %}
+                    <button class="btn btn--secondary save-btn" data-playlist-id="{{ playlist.pk }}" data-saved="{{ is_saved|yesno:'true,false' }}">
+                        {% if is_saved %}
+                        <img src="{% static 'img/icon-saved.png' %}" alt="Guardada">
+                        {% else %}
+                        <img src="{% static 'img/icon-save.png' %}" alt="Guardar">
+                        {% endif %}
+                    </button>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </header>
+
+        <!-- Lista de canciones -->
+        <section class="tracklist">
+            <div class="tracklist__header">
+                <h2 class="tracklist__title">Canciones</h2>
+            </div>
+            <div class="tracklist__tracks">
+                {% for song in songs %}
+                <article class="tracklist__track" data-track-id="{{ song.pk }}">
+                    <div class="tracklist__track-thumb-wrap">
+                        <img src="{{ song.album.cover.url }}" alt="{{ song.album.title }}" class="tracklist__track-thumb" loading="lazy">
+                        <div class="tracklist__track-play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
+                        </div>
+                    </div>
+                    <div class="tracklist__track-info">
+                        <p class="tracklist__track-title">
+                            {{ song.title }}
+                            {% if song.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
+                        </p>
+                        <p class="tracklist__track-artist">
+                            {{ song.artist.name }}
+                        </p>
+                    </div>
+                    {% if user == playlist.user %}
+                    <div class="tracklist__track-actions">
+                        <button class="btn btn--icon remove-song-btn" data-song-id="{{ song.pk }}">
+                            <img src="{% static 'img/icon-remove.png' %}" alt="Quitar">
+                        </button>
+                    </div>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+{% endblock %}
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const saveBtn = document.querySelector('.save-btn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', function() {
+            const playlistId = this.dataset.playlistId;
+            const isSaved = this.dataset.saved === 'true';
+            const url = isSaved ? `/playlists/${playlistId}/unsave/` : `/playlists/${playlistId}/save/`;
+            fetch(url, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        this.dataset.saved = data.saved ? 'true' : 'false';
+                        const img = this.querySelector('img');
+                        img.src = data.saved ? '{% static "img/icon-saved.png" %}' : '{% static "img/icon-save.png" %}';
+                        img.alt = data.saved ? 'Guardada' : 'Guardar';
+                    } else {
+                        alert(data.message || 'Error');
+                    }
+                });
+        });
+    }
+
+    // Para quitar canciones
+    document.querySelectorAll('.remove-song-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const songId = this.dataset.songId;
+            const playlistId = {{ playlist.pk }};
+            if (confirm('¿Quitar esta canción de la playlist?')) {
+                fetch(`/playlists/${playlistId}/remove/${songId}/`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();  // Recargar para actualizar la lista
+                        }
+                    });
+            }
+        });
+    });
+});
+</script>

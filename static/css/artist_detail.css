@@ -24,8 +24,8 @@
   background-position: center top;
 
   /* Blur más alto para suavizar texturas */
-  filter: blur(10px) brightness(0.8);
-  transform: scale(1.2);
+  filter: blur(60px) brightness(0.35) saturate(0.8);
+  transform: scale(1.08);
   will-change: transform;
 }
 

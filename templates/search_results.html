@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – Resultados para "{{ query }}"{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/search_results.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════════════════════════════
+     SEARCH RESULTS  –  Bloque dinámico para <main class="main-content">
+     Contexto Django esperado:
+       · query      → string con el texto buscado
+       · artists    → QuerySet de Artist
+       · songs      → QuerySet de Track (con .album, .artist, .is_explicit)
+       · albums     → QuerySet de Album (con .artist, .release_date)
+       · playlists  → QuerySet de Playlist (con .cover, .title, .track_count)
+     ════════════════════════════════════════════════════════════════════ -->
+
+<div class="search-results">
+<div class="search-results__inner">
+
+    <!-- ────────────────────────────────────────────────
+         ARTISTAS  –  carrusel circular
+         ──────────────────────────────────────────────── -->
+    {% if artists %}
+    <section class="sr-section" aria-labelledby="sr-artists-heading">
+
+        <div class="sr-section__header">
+            <h2 class="sr-section__title" id="sr-artists-heading">Artistas</h2>
+            <div class="sr-section__controls">
+                <div class="sr-nav">
+                    <button class="carousel-nav-btn"
+                            data-target="carousel-artists" data-dir="-1"
+                            aria-label="Anterior artistas">
+                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                    </button>
+                    <button class="carousel-nav-btn"
+                            data-target="carousel-artists" data-dir="1"
+                            aria-label="Siguiente artistas">
+                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                    </button>
+                </div>
+                <a href="{% url 'search:all' %}?q={{ query }}&type=artists"
+                   class="btn-see-all">Ver todo</a>
+            </div>
+        </div>
+
+        <div class="carousel" id="carousel-artists">
+            <div class="carousel__track">
+                {% for artist in artists %}
+                <article class="artist-card carousel__item">
+                    <a href="{% url 'music:artist_detail_public' artist.pk %}" class="artist-card__link">
+                        <div class="artist-card__photo-wrap">
+                            <img src="{{ artist.photo.url }}"
+                                 alt="{{ artist.name }}"
+                                 class="artist-card__photo"
+                                 loading="lazy">
+                        </div>
+                        <h3 class="artist-card__name">{{ artist.name }}</h3>
+                        <p class="artist-card__genre">{{ artist.primary_genre }}</p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}<!-- /artists -->
+
+
+    <!-- ────────────────────────────────────────────────
+         CANCIONES  –  grid 3 columnas · 3 filas (9 resultados)
+         ──────────────────────────────────────────────── -->
+    {% if songs %}
+    <section class="sr-section" aria-labelledby="sr-songs-heading">
+
+        <div class="sr-section__header">
+            <h2 class="sr-section__title" id="sr-songs-heading">Canciones</h2>
+            <div class="sr-section__controls">
+                <a href="{% url 'search:all' %}?q={{ query }}&type=songs"
+                   class="btn-see-all">Ver todo</a>
+            </div>
+        </div>
+
+        <div class="sr-songs-grid">
+            {% for song in songs|slice:":9" %}
+            <article class="sr-song-row" data-track-id="{{ song.pk }}">
+
+                <!-- Thumbnail -->
+                <div class="sr-song-row__thumb-wrap">
+                    <img src="{{ song.album.cover.url }}"
+                         alt="{{ song.album.title }}"
+                         class="sr-song-row__thumb"
+                         loading="lazy">
+                    <!-- Overlay play al hover -->
+                    <div class="sr-song-row__play-overlay" aria-hidden="true">
+                        <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
+                    </div>
+                    <!-- Icono de tipo (shuffle / play) si aplica -->
+                    {% if song.has_type_icon %}
+                    <div class="sr-song-row__type-badge" aria-hidden="true">
+                        <img src="{% static 'img/icon-shuffle-sm.png' %}" alt="" class="icon--xs">
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Info -->
+                <div class="sr-song-row__info">
+                    <p class="sr-song-row__title">
+                        {{ song.title }}
+                        {% if song.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
+                    </p>
+                    <p class="sr-song-row__sub">
+                        {{ song.artist.name }}
+                        {% if song.featured_context %}
+                        · <span class="sr-song-row__context">{{ song.featured_context }}</span>
+                        {% endif %}
+                    </p>
+                </div>
+
+            </article>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}<!-- /songs -->
+
+
+    <!-- ────────────────────────────────────────────────
+         ÁLBUMES  –  carrusel horizontal
+         ──────────────────────────────────────────────── -->
+    {% if albums %}
+    <section class="sr-section" aria-labelledby="sr-albums-heading">
+
+        <div class="sr-section__header">
+            <h2 class="sr-section__title" id="sr-albums-heading">Álbumes</h2>
+            <div class="sr-section__controls">
+                <div class="sr-nav">
+                    <button class="carousel-nav-btn"
+                            data-target="carousel-albums" data-dir="-1"
+                            aria-label="Anterior álbumes">
+                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                    </button>
+                    <button class="carousel-nav-btn"
+                            data-target="carousel-albums" data-dir="1"
+                            aria-label="Siguiente álbumes">
+                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                    </button>
+                </div>
+                <a href="{% url 'search:all' %}?q={{ query }}&type=albums"
+                   class="btn-see-all">Ver todo</a>
+            </div>
+        </div>
+
+        <div class="carousel" id="carousel-albums">
+            <div class="carousel__track">
+                {% for album in albums %}
+                <article class="track-card carousel__item">
+                    <a href="{% url 'music:album_detail' album.pk %}" class="track-card__link">
+                        <div class="track-card__cover-wrap">
+                            <img src="{{ album.cover.url }}"
+                                 alt="{{ album.title }}"
+                                 class="track-card__cover"
+                                 loading="lazy">
+                            <div class="track-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="track-card__title">
+                            {{ album.title }}
+                            {% if album.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
+                        </h3>
+                        <p class="track-card__sub">
+                            {{ album.artist.name }} · {{ album.release_date|date:"Y" }}
+                        </p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}<!-- /albums -->
+
+
+    <!-- ────────────────────────────────────────────────
+         PLAYLISTS  –  carrusel horizontal
+         ──────────────────────────────────────────────── -->
+    {% if playlists %}
+    <section class="sr-section" aria-labelledby="sr-playlists-heading">
+
+        <div class="sr-section__header">
+            <h2 class="sr-section__title" id="sr-playlists-heading">Playlists</h2>
+            <div class="sr-section__controls">
+                <div class="sr-nav">
+                    <button class="carousel-nav-btn"
+                            data-target="carousel-playlists" data-dir="-1"
+                            aria-label="Anterior playlists">
+                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
+                    </button>
+                    <button class="carousel-nav-btn"
+                            data-target="carousel-playlists" data-dir="1"
+                            aria-label="Siguiente playlists">
+                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
+                    </button>
+                </div>
+                <a href="{% url 'search:all' %}?q={{ query }}&type=playlists"
+                   class="btn-see-all">Ver todo</a>
+            </div>
+        </div>
+
+        <div class="carousel" id="carousel-playlists">
+            <div class="carousel__track">
+                {% for playlist in playlists %}
+                <article class="track-card carousel__item">
+                    <a href="{% url 'playlists:detail' playlist.pk %}" class="track-card__link">
+                        <div class="track-card__cover-wrap">
+                            <img src="{{ playlist.cover.url }}"
+                                 alt="{{ playlist.title }}"
+                                 class="track-card__cover"
+                                 loading="lazy">
+                            <div class="track-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="track-card__title">{{ playlist.title }}</h3>
+                        <p class="track-card__sub">
+                            {{ playlist.track_count }} canción{{ playlist.track_count|pluralize:",es" }}
+                            {% if playlist.owner %} · {{ playlist.owner.username }}{% endif %}
+                        </p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    {% endif %}<!-- /playlists -->
+
+
+    <!-- Sin resultados -->
+    {% if not artists and not songs and not albums and not playlists %}
+    <div class="sr-empty">
+        <p class="sr-empty__title">Sin resultados para "{{ query }}"</p>
+        <p class="sr-empty__sub">Prueba con otro término o revisa la ortografía.</p>
+    </div>
+    {% endif %}
+
+</div><!-- /inner -->
+</div><!-- /search-results -->
+
+{% endblock %}

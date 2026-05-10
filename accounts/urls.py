@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, api_views
+from . import views, api_views, views_sidebar
 
 urlpatterns = [
     path('', views.index_view, name='index'),
@@ -11,9 +11,16 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('edit-artist-profile/', views.edit_artist_profile, name='edit_artist_profile'),
 
+    # Sidebar endpoints
+    path('sidebar/recent/', views_sidebar.get_recent_items, name='sidebar_recent'),
+    path('sidebar/saved/', views_sidebar.get_saved_items, name='sidebar_saved'),
+    path('sidebar/search/', views_sidebar.sidebar_search, name='sidebar_search'),
+    path('sidebar/add-recent/<str:content_type>/<int:object_id>/', views_sidebar.add_to_recent, name='add_to_recent'),
+
     # API endpoints para sincronización de reproducción
     path('api/playback/state/', api_views.save_playback_state, name='api_save_playback_state'),
     path('api/playback/get/', api_views.get_playback_state, name='api_get_playback_state'),
     path('api/playback/check-concurrent/', api_views.check_concurrent_session, name='api_check_concurrent'),
     path('api/playback/stop/', api_views.stop_playback_session, name='api_stop_playback_session'),
+    path('api/add-to-history/', api_views.add_to_listening_history, name='api_add_to_history'),
 ]

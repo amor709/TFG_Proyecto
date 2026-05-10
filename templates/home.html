@@ -25,7 +25,9 @@
         <p class="hero__label">Escucha más de…</p>
         <h1 class="hero__artist-name">{{ featured_artist.user.username }}</h1>
         <button class="btn-hero">
-            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs"> Ver artista
+            <a href="{% url 'music:artist_detail_public' featured_artist.pk %}">
+                <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs"> Ver artista
+            </a>
         </button>
     </div>
 </section><!-- /hero -->
@@ -79,7 +81,7 @@
         <div class="carousel__track">
             {% for artist in companion_artists %}
             <article class="artist-card carousel__item">
-                <div class="artist-card__link">
+                <a href="{% url 'music:artist_detail_public' artist.pk %}" class="artist-card__link">
                     <div class="artist-card__photo-wrap">
                         <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-placeholder.png' %}{% endif %}"
                              alt="{{ artist.user.username }}"
@@ -88,7 +90,7 @@
                     </div>
                     <h3 class="artist-card__name">{{ artist.user.username }}</h3>
                     <p class="artist-card__genre">Artista</p>
-                </div>
+                </a>
             </article>
             {% empty %}
             <p class="empty-state">No hay artistas registrados aún.</p>
@@ -199,7 +201,7 @@
         <div class="carousel__track">
             {% for playlist in user_playlists %}
             <article class="track-card carousel__item">
-                <a href="#" class="track-card__link">
+                <a href="{% url 'playlists:detail' playlist.pk %}" class="track-card__link">
                     <div class="track-card__cover-wrap">
                         <img src="{% static 'img/playlist-placeholder.png' %}"
                              alt="{{ playlist.name }}"

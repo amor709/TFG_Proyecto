@@ -27,6 +27,7 @@ urlpatterns = [
     path('accounts/', include('accounts.urls')),
     path('music/', include('music.urls')),
     path('playlists/', include('playlists.urls')),
+    path('search/', include('search.urls')),
 ]
 
 if settings.DEBUG:

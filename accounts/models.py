@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.conf import settings
 from django.utils import timezone
+from django.contrib.contenttypes.models import ContentType
+from django.contrib.contenttypes.fields import GenericForeignKey
 
 
 class User(AbstractUser):
@@ -28,10 +30,23 @@ class ArtistProfile(models.Model):
     banner = models.FileField(upload_to='profiles/', blank=True, null=True)
     website = models.URLField(blank=True)
     total_plays = models.PositiveIntegerField(default=0)
+    slug = models.SlugField(unique=True, null=True, blank=True)
 
     @property
     def name(self):
         return self.user.username
+
+    @property
+    def primary_genre(self):
+        """Retorna el género principal basado en las tags de las canciones."""
+        from django.db.models import Count
+        tags = self.songs.values('tags').annotate(count=Count('tags')).order_by('-count')
+        if tags:
+            from music.models import Tag
+            tag_id = tags[0]['tags']
+            tag = Tag.objects.get(id=tag_id)
+            return tag.name
+        return "Nulo"
 
     @property
     def followers_count(self):
@@ -51,6 +66,7 @@ class ListenerProfile(models.Model):
     avatar = models.FileField(upload_to='profiles/', blank=True, null=True)
 
     following = models.ManyToManyField(ArtistProfile, blank=True, related_name='followers')
+    saved_albums = models.ManyToManyField('music.Album', related_name='saved_by_users', blank=True)
 
     def __str__(self):
         return f"Oyente: {self.user.username}"
@@ -137,3 +153,18 @@ class PlaybackSession(models.Model):
         """Marcar sesión como activa actualizando timestamp"""
         self.last_activity = timezone.now()
         self.save(update_fields=['last_activity'])
+
+
+class RecentItem(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='recent_items')
+    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+    timestamp = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        unique_together = ('user', 'content_type', 'object_id')
+
+    def __str__(self):
+        return f"{self.user.username} - {self.content_object}"

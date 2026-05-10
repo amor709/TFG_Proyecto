@@ -175,8 +175,11 @@ class HomeView(TemplateView):
             context['back_to_music'] = back_to_music
 
             # Tus playlists: todas las playlists del usuario
-            user_playlists = Playlist.objects.filter(user=user).order_by('-created_at')[:10]
-            context['user_playlists'] = user_playlists
+            if user.is_artist:
+                context['user_playlists'] = []
+            else:
+                user_playlists = Playlist.objects.filter(user=user).order_by('-created_at')[:10]
+                context['user_playlists'] = user_playlists
         else:
             # Para usuarios no autenticados, mostrar datos por defecto
             context['recently_played'] = Song.objects.all().order_by('-plays')[:10]

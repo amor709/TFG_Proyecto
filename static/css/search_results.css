@@ -1,0 +1,446 @@
+/* ════════════════════════════════════════════════════════════════════
+   search_results.css  –  Estilos de la vista de Resultados de Búsqueda
+   Enlazar DESPUÉS de soundmusik.css para heredar sus variables.
+   Arquitectura:
+     1. Contenedor raíz
+     2. Cabecera de sección  (título + controles)
+     3. Artistas  (carrusel circular)
+     4. Canciones  (grid 3 columnas)
+     5. Álbumes / Playlists  (carrusel cuadrado – reutiliza .track-card)
+     6. Estado vacío
+     7. Responsive
+   ════════════════════════════════════════════════════════════════════ */
+
+
+/* ───────────────────────────────────────────────────────────────────
+   1. CONTENEDOR RAÍZ
+   ─────────────────────────────────────────────────────────────────── */
+
+.search-results {
+  min-height: 100%;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+}
+
+.search-results__inner {
+  display: flex;
+  flex-direction: column;
+  /* Separación generosa entre secciones, idéntica a la captura */
+  gap: var(--space-10);
+  padding: var(--space-8) var(--space-8) var(--space-12);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   2. CABECERA DE SECCIÓN  (título + nav + "Ver todo")
+   ─────────────────────────────────────────────────────────────────── */
+
+.sr-section { }   /* envoltorio semántico, sin estilos propios */
+
+.sr-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+/* Título de sección – mismo peso que en el resto de la app */
+.sr-section__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  letter-spacing: -0.02em;
+}
+
+/* Grupo derecho: flechas + "Ver todo" */
+.sr-section__controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+/* Par de flechas de navegación */
+.sr-nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* Botón flecha – mismo componente que en artist_detail.css */
+.search-results .carousel-nav-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-surface-03);
+  background: var(--color-surface-02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity      var(--duration-fast),
+              background   var(--duration-fast),
+              border-color var(--duration-fast);
+}
+.search-results .carousel-nav-btn:hover {
+  opacity: 1;
+  background: var(--color-surface-03);
+  border-color: var(--color-text-muted);
+}
+.search-results .carousel-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+
+/* "Ver todo" – pastilla con borde */
+.btn-see-all {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--color-surface-03);
+  border-radius: var(--radius-full);
+  padding: var(--space-2) var(--space-5);
+  white-space: nowrap;
+  transition: color        var(--duration-fast),
+              border-color var(--duration-fast),
+              background   var(--duration-fast);
+}
+.btn-see-all:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   3. ARTISTAS  –  carrusel de fotos circulares
+      Los ítems ya usan .artist-card de soundmusik.css;
+      aquí solo ajustamos el tamaño dentro del carrusel.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Contenedor del carrusel – oculta el desbordamiento */
+.search-results .carousel {
+  overflow: hidden;
+  width: 100%;
+}
+
+/* Track deslizable */
+.search-results .carousel__track {
+  display: flex;
+  gap: var(--space-4);
+  transition: transform var(--duration-normal) var(--ease-out);
+  will-change: transform;
+}
+
+/*
+ * Cada ítem: exactamente 1/7 del ancho visible para artistas
+ * (la captura muestra ~7 artistas parciales → sensación de continuidad)
+ * Para álbumes y playlists se sobreescribe con .carousel--5col
+ * IMPORTANTE: Selectores descendientes para aislar de HOME
+ */
+.search-results .carousel__item {
+  flex: 0 0 calc((100% - 6 * var(--space-4)) / 7);
+  min-width: 0;
+}
+
+/* Carruseles de 5 columnas (álbumes · playlists) */
+.search-results #carousel-albums .carousel__item,
+.search-results #carousel-playlists .carousel__item {
+  flex: 0 0 calc((100% - 4 * var(--space-4)) / 5);
+}
+
+/* Foto circular del artista */
+.search-results .artist-card__link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  text-decoration: none;
+}
+
+.search-results .artist-card__photo-wrap {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: var(--radius-full);   /* círculo perfecto */
+  overflow: hidden;
+  background: var(--color-surface-02);
+  box-shadow: var(--shadow-card);
+  transition: transform   var(--duration-normal) var(--ease-out),
+              box-shadow  var(--duration-normal) var(--ease-out);
+}
+.search-results .artist-card__link:hover .artist-card__photo-wrap {
+  transform: translateY(-4px) scale(1.03);
+  box-shadow: var(--shadow-hover);
+}
+
+.search-results .artist-card__photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-slow) var(--ease-out);
+}
+.search-results .artist-card__link:hover .artist-card__photo { transform: scale(1.06); }
+
+.search-results .artist-card__name {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+}
+
+.search-results .artist-card__genre {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   4. CANCIONES  –  grid de 3 columnas · hasta 9 filas
+   ─────────────────────────────────────────────────────────────────── */
+
+.sr-songs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  /* Sin gap vertical extra: las filas tienen su propio padding */
+  gap: var(--space-1) var(--space-6);
+}
+
+/* Fila de canción */
+.sr-song-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  min-width: 0;
+  transition: background var(--duration-fast);
+}
+.sr-song-row:hover { background: rgba(255, 255, 255, 0.07); }
+
+/* Thumbnail cuadrado */
+.sr-song-row__thumb-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface-02);
+}
+
+.sr-song-row__thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.sr-song-row:hover .sr-song-row__thumb { transform: scale(1.06); }
+
+/* Overlay play al hover */
+.sr-song-row__play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+.sr-song-row:hover .sr-song-row__play-overlay { opacity: 1; }
+
+/* Badge de tipo sobre el thumbnail (ej. icono shuffle en playlists REDISCOVER) */
+.sr-song-row__type-badge {
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  background: rgba(0, 0, 0, 0.65);
+  border-radius: var(--radius-sm);
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Textos */
+.sr-song-row__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  flex: 1;
+}
+
+.sr-song-row__title {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sr-song-row__sub {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Parte de contexto ("Destacado en REDISCOVER Playlist") atenuada */
+.sr-song-row__context {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   5. ÁLBUMES Y PLAYLISTS  –  tarjetas cuadradas en carrusel
+      Reutiliza .track-card de soundmusik.css sin modificaciones.
+      Solo ajustamos el nº de columnas del carrusel.
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Los carruseles de álbumes y playlists muestran 5 ítems */
+#carousel-albums  .carousel__item,
+#carousel-playlists .carousel__item {
+  flex: 0 0 calc((100% - 4 * var(--space-4)) / 5);
+}
+
+/*
+ * .track-card y .track-card__* están definidos en soundmusik.css.
+ * No se duplican aquí para evitar conflictos.
+ */
+
+
+/* ───────────────────────────────────────────────────────────────────
+   6. BADGE "E" EXPLÍCITO  (compartido con album_detail.css)
+   ─────────────────────────────────────────────────────────────────── */
+
+.badge-explicit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  font-size: 9px;
+  font-weight: 700;
+  background: var(--color-text-muted);
+  color: var(--color-bg);
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-left: 3px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   7. ESTADO VACÍO
+   ─────────────────────────────────────────────────────────────────── */
+
+.sr-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-8);
+  text-align: center;
+  font-family: var(--font-body);
+}
+
+.sr-empty__title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.sr-empty__sub {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   8. RESPONSIVE
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Pantallas medianas: artistas 5 col, álbumes/playlists 4 col */
+@media (max-width: 1280px) {
+  .search-results .carousel__item {
+    flex: 0 0 calc((100% - 4 * var(--space-4)) / 5);
+  }
+  .search-results #carousel-albums .carousel__item,
+  .search-results #carousel-playlists .carousel__item {
+    flex: 0 0 calc((100% - 3 * var(--space-4)) / 4);
+  }
+  .search-results .sr-songs-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Pantallas pequeñas: artistas 4 col, álbumes/playlists 3 col */
+@media (max-width: 1024px) {
+  .search-results .carousel__item {
+    flex: 0 0 calc((100% - 3 * var(--space-4)) / 4);
+  }
+  .search-results #carousel-albums .carousel__item,
+  .search-results #carousel-playlists .carousel__item {
+    flex: 0 0 calc((100% - 2 * var(--space-4)) / 3);
+  }
+}
+
+/* Móvil */
+@media (max-width: 768px) {
+  .search-results__inner {
+    padding: var(--space-5) var(--space-4) var(--space-10);
+    gap: var(--space-8);
+  }
+  .search-results .carousel__item {
+    flex: 0 0 calc((100% - 2 * var(--space-4)) / 3);
+  }
+  .search-results #carousel-albums .carousel__item,
+  .search-results #carousel-playlists .carousel__item {
+    flex: 0 0 calc((100% - var(--space-4)) / 2);
+  }
+  .search-results .sr-songs-grid {
+    grid-template-columns: 1fr;
+  }
+  .search-results .sr-section__title { font-size: var(--text-lg); }
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   9. LÓGICA JS  –  carruseles (añadir en main.js o al final del template)
+   ─────────────────────────────────────────────────────────────────── */
+/*
+  document.querySelectorAll('.carousel-nav-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id    = btn.dataset.target;
+      const dir   = parseInt(btn.dataset.dir);
+      const track = document.querySelector(`#${id} .carousel__track`);
+      if (!track) return;
+      const item  = track.querySelector('.carousel__item');
+      const gap   = 16;  // --space-4 en px
+      const step  = item ? item.offsetWidth + gap : 220;
+      const max   = track.scrollWidth - track.parentElement.offsetWidth;
+      let cur     = parseFloat(track.dataset.offset || 0);
+      cur         = Math.min(0, Math.max(-max, cur - dir * step));
+      track.dataset.offset      = cur;
+      track.style.transform     = `translateX(${cur}px)`;
+    });
+  });
+*/

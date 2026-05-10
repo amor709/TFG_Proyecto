@@ -29,6 +29,7 @@ class Album(models.Model):
     tags = models.ManyToManyField(Tag, related_name='albums', blank=True)
     is_draft = models.BooleanField(default=True)
     completed = models.BooleanField(default=False)
+    is_explicit = models.BooleanField(default=False)
 
     def get_type_display(self):
         return "Álbum"
@@ -74,6 +75,7 @@ class Song(models.Model):
     plays = models.PositiveIntegerField(default=0)
     release_date = models.DateField()
     collaborators = models.ManyToManyField('accounts.ArtistProfile', related_name='collaborations', blank=True)
+    is_explicit = models.BooleanField(default=False)
 
     def get_type_display(self):
         if self.album:
@@ -100,6 +102,19 @@ class Song(models.Model):
         """Retorna los artistas colaboradores (excluding the main artist)"""
         # Para compatibilidad, retornar los colaboradores
         return self.collaborators
+
+    @property
+    def has_type_icon(self):
+        """Placeholder para icono de tipo (shuffle, etc.)"""
+        return False
+
+    @property
+    def featured_context(self):
+        """Retorna contexto de featuring, e.g., 'feat. Artist'"""
+        if self.collaborators.exists():
+            names = [collab.user.username for collab in self.collaborators.all()]
+            return f"feat. {', '.join(names)}"
+        return ""
 
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"

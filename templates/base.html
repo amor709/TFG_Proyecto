@@ -23,9 +23,9 @@
     <!-- ── HEADER (10vh) ── -->
     <header class="app-header">
         <!-- Logo -->
-        <div class="header__logo">
+        <a href="{% url 'home' %}" class="header__logo">
             <img src="{% static 'img/logo.png' %}" alt="SoundMusik logo icon" class="logo__icon">
-        </div>
+        </a>
 
         <!-- Barra de búsqueda global -->
         <div class="header__search">
@@ -89,9 +89,11 @@
             <!-- Cabecera del sidebar -->
             <div class="sidebar__header">
                 <h2 class="sidebar__title">Tu banda sonora</h2>
-                <button class="sidebar__add-btn" aria-label="Añadir elemento">
+                {% if request.user.is_authenticated and not request.user.is_artist %}
+                <a href="{% url 'playlists:create' %}" class="sidebar__add-btn" aria-label="Añadir elemento">
                     <img src="{% static 'img/addplaylist.png' %}" alt="+" class="icon--sm">
-                </button>
+                </a>
+                {% endif %}
             </div>
 
             <!-- Búsqueda interna del sidebar -->
@@ -107,20 +109,13 @@
 
             <!-- Filtros rápidos -->
             <div class="sidebar__filters">
-                <button class="filter-chip filter-chip--active">Recientes</button>
-                <button class="filter-chip">Guardados</button>
+                <button class="filter-chip filter-chip--active" data-section="recent">Recientes</button>
+                <button class="filter-chip" data-section="saved">Guardados</button>
             </div>
 
-            <ul id="playlist">
-                {% for song in songs %}
-                <li onclick="loadSong({{ forloop.counter0 }})">{{ song.title }}</li>
-                {% endfor %}
-            </ul>
-
-            <!-- Lista de elementos de biblioteca -->
-            <ul class="sidebar__list">
+            <ul id="sidebar-list" class="sidebar__list">
                 {# Sección "Mis joyas" (playlist Me gusta) #}
-                <li class="sidebar-item">
+                <li class="sidebar-item sidebar-item--fixed">
                     <div class="sidebar-item__link">
                         <div class="sidebar-item__thumb sidebar-item__thumb--liked">
                             <img src="{% static 'img/diamond-black.png' %}" alt="" class="icon--md">
@@ -201,7 +196,7 @@
             </div>
             {% endif %}
             {% else %}
-            <p class="right-panel__empty">Reproduce algo para empezar 🎵</p>
+            <p class="right-panel__empty">Reproduce algo para empezar </p>
             {% endif %}
 
         </aside>
@@ -316,10 +311,15 @@ document.addEventListener('click', function(event) {
 
     document.addEventListener('DOMContentLoaded', function() {
         initializePlayer();
+
+        // Restaurar información del panel derecho desde localStorage
+        if (typeof restoreRightPanelFromStorage === 'function') {
+            restoreRightPanelFromStorage();
+        }
     });
 
     function initializePlayer() {
-        console.log('🎵 Inicializando reproductor...');
+        console.log(' Inicializando reproductor...');
         if (!audio) {
             console.error('❌ Elemento de audio no encontrado');
             return;
@@ -352,7 +352,7 @@ document.addEventListener('click', function(event) {
                 if (audio.duration) {
                     const newTime = (this.value * audio.duration) / 100;
                     audio.currentTime = newTime;
-                    console.log('📍 Saltando a:', newTime.toFixed(2) + 's');
+                    console.log(' Saltando a:', newTime.toFixed(2) + 's');
                 }
             });
 
@@ -389,7 +389,7 @@ document.addEventListener('click', function(event) {
 
         // Actualizar duración cuando se carga el metadata
         audio.addEventListener('loadedmetadata', function() {
-            console.log('📊 Duración de la canción:', formatTime(audio.duration));
+            console.log(' Duración de la canción:', formatTime(audio.duration));
             updateTimeDisplay(audio.currentTime, audio.duration);
         });
 
@@ -425,6 +425,20 @@ document.addEventListener('click', function(event) {
         });
         console.log('▶️ Reproduciendo:', song.title);
 
+        // Crear objeto de datos de canción para consistencia
+        const trackData = {
+            id: trackIndex,
+            title: song.title,
+            artist: song.artist,
+            cover: song.cover,
+            audio_url: song.url
+        };
+
+        // Actualizar panel derecho
+        if (typeof updateRightPanel === 'function') {
+            updateRightPanel(trackData);
+        }
+
         // Guardar en el sistema de persistencia
         if (typeof audioPlayerSync !== 'undefined' && audioPlayerSync) {
             audioPlayerSync.setCurrentTrack(trackIndex, {
@@ -435,11 +449,9 @@ document.addEventListener('click', function(event) {
             });
         }
 
-        // Actualizar paneles inmediatamente después de cargar la canción
-        if (typeof playerPanelsUpdater !== 'undefined' && playerPanelsUpdater) {
-            setTimeout(() => {
-                playerPanelsUpdater.updatePanels();
-            }, 100);
+        // Guardar en localStorage para persistencia entre páginas
+        if (typeof saveCurrentTrackToStorage === 'function') {
+            saveCurrentTrackToStorage(trackData);
         }
 
         // Disparar evento para actualizar paneles
@@ -521,7 +533,7 @@ document.addEventListener('click', function(event) {
     // Function to play song by ID (for home page)
     async function playSongA(trackId) {
         try {
-            const response = await fetch(`/music/track/${trackId}/data/`);
+            const response = await fetch(`/music/api/track/${trackId}/`);
             if (!response.ok) {
                 throw new Error('Failed to fetch track data');
             }
@@ -531,6 +543,11 @@ document.addEventListener('click', function(event) {
             document.getElementById('track-art').src = data.cover;
             document.getElementById('track-artist').innerText = data.artist;
             audio.play().catch(err => console.error('Error al reproducir:', err));
+
+            // Actualizar panel derecho con los datos correctos
+            if (typeof updateRightPanel === 'function') {
+                updateRightPanel(data);
+            }
 
             // Guardar en el sistema de persistencia
             if (typeof audioPlayerSync !== 'undefined' && audioPlayerSync) {
@@ -542,11 +559,9 @@ document.addEventListener('click', function(event) {
                 });
             }
 
-            // Actualizar paneles inmediatamente después de cargar la canción
-            if (typeof playerPanelsUpdater !== 'undefined' && playerPanelsUpdater) {
-                setTimeout(() => {
-                    playerPanelsUpdater.updatePanels();
-                }, 100);
+            // Guardar en localStorage para persistencia entre páginas
+            if (typeof saveCurrentTrackToStorage === 'function') {
+                saveCurrentTrackToStorage(data);
             }
 
             // Disparar evento para actualizar paneles
@@ -557,9 +572,11 @@ document.addEventListener('click', function(event) {
     }
 </script>
 
+<script src="{% static 'js/script.js' %}"></script>
 <script src="{% static 'js/playback-state.js' %}"></script>
 <script src="{% static 'js/audio-player-sync.js' %}"></script>
-<script src="{% static 'js/update-player-panels.js' %}"></script>
+<!-- <script src="{% static 'js/update-player-panels.js' %}"></script> --> <!-- Desactivado para evitar conflictos con ajax-player.js -->
 <script src="{% static 'js/ajax-player.js' %}"></script>
+<script src="{% static 'js/sidebar.js' %}"></script>
 </body>
 </html>

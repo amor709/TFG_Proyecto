@@ -1,0 +1,277 @@
+/* ════════════════════════════════════════════════════════════════════
+   playlist_detail.css  –  Estilos de la vista de Detalle de Playlist
+   Enlazar en este orden:
+     1. soundmusik.css
+     2. album_detail.css   ← aporta .tracklist, .tracklist__*, .badge-explicit…
+     3. playlist_detail.css  ← este archivo (sólo diferencias respecto al álbum)
+   ════════════════════════════════════════════════════════════════════ */
+
+
+/* ───────────────────────────────────────────────────────────────────
+   1. CONTENEDOR RAÍZ  –  mismo patrón que .album-detail
+   ─────────────────────────────────────────────────────────────────── */
+
+.playlist-detail {
+  position: relative;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fondo difuminado – idéntico al álbum */
+.playlist-detail__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center top;
+  filter: blur(60px) brightness(0.35) saturate(0.8);
+  transform: scale(1.08);
+  will-change: transform;
+}
+
+/* Degradado overlay */
+.playlist-detail__overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: linear-gradient(
+    to bottom,
+    rgba(13, 13, 13, 0)    0%,
+    rgba(13, 13, 13, 0.25) 30%,
+    rgba(13, 13, 13, 0.75) 65%,
+    rgba(13, 13, 13, 0.97) 100%
+  );
+  pointer-events: none;
+}
+
+/* Wrapper de contenido */
+.playlist-detail__inner {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-8) var(--space-12);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   2. CABECERA DE LA PLAYLIST
+      Igual que .album-header pero con campo "propietario" y descripción
+   ─────────────────────────────────────────────────────────────────── */
+
+.playlist-detail__header {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-6);
+  padding-top: var(--space-8);
+}
+
+/* Portada – mismas dimensiones que la del álbum */
+.playlist-detail__cover-wrap {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.8);
+}
+
+.playlist-detail__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Columna de metadatos */
+.playlist-detail__info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-1);
+}
+
+/* "Playlist" en rojo */
+.playlist-detail__type {
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+/* Título grande */
+.playlist-detail__title {
+  font-family: var(--font-body);
+  font-size: clamp(1.8rem, 3.5vw, 3rem);
+  font-weight: 800;
+  color: var(--color-text-primary);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  margin: 0;
+}
+
+/* Propietario */
+.playlist-detail__owner {
+  font-size: var(--text-md);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.playlist-detail__owner-link {
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast);
+}
+.playlist-detail__owner-link:hover { color: var(--color-text-primary); }
+
+/* Descripción */
+.playlist-detail__description {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  font-style: italic;
+  max-width: 480px;
+}
+
+/* Línea de estadísticas */
+.playlist-detail__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   3. TABLA DE CANCIONES  –  PLAYLIST
+      La playlist añade:
+        · Miniatura del álbum junto al título
+        · Columna "Álbum" (en lugar de la columna de artistas)
+        · Artista bajo el título (en la misma celda)
+      Grid: [40px] [1fr] [1fr] [64px] [80px]
+   ─────────────────────────────────────────────────────────────────── */
+
+/*
+ * Sobreescribimos el grid de columnas heredado de album_detail.css
+ * SOLO para las filas de playlist.
+ * Las clases .tracklist__header, .tracklist__divider, .tracklist__row,
+ * .tracklist__col--actions, etc. vienen de album_detail.css sin cambios.
+ */
+.pl-tracklist__header,
+.playlist-detail .tracklist__row {
+  grid-template-columns: 40px 1.4fr 1fr 64px 80px;
+}
+
+/* ── Celda de título (thumbnail + texto apilado) ── */
+.pl-col-title {
+  display: flex !important;   /* sobreescribe el flex de .tracklist__col */
+  align-items: center;
+  gap: var(--space-3);
+  overflow: hidden;
+}
+
+/* Miniatura del álbum */
+.pl-track-thumb-wrap {
+  width: 42px;
+  height: 42px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface-02);
+}
+
+.pl-track-thumb {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.tracklist__row:hover .pl-track-thumb { transform: scale(1.06); }
+
+/* Texto: nombre + artista apilados */
+.pl-track-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* El botón del título ya tiene estilos en album_detail.css;
+   aquí solo ajustamos el tamaño para que quepa junto al artista */
+.pl-track-text .track-title-btn {
+  font-size: var(--text-base);
+  line-height: 1.2;
+}
+
+/* Artista bajo el título */
+.pl-track-artist {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.pl-track-artist .track-artist-link {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  transition: color var(--duration-fast);
+}
+.pl-track-artist .track-artist-link:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+/* ── Columna Álbum ── */
+.tracklist__col--album {
+  overflow: hidden;
+}
+
+.pl-album-link {
+  font-size: var(--text-base);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+  transition: color var(--duration-fast);
+}
+.pl-album-link:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   4. RESPONSIVE
+   ─────────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  /* Ocultar columna álbum en pantallas medianas */
+  .pl-tracklist__header .tracklist__col--album,
+  .playlist-detail .tracklist__row .tracklist__col--album {
+    display: none;
+  }
+  .pl-tracklist__header,
+  .playlist-detail .tracklist__row {
+    grid-template-columns: 40px 1fr 64px 80px;
+  }
+}
+
+@media (max-width: 768px) {
+  .playlist-detail__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .playlist-detail__cover-wrap {
+    width: 120px;
+    height: 120px;
+  }
+  .playlist-detail__inner {
+    padding: var(--space-5) var(--space-4) var(--space-10);
+  }
+}

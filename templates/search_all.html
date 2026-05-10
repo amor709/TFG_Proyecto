@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – {{ type|title }} para "{{ query }}"{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/search_results.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="search-results">
+    <div class="search-results__inner">
+        <section class="sr-section" style="margin-bottom: var(--space-5);">
+            <div class="sr-section__header">
+                <h1 class="sr-section__title">{{ type|title }} para "{{ query }}"</h1>
+                <a href="{% url 'search:search' %}?q={{ query }}" class="btn-see-all">← Volver</a>
+            </div>
+        </section>
+
+        <div>
+        {% if type == 'songs' %}
+            <div class="sr-songs-grid">
+                {% for song in songs %}
+                <article class="sr-song-row" data-track-id="{{ song.pk }}">
+                    <div class="sr-song-row__thumb-wrap">
+                        <img src="{{ song.album.cover.url }}" alt="{{ song.album.title }}" class="sr-song-row__thumb" loading="lazy">
+                        <div class="sr-song-row__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
+                        </div>
+                    </div>
+                    <div class="sr-song-row__info">
+                        <p class="sr-song-row__title">
+                            {{ song.title }}
+                            {% if song.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
+                        </p>
+                        <p class="sr-song-row__sub">
+                            {{ song.artist.name }}
+                            {% if song.featured_context %}· <span class="sr-song-row__context">{{ song.featured_context }}</span>{% endif %}
+                        </p>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        {% elif type == 'albums' %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-4);">
+                {% for album in albums %}
+                <article class="track-card">
+                    <a href="{% url 'music:album_detail' album.pk %}" class="track-card__link">
+                        <div class="track-card__cover-wrap">
+                            <img src="{{ album.cover.url }}" alt="{{ album.title }}" class="track-card__cover" loading="lazy">
+                            <div class="track-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="track-card__title">
+                            {{ album.title }}
+                            {% if album.is_explicit %}<span class="badge-explicit">E</span>{% endif %}
+                        </h3>
+                        <p class="track-card__sub">
+                            {{ album.artist.name }} · {{ album.release_date|date:"Y" }}
+                        </p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        {% elif type == 'artists' %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-4);">
+                {% for artist in artists %}
+                <article class="artist-card">
+                    <a href="{% url 'music:artist_detail_public' artist.pk %}" class="artist-card__link">
+                        <div class="artist-card__photo-wrap">
+                            <img src="{{ artist.photo.url }}" alt="{{ artist.name }}" class="artist-card__photo" loading="lazy">
+                        </div>
+                        <h3 class="artist-card__name">{{ artist.name }}</h3>
+                        <p class="artist-card__genre">{{ artist.primary_genre }}</p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        {% elif type == 'playlists' %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: var(--space-4);">
+                {% for playlist in playlists %}
+                <article class="track-card">
+                    <a href="{% url 'playlists:detail' playlist.pk %}" class="track-card__link">
+                        <div class="track-card__cover-wrap">
+                            <img src="{{ playlist.cover.url }}" alt="{{ playlist.title }}" class="track-card__cover" loading="lazy">
+                            <div class="track-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="track-card__title">{{ playlist.title }}</h3>
+                        <p class="track-card__sub">
+                            {{ playlist.track_count }} canción{{ playlist.track_count|pluralize:",es" }}
+                            {% if playlist.owner %} · {{ playlist.owner.username }}{% endif %}
+                        </p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        {% endif %}
+        </div>
+
+        {% if not songs and not albums and not artists and not playlists %}
+        <div class="sr-empty">
+            <p class="sr-empty__title">No hay más resultados</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Crear Playlist{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/create_playlist.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="release-container">
+    <div class="release-header">
+        <h1>🎵 Crear Playlist</h1>
+        <p>Crea tu nueva playlist en SoundMusik</p>
+    </div>
+
+    {% if messages %}
+    <div class="messages">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <form method="post" enctype="multipart/form-data" id="playlist-form" novalidate>
+        {% csrf_token %}
+
+        <!-- Nombre -->
+        <div class="form-group">
+            <label for="id_name">{{ form.name.label }}</label>
+            {{ form.name }}
+            {% if form.name.errors %}
+            <div class="error-message">
+                <ul class="error-list">
+                    {% for error in form.name.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Descripción -->
+        <div class="form-group">
+            <label for="id_description">{{ form.description.label }}</label>
+            {{ form.description }}
+            {% if form.description.errors %}
+            <div class="error-message">
+                <ul class="error-list">
+                    {% for error in form.description.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Portada -->
+        <div class="form-group">
+            <label for="id_cover">{{ form.cover.label }}</label>
+            <div class="help-text">Sube una imagen cuadrada para la portada de tu playlist (opcional)</div>
+            <div class="file-input-wrapper" id="cover-drop-zone" ondrop="handleDrop(event)" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
+                <input type="file" name="cover" id="id_cover" accept="image/*" onchange="handleCoverChange(event)">
+                <div class="file-input-text">
+                    <strong>Arrastra tu imagen aquí</strong> o haz clic para seleccionar
+                </div>
+                <div class="file-preview" id="cover-preview"></div>
+            </div>
+            {% if form.cover.errors %}
+            <div class="error-message">
+                <ul class="error-list">
+                    {% for error in form.cover.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Privacidad -->
+        <div class="form-group">
+            <div class="form-check">
+                {{ form.is_public }}
+                <label for="id_is_public" class="form-check-label">{{ form.is_public.label }}</label>
+            </div>
+            {% if form.is_public.errors %}
+            <div class="error-message">
+                <ul class="error-list">
+                    {% for error in form.is_public.errors %}
+                    <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Botones de acción -->
+        <div class="btn-group">
+            <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
+            <button type="submit" class="btn btn-primary" id="submit-btn">Crear Playlist</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    // Validación de imagen cuadrada
+    function handleCoverChange(event) {
+        const file = event.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const preview = document.getElementById('cover-preview');
+                    const width = img.naturalWidth;
+                    const height = img.naturalHeight;
+
+                    if (width !== height) {
+                        preview.innerHTML = `<p style="color: #ff6666; font-weight: 600;">⚠️ Error: La imagen debe ser cuadrada (${width}x${height}). Esperamos ${Math.max(width, height)}x${Math.max(width, height)}</p>`;
+                        document.getElementById('submit-btn').disabled = true;
+                    } else {
+                        preview.innerHTML = `<img src="${e.target.result}" class="preview-image" alt="Preview">
+                                           <p style="color: #00ff88; margin-top: 0.5rem;">✅ Imagen válida (${width}x${height})</p>`;
+                        document.getElementById('submit-btn').disabled = false;
+                    }
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+    }
+
+    function handleDrop(event) {
+        event.preventDefault();
+        event.stopPropagation();
+        const zone = event.currentTarget;
+        zone.classList.remove('dragover');
+
+        const files = event.dataTransfer.files;
+        if (files.length > 0) {
+            const input = zone.querySelector('input[type="file"]');
+            input.files = files;
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    }
+
+    function handleDragOver(event) {
+        event.preventDefault();
+        event.currentTarget.classList.add('dragover');
+    }
+
+    function handleDragLeave(event) {
+        event.currentTarget.classList.remove('dragover');
+    }
+
+    // Añadir estilos para el estado dragover
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .file-input-wrapper.dragover {
+            border-color: #e8212e;
+            background: #2f2828;
+        }
+    `;
+    document.head.appendChild(style);
+</script>
+{% endblock %}
