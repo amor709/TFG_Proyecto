@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar perfil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/edit_artist_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="edit-profile-container">
+    <div class="edit-profile-card">
+        <h1 class="edit-profile__title">Editar perfil</h1>
+
+        <form method="post" enctype="multipart/form-data" class="edit-profile-form">
+            {% csrf_token %}
+
+            <!-- Avatar -->
+            <div class="form-group">
+                <label for="{{ avatar_form.avatar.id_for_label }}" class="form-label">Foto de perfil</label>
+                {% if user.listener_profile.avatar %}
+                    <div class="current-image">
+                        <img src="{{ user.listener_profile.avatar.url }}" alt="Foto actual" class="current-image__img">
+                        <p class="current-image__text">Foto actual</p>
+                    </div>
+                {% endif %}
+                {{ avatar_form.avatar }}
+                {% if avatar_form.avatar.errors %}
+                    <div class="form-errors">
+                        {% for error in avatar_form.avatar.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Nickname -->
+            <div class="form-group">
+                <label for="{{ nickname_form.nickname.id_for_label }}" class="form-label">Nombre de usuario</label>
+                {{ nickname_form.nickname }}
+                {% if nickname_form.nickname.errors %}
+                    <div class="form-errors">
+                        {% for error in nickname_form.nickname.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Errores no-field -->
+            {% if avatar_form.non_field_errors or nickname_form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in avatar_form.non_field_errors %}
+                        <p class="error-text">{{ error }}</p>
+                    {% endfor %}
+                    {% for error in nickname_form.non_field_errors %}
+                        <p class="error-text">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+             <!-- Buttons -->
+             <div class="form-actions">
+                 <button type="submit" class="btn btn-primary">Guardar cambios</button>
+                 <a href="{% url 'listener_profile' user.id %}" class="btn btn-secondary">Cancelar</a>
+             </div>
+         </form>
+     </div>
+ </div>
+{% endblock %}
+
+
+

@@ -1,4 +1,4 @@
-okenebt{% extends "base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block title %} – {{ artist.name }}{% endblock %}
@@ -259,7 +259,7 @@ okenebt{% extends "base.html" %}
                 <div class="carousel" id="carousel-singles">
                     <div class="carousel__track">
                         {% for single in singles %}
-                        <article class="track-card carousel__item">
+                        <article class="track-card carousel__item" data-track-id="{{ single.pk }}">
                             <a href="#" class="track-card__link">
                                 <div class="track-card__cover-wrap">
                                     <img src="{{ single.cover.url }}" alt="{{ single.title }}"
@@ -305,7 +305,7 @@ okenebt{% extends "base.html" %}
             <div class="carousel" id="carousel-features">
                 <div class="carousel__track">
                     {% for item in features %}
-                    <article class="track-card carousel__item">
+                    <article class="track-card carousel__item" data-track-id="{{ item.pk }}">
                         <a href="#" class="track-card__link">
                             <div class="track-card__cover-wrap">
                                 <img src="{{ item.cover.url }}" alt="{{ item.title }}"
@@ -354,6 +354,9 @@ okenebt{% extends "base.html" %}
 
 {% block extra_scripts %}
 <script>
+// ====== REGISTRAR EN RECIENTES ======
+registerRecentItem('artistprofile', {{ artist.pk }});
+
 const artistSongs = [
 {% for song in top_songs %}
 {
@@ -377,17 +380,32 @@ function loadSongByData(songData) {
 
 // Shuffle button
 document.getElementById('btn-artist-shuffle').addEventListener('click', () => {
-    if (artistSongs.length > 0) {
+    if (artistSongs.length > 0 && typeof playSongA === 'function') {
         const randomIndex = Math.floor(Math.random() * artistSongs.length);
-        loadSongByData(artistSongs[randomIndex]);
+        playSongA(artistSongs[randomIndex].id);
     }
 });
 
 // Top songs click
 document.querySelectorAll('.top-song-row').forEach((row, index) => {
     row.addEventListener('click', () => {
-        if (artistSongs[index]) {
-            loadSongByData(artistSongs[index]);
+        if (artistSongs[index] && typeof playSongA === 'function') {
+            playSongA(artistSongs[index].id);
+        }
+    });
+});
+
+// Manejar clics en singles y features
+document.querySelectorAll('.track-card__link[href="#"]').forEach(link => {
+    link.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Buscar el elemento padre que tenga data-track-id
+        const card = this.closest('[data-track-id]');
+        if (card && typeof playSongA === 'function') {
+            const trackId = card.dataset.trackId;
+            if (trackId) {
+                playSongA(trackId);
+            }
         }
     });
 });

@@ -70,6 +70,16 @@ class ListenerProfile(models.Model):
 
     def __str__(self):
         return f"Oyente: {self.user.username}"
+    
+    @property
+    def playlist_count(self):
+        """Retorna el número de playlists públicas del usuario"""
+        return self.user.playlists.filter(is_public=True).count()
+    
+    @property
+    def following_count(self):
+        """Retorna el número de artistas que sigue el usuario"""
+        return self.following.count()
 
 
 class ListeningHistory(models.Model):
@@ -160,7 +170,7 @@ class RecentItem(models.Model):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.PositiveIntegerField()
     content_object = GenericForeignKey('content_type', 'object_id')
-    timestamp = models.DateTimeField(auto_now=True)
+    timestamp = models.DateTimeField(default=timezone.now)
 
     class Meta:
         ordering = ['-timestamp']
@@ -168,3 +178,117 @@ class RecentItem(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.content_object}"
+
+
+# Modelos de estadísticas de reproducción
+
+class ArtistPlayCount(models.Model):
+    """
+    Recuento permanente de reproducciones de un artista por usuario.
+    Se incrementa cada vez que se reproduce una canción del artista.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='artist_play_counts'
+    )
+    artist = models.ForeignKey(
+        ArtistProfile,
+        on_delete=models.CASCADE,
+        related_name='play_counts'
+    )
+    play_count = models.PositiveIntegerField(default=0)
+    last_played = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'artist')
+        verbose_name = 'Recuento de reproducciones de artista'
+        verbose_name_plural = 'Recuentos de reproducciones de artistas'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.artist.user.username}: {self.play_count} reproducciones"
+
+
+class SongPlayCount(models.Model):
+    """
+    Recuento permanente de reproducciones de una canción por usuario.
+    Se incrementa cada vez que se reproduce la canción.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='song_play_counts'
+    )
+    song = models.ForeignKey(
+        'music.Song',
+        on_delete=models.CASCADE,
+        related_name='play_counts'
+    )
+    play_count = models.PositiveIntegerField(default=0)
+    last_played = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'song')
+        verbose_name = 'Recuento de reproducciones de canción'
+        verbose_name_plural = 'Recuentos de reproducciones de canciones'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.song.title}: {self.play_count} reproducciones"
+
+
+class MonthlyArtistStats(models.Model):
+    """
+    Estadísticas mensuales de artistas (últimos 30 días).
+    Se crea un registro por mes/usuario/artista.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='monthly_artist_stats'
+    )
+    artist = models.ForeignKey(
+        ArtistProfile,
+        on_delete=models.CASCADE,
+        related_name='monthly_stats'
+    )
+    month = models.CharField(max_length=7)  # Formato: YYYY-MM
+    play_count = models.PositiveIntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'artist', 'month')
+        verbose_name = 'Estadística mensual de artista'
+        verbose_name_plural = 'Estadísticas mensuales de artistas'
+        ordering = ['-last_updated']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.artist.user.username} ({self.month}): {self.play_count}"
+
+
+class MonthlySongStats(models.Model):
+    """
+    Estadísticas mensuales de canciones (últimos 30 días).
+    Se crea un registro por mes/usuario/canción.
+    """
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='monthly_song_stats'
+    )
+    song = models.ForeignKey(
+        'music.Song',
+        on_delete=models.CASCADE,
+        related_name='monthly_stats'
+    )
+    month = models.CharField(max_length=7)  # Formato: YYYY-MM
+    play_count = models.PositiveIntegerField(default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'song', 'month')
+        verbose_name = 'Estadística mensual de canción'
+        verbose_name_plural = 'Estadísticas mensuales de canciones'
+        ordering = ['-last_updated']
+
+    def __str__(self):
+        return f"{self.user.username} - {self.song.title} ({self.month}): {self.play_count}"

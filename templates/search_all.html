@@ -21,7 +21,7 @@
         {% if type == 'songs' %}
             <div class="sr-songs-grid">
                 {% for song in songs %}
-                <article class="sr-song-row" data-track-id="{{ song.pk }}">
+                <article class="sr-song-row" data-track-id="{{ song.pk }}" style="cursor: pointer;">
                     <div class="sr-song-row__thumb-wrap">
                         <img src="{{ song.album.cover.url }}" alt="{{ song.album.title }}" class="sr-song-row__thumb" loading="lazy">
                         <div class="sr-song-row__play-overlay" aria-hidden="true">
@@ -107,4 +107,21 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+// Hacer que las canciones en búsqueda sean clickeables para reproducirlas
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.sr-song-row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            // Evitar que el evento se propague si se hace clic en un enlace
+            if (e.target.closest('a')) return;
+
+            const trackId = this.dataset.trackId;
+            if (trackId && typeof playSongA === 'function') {
+                playSongA(trackId);
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

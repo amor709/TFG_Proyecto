@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView, CreateView
@@ -8,11 +8,15 @@ from django.urls import reverse_lazy
 from music.models import Song, Album
 from accounts.models import ArtistProfile, User, ListenerProfile, ListeningHistory, UserTag
 from django import forms
-from accounts.forms import ArtistProfileForm
+from accounts.forms import ArtistProfileForm, ListenerProfileForm, ListenerProfileEditForm
+from accounts.stats_utils import (
+    get_top_songs_this_month, get_top_artists_this_month,
+    get_all_top_songs_this_month, get_all_top_artists_this_month
+)
 from playlists.models import Playlist
 from django.utils import timezone
 from datetime import timedelta
-
+from django.db.models import Count, Q
 
 def index_view(request):
     if request.user.is_authenticated:
@@ -308,3 +312,97 @@ def not_found_view(request, exception=None):
 
 def forbidden_view(request, exception=None):
     return render(request, 'errors/403.html', status=403)
+
+
+@login_required(login_url='login')
+def listener_profile_view(request, user_id):
+    """Vista del perfil del oyente"""
+    profile_user = get_object_or_404(User, id=user_id, is_artist=False)
+    listener_profile = profile_user.listener_profile
+
+    # Verificar si es perfil propio
+    is_own_profile = request.user.id == profile_user.id
+
+    # Obtener canciones más escuchadas este mes
+    top_songs = get_top_songs_this_month(profile_user, limit=5)
+
+    # Obtener artistas más escuchados este mes
+    top_artists = get_top_artists_this_month(profile_user, limit=5)
+
+    # Obtener playlists públicas del usuario
+    playlists = Playlist.objects.filter(user=profile_user, is_public=True).select_related('user')
+
+    # Obtener artistas que sigue
+    following = listener_profile.following.all().select_related('user')
+
+    context = {
+        'profile_user': profile_user,
+        'top_songs': top_songs,
+        'top_artists': top_artists,
+        'playlists': playlists,
+        'following': following,
+        'is_own_profile': is_own_profile,
+    }
+
+    return render(request, 'accounts/user_profile.html', context)
+
+
+@login_required(login_url='login')
+def listener_profile_songs_view(request, user_id):
+    """Vista con todas las canciones más escuchadas este mes"""
+    profile_user = get_object_or_404(User, id=user_id, is_artist=False)
+
+    # Obtener todas las canciones más escuchadas este mes
+    top_songs = get_all_top_songs_this_month(profile_user)
+
+    context = {
+        'profile_user': profile_user,
+        'top_songs': top_songs,
+        'is_own_profile': request.user.id == profile_user.id,
+    }
+
+    return render(request, 'accounts/user_profile_songs.html', context)
+
+
+@login_required(login_url='login')
+def listener_profile_following_view(request, user_id):
+    """Vista con todos los artistas que sigue"""
+    profile_user = get_object_or_404(User, id=user_id, is_artist=False)
+    listener_profile = profile_user.listener_profile
+
+    # Obtener todos los artistas que sigue
+    following = listener_profile.following.all().select_related('user')
+
+    context = {
+        'profile_user': profile_user,
+        'following': following,
+        'is_own_profile': request.user.id == profile_user.id,
+    }
+
+    return render(request, 'accounts/user_profile_following.html', context)
+
+
+@login_required(login_url='login')
+def edit_listener_profile(request):
+    """Vista para editar el perfil del oyente"""
+    if request.user.is_artist:
+        messages.error(request, "Esta página es solo para oyentes.")
+        return redirect('home')
+
+    listener_profile = request.user.listener_profile
+
+    if request.method == 'POST':
+        form = ListenerProfileEditForm(request.POST, request.FILES, instance=listener_profile)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Perfil actualizado correctamente.")
+            return redirect('listener_profile', user_id=request.user.id)
+    else:
+        form = ListenerProfileEditForm(instance=listener_profile)
+
+    context = {
+        'form': form,
+        'user': request.user,
+    }
+
+    return render(request, 'accounts/edit_listener_profile.html', context)

@@ -1,7 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from PIL import Image
-from accounts.models import ArtistProfile
+from accounts.models import ArtistProfile, ListenerProfile, User
 
 
 class BannerAspectRatioValidator:
@@ -114,4 +114,36 @@ class ArtistRegistrationForm(forms.ModelForm):
             'website': 'Sitio web',
             'password': 'Contraseña',
             'password_confirm': 'Confirmar contraseña'
+        }
+
+
+class ListenerProfileForm(forms.ModelForm):
+    """Formulario para editar el perfil del oyente (avatar)"""
+    class Meta:
+        model = ListenerProfile
+        fields = ['avatar']
+        widgets = {
+            'avatar': forms.FileInput(attrs={
+                'class': 'form-control',
+                'accept': 'image/*'
+            })
+        }
+        labels = {
+            'avatar': 'Foto de perfil',
+        }
+
+
+class ListenerProfileEditForm(forms.ModelForm):
+    """Formulario para editar nickname del usuario oyente"""
+    class Meta:
+        model = User
+        fields = ['nickname']
+        widgets = {
+            'nickname': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Tu nombre de usuario'
+            })
+        }
+        labels = {
+            'nickname': 'Nombre de usuario',
         }

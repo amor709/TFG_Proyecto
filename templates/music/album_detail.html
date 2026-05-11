@@ -94,7 +94,9 @@
                     <span class="tracklist__col tracklist__col--num">
                         <!-- El número se oculta al hover y aparece el play; se maneja con CSS -->
                         <span class="track-num">{{ forloop.counter }}</span>
-                        <button class="track-play-btn" aria-label="Reproducir {{ song.title }}">
+                        <button class="track-play-btn"
+                                data-track-id="{{ song.pk }}"
+                                aria-label="Reproducir {{ song.title }}">
                             <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
                         </button>
                     </span>
@@ -203,10 +205,45 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const modal = document.getElementById('add-to-playlist-modal');
+     // ====== REGISTRAR EN RECIENTES ======
+     registerRecentItem('album', {{ album.pk }});
+
+     const modal = document.getElementById('add-to-playlist-modal');
     const playlistsList = document.getElementById('playlists-list');
     const closeModal = document.getElementById('close-modal');
     let currentSongId = null;
+
+    // ────────────────────────────────────────────────────────
+    // REPRODUCCIÓN DE CANCIONES
+    // ────────────────────────────────────────────────────────
+
+    // Manejar clics en el botón de play (número de pista)
+    document.querySelectorAll('.track-play-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const trackId = this.dataset.trackId;
+            if (trackId && typeof playSongA === 'function') {
+                playSongA(trackId);
+            }
+        });
+    });
+
+    // Manejar clics en el título de la canción
+    document.querySelectorAll('.track-title-btn').forEach(btn => {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const trackId = this.dataset.trackId;
+            if (trackId && typeof playSongA === 'function') {
+                playSongA(trackId);
+            }
+        });
+    });
+
+    // ────────────────────────────────────────────────────────
+    // MENÚ DE OPCIONES
+    // ────────────────────────────────────────────────────────
 
     // Manejar clics en "Más opciones"
     document.querySelectorAll('.track-more-btn').forEach(btn => {

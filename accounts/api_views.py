@@ -11,6 +11,7 @@ import logging
 
 from accounts.models import PlaybackSession, ArtistProfile, ListeningHistory
 from music.models import Song
+from accounts.stats_utils import record_play
 
 logger = logging.getLogger(__name__)
 
@@ -356,6 +357,9 @@ def add_to_listening_history(request):
         if not created:
             history_entry.played_at = timezone.now()
             history_entry.save()
+
+        # Registrar la reproducción en las estadísticas
+        record_play(request.user, song)
 
         # Mantener solo las últimas 100 entradas por usuario
         ListeningHistory.objects.filter(user=request.user).order_by('-played_at')[100:].delete()

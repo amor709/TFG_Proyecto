@@ -23,4 +23,10 @@ urlpatterns = [
     path('api/playback/check-concurrent/', api_views.check_concurrent_session, name='api_check_concurrent'),
     path('api/playback/stop/', api_views.stop_playback_session, name='api_stop_playback_session'),
     path('api/add-to-history/', api_views.add_to_listening_history, name='api_add_to_history'),
+
+    # Perfil del oyente
+    path('profile/<int:user_id>/', views.listener_profile_view, name='listener_profile'),
+    path('profile/<int:user_id>/songs/', views.listener_profile_songs_view, name='listener_profile_songs'),
+    path('profile/<int:user_id>/following/', views.listener_profile_following_view, name='listener_profile_following'),
+    path('edit-profile/', views.edit_listener_profile, name='edit_listener_profile'),
 ]

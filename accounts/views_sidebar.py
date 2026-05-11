@@ -12,9 +12,16 @@ from accounts.models import ArtistProfile
 @login_required
 def add_to_recent(request, content_type, object_id):
     """Añade o mueve un elemento a la lista de recientes."""
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'error': 'Método no permitido'}, status=405)
+
     try:
+        # Normalizar el nombre del content_type
+        content_type = content_type.lower()
+
         ct = ContentType.objects.get(model=content_type)
         obj = ct.get_object_for_this_type(pk=object_id)
+
         recent_item, created = RecentItem.objects.get_or_create(
             user=request.user,
             content_type=ct,
@@ -22,6 +29,7 @@ def add_to_recent(request, content_type, object_id):
             defaults={'timestamp': timezone.now()}
         )
         if not created:
+            # Si ya existe, actualizar el timestamp para moverlo al top
             recent_item.timestamp = timezone.now()
             recent_item.save()
 
@@ -29,8 +37,10 @@ def add_to_recent(request, content_type, object_id):
         RecentItem.objects.filter(user=request.user).order_by('-timestamp')[20:].delete()
 
         return JsonResponse({'success': True})
+    except ContentType.DoesNotExist:
+        return JsonResponse({'success': False, 'error': f'Tipo de contenido "{content_type}" no existe'}, status=400)
     except Exception as e:
-        return JsonResponse({'success': False, 'error': str(e)})
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 
 @login_required
@@ -48,17 +58,30 @@ def get_recent_items(request):
                 item.delete()
                 continue
 
+            # Excluir perfiles de usuarios (listeners) - el usuario no quiere que se muestren
+            if item.content_type.model == 'user':
+                continue
+
             if hasattr(obj, 'cover'):
                 cover = obj.cover.url if obj.cover else None
             else:
                 cover = obj.photo.url if hasattr(obj, 'photo') and obj.photo else None
 
+            # Determinar el campo "artist" según el tipo de objeto
+            artist_name = None
+            if item.content_type.model == 'album':
+                artist_name = obj.artist.user.username if obj.artist else None
+            elif item.content_type.model == 'playlist':
+                artist_name = obj.user.username  # Creador de la playlist
+            elif item.content_type.model == 'artistprofile':
+                artist_name = obj.user.username  # El propio artista
+
             items.append({
                 'id': obj.pk,
-                'title': getattr(obj, 'title', getattr(obj, 'name', str(obj))),
+                'title': getattr(obj, 'title', getattr(obj, 'name', getattr(obj, 'username', str(obj)))),
                 'type': item.content_type.model,
                 'cover': cover,
-                'artist': getattr(obj, 'artist', None).user.username if hasattr(obj, 'artist') else None,
+                'artist': artist_name,
             })
         except Exception as e:
             # Si hay error al procesar el item, lo ignoramos
@@ -132,12 +155,21 @@ def sidebar_search(request):
                     else:
                         cover = obj.photo.url if hasattr(obj, 'photo') and obj.photo else None
 
+                    # Determinar el campo "artist" según el tipo de objeto para búsqueda
+                    artist_name = None
+                    if item.content_type.model == 'album':
+                        artist_name = obj.artist.user.username if obj.artist else None
+                    elif item.content_type.model == 'playlist':
+                        artist_name = obj.user.username  # Creador de la playlist
+                    elif item.content_type.model == 'artistprofile':
+                        artist_name = obj.user.username  # El propio artista
+
                     results.append({
                         'id': obj.pk,
                         'title': title,
                         'type': item.content_type.model,
                         'cover': cover,
-                        'artist': getattr(obj, 'artist', None).user.username if hasattr(obj, 'artist') else None,
+                        'artist': artist_name,
                     })
             except Exception as e:
                 continue
@@ -175,7 +207,4 @@ def sidebar_search(request):
 
 
     return JsonResponse({'items': results})
-
-
-
 

@@ -93,7 +93,10 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const saveBtn = document.querySelector('.save-btn');
+     // ====== REGISTRAR EN RECIENTES ======
+     registerRecentItem('playlist', {{ playlist.pk }});
+
+     const saveBtn = document.querySelector('.save-btn');
     if (saveBtn) {
         saveBtn.addEventListener('click', function() {
             const playlistId = this.dataset.playlistId;

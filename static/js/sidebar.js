@@ -53,6 +53,15 @@ class SidebarManager {
     }
 
     /**
+     * Recargar la sección actual (útil cuando se añade algo nuevo a recientes)
+     */
+    reloadCurrentSection() {
+        if (this.currentSection === 'recent') {
+            this.loadSidebarSection(this.currentSection);
+        }
+    }
+
+    /**
      * Maneja la entrada de búsqueda con debounce
      */
     onSearchInput(e) {
@@ -180,8 +189,8 @@ class SidebarManager {
                 return `${baseUrl}/music/album/${item.id}/`;
             case 'playlist':
                 return `${baseUrl}/playlists/${item.id}/`;
-            case 'artist':
-                return `${baseUrl}/accounts/artist/${item.id}/`;
+            case 'artistprofile':
+                return `${baseUrl}/music/artist/${item.id}/`;
             default:
                 return '#';
         }
@@ -194,7 +203,7 @@ class SidebarManager {
         const labels = {
             'album': 'Álbum',
             'playlist': 'Playlist',
-            'artist': 'Artista'
+            'artistprofile': 'Artista'
         };
         return labels[type] || type;
     }
@@ -265,5 +274,3 @@ let sidebarManager;
 document.addEventListener('DOMContentLoaded', function() {
     sidebarManager = new SidebarManager();
 });
-
-

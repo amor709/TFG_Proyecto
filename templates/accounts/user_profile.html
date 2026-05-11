@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – {{ profile_user.username }}{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/user_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<!-- ════════════════════════════════════════════════════════════════════
+     USER PROFILE  –  Bloque dinámico para <main class="main-content">
+     Contexto Django esperado:
+       · profile_user     → instancia User (.username, .profile.avatar,
+                            .profile.playlist_count, .profile.following_count)
+       · top_songs        → QuerySet Track (canciones más escuchadas este mes)
+       · top_artists      → QuerySet Artist (artistas más escuchados este mes)
+       · playlists        → QuerySet Playlist del usuario
+       · following        → QuerySet Artist que sigue el usuario
+       · is_own_profile   → bool (True si es el perfil del usuario autenticado)
+     ════════════════════════════════════════════════════════════════════ -->
+
+<div class="profile-page">
+
+    <!-- ── FONDO DIFUMINADO (avatar del usuario) ── -->
+    <div class="profile-page__backdrop"
+         style="background-image: url('{% if profile_user.profile.avatar %}{{ profile_user.profile.avatar.url }}{% else %}{% static "img/avatar-default.png" %}{% endif %}');"
+         aria-hidden="true"></div>
+    <div class="profile-page__overlay" aria-hidden="true"></div>
+
+    <div class="profile-page__inner">
+
+        <!-- ────────────────────────────────────────────────
+             HERO  –  avatar + nombre + stats + botón edición
+             ──────────────────────────────────────────────── -->
+        <header class="profile-hero">
+
+            <!-- Avatar circular -->
+            <div class="profile-hero__avatar-wrap">
+                {% if profile_user.profile.avatar %}
+                    <img src="{{ profile_user.profile.avatar.url }}"
+                         alt="Avatar de {{ profile_user.username }}"
+                         class="profile-hero__avatar">
+                {% else %}
+                    <img src="{% static 'img/avatar-default.png' %}"
+                         alt="Avatar de {{ profile_user.username }}"
+                         class="profile-hero__avatar">
+                {% endif %}
+            </div>
+
+            <!-- Nombre, estadísticas y botón de edición -->
+            <div class="profile-hero__content">
+                <div class="profile-hero__meta">
+                    <h1 class="profile-hero__username">{% if profile_user.nickname %}{{ profile_user.nickname }}{% else %}{{ profile_user.username }}{% endif %}</h1>
+                    <p class="profile-hero__stats">
+                        <span>{{ profile_user.profile.playlist_count }} Playlist{{ profile_user.profile.playlist_count|pluralize:"s" }}</span>
+                        <span class="profile-hero__dot">•</span>
+                        <span>Siguiendo {{ profile_user.profile.following_count }} artista{{ profile_user.profile.following_count|pluralize:"s" }}</span>
+                    </p>
+                </div>
+
+                <!-- Botón de edición (solo para perfil propio) -->
+                {% if is_own_profile %}
+                <a href="{% url 'edit_listener_profile' %}" class="profile-icon-btn"
+                   aria-label="Editar perfil">
+                    <img src="{% static 'img/pencil.png' %}" alt="Editar" class="icon--md">
+                </a>
+                {% endif %}
+            </div>
+
+        </header><!-- /profile-hero -->
+
+
+        <!-- ────────────────────────────────────────────────
+             CANCIONES MÁS ESCUCHADAS ESTE MES  (5 tarjetas cuadradas)
+             ──────────────────────────────────────────────── -->
+        {% if top_songs %}
+        <section class="profile-section" aria-labelledby="top-songs-heading">
+            <div class="profile-section__header">
+                <h2 class="profile-section__title" id="top-songs-heading">
+                    Canciones más escuchadas este mes
+                </h2>
+                <a href="{% url 'listener_profile_songs' profile_user.id %}"
+                   class="btn-see-all">Ver más</a>
+            </div>
+
+            <div class="profile-cards-grid profile-cards-grid--songs">
+                {% for song in top_songs|slice:":5" %}
+                <article class="track-card" data-track-id="{{ song.pk }}">
+                    <div class="track-card__link" onclick="playSongA({{ song.pk }}); return false;" style="cursor: pointer;">
+                        <div class="track-card__cover-wrap">
+                            <img src="{% if song.album.cover %}{{ song.album.cover.url }}{% else %}{% static 'img/album-default.png' %}{% endif %}"
+                                 alt="{% if song.album %}{{ song.album.title }}{% else %}{{ song.title }}{% endif %}"
+                                 class="track-card__cover"
+                                 loading="lazy">
+                            <div class="track-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="track-card__title">{{ song.title }}</h3>
+                        <p class="track-card__sub">{{ song.artist.user.username }}</p>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}<!-- /top-songs -->
+
+
+        <!-- ────────────────────────────────────────────────
+             ARTISTAS MÁS ESCUCHADOS ESTE MES  (5 círculos)
+             ──────────────────────────────────────────────── -->
+        {% if top_artists %}
+        <section class="profile-section" aria-labelledby="top-artists-heading">
+            <h2 class="profile-section__title" id="top-artists-heading">
+                Artistas más escuchados este mes
+            </h2>
+
+            <div class="profile-cards-grid profile-cards-grid--artists">
+                {% for artist in top_artists|slice:":5" %}
+                <article class="artist-card">
+                    <a href="{% url 'music:artist_detail_public' artist.id %}" class="artist-card__link">
+                        <div class="artist-card__photo-wrap">
+                            <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-default.png' %}{% endif %}"
+                                 alt="{{ artist.user.username }}"
+                                 class="artist-card__photo"
+                                 loading="lazy">
+                        </div>
+                        <h3 class="artist-card__name">{{ artist.user.username }}</h3>
+                        <p class="artist-card__genre">
+                            {{ artist.primary_genre }}
+                        </p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}<!-- /top-artists -->
+
+
+        <!-- ────────────────────────────────────────────────
+             TUS PLAYLISTS
+             ──────────────────────────────────────────────── -->
+        {% if playlists or is_own_profile %}
+        <section class="profile-section" aria-labelledby="playlists-heading">
+
+            <div class="profile-section__header">
+                <h2 class="profile-section__title" id="playlists-heading">
+                    {% if is_own_profile %}Tus playlists{% else %}Playlists{% endif %}
+                </h2>
+                {% if is_own_profile %}
+                <a href="{% url 'playlists:create' %}"
+                   class="profile-icon-btn"
+                   aria-label="Crear playlist">
+                    <img src="{% static 'img/icon-edit.png' %}" alt="Crear" class="icon--sm">
+                </a>
+                {% endif %}
+            </div>
+
+            {% if playlists %}
+            <div class="profile-cards-grid profile-cards-grid--playlists">
+                {% for pl in playlists %}
+                <article class="track-card">
+                    <a href="{% url 'playlists:detail' pl.pk %}" class="track-card__link">
+                        <div class="track-card__cover-wrap">
+                            <img src="{% if pl.cover %}{{ pl.cover.url }}{% else %}{% static 'img/playlist-default.png' %}{% endif %}"
+                                 alt="{{ pl.name }}"
+                                 class="track-card__cover"
+                                 loading="lazy">
+                            <div class="track-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="track-card__title">{{ pl.name }}</h3>
+                        <p class="track-card__sub">{{ pl.track_count }} canción{{ pl.track_count|pluralize:",es" }}</p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="profile-empty">Todavía no hay playlists públicas.</p>
+            {% endif %}
+
+        </section>
+        {% endif %}<!-- /playlists -->
+
+
+        <!-- ────────────────────────────────────────────────
+             SIGUIENDO  (artistas seguidos)
+             ──────────────────────────────────────────────── -->
+        {% if following %}
+        <section class="profile-section" aria-labelledby="following-heading">
+            <div class="profile-section__header">
+                <h2 class="profile-section__title" id="following-heading">
+                    Siguiendo
+                </h2>
+                <a href="{% url 'listener_profile_following' profile_user.id %}"
+                   class="btn-see-all">Ver más</a>
+            </div>
+
+            <div class="profile-cards-grid profile-cards-grid--following">
+                {% for artist in following|slice:":5" %}
+                <article class="artist-card">
+                    <a href="{% url 'music:artist_detail_public' artist.id %}" class="artist-card__link">
+                        <div class="artist-card__photo-wrap">
+                            <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-default.png' %}{% endif %}"
+                                 alt="{{ artist.user.username }}"
+                                 class="artist-card__photo"
+                                 loading="lazy">
+                        </div>
+                        <h3 class="artist-card__name">{{ artist.user.username }}</h3>
+                        <p class="artist-card__genre">
+                            {{ artist.primary_genre }}
+                        </p>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}<!-- /following -->
+
+    </div><!-- /profile-page__inner -->
+</div><!-- /profile-page -->
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// ====== REGISTRAR EN RECIENTES ======
+{% if not profile_user.is_artist %}
+registerRecentItem('user', {{ profile_user.pk }});
+{% endif %}
+</script>
+{% endblock %}

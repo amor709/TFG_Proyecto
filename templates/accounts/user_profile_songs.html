@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ profile_user.username }} – Canciones más escuchadas{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/user_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <!-- ── FONDO DIFUMINADO ── -->
+    <div class="profile-page__backdrop"
+         style="background-image: url('{% if profile_user.profile.avatar %}{{ profile_user.profile.avatar.url }}{% else %}{% static "img/avatar-default.png" %}{% endif %}');"
+         aria-hidden="true"></div>
+    <div class="profile-page__overlay" aria-hidden="true"></div>
+
+    <div class="profile-page__inner">
+        <!-- Enlace de vuelta al perfil -->
+        <a href="{% url 'listener_profile' profile_user.id %}" class="back-link">
+            ← Volver al perfil
+        </a>
+
+        <!-- ────────────────────────────────────────────────
+             TODAS LAS CANCIONES MÁS ESCUCHADAS ESTE MES
+             ──────────────────────────────────────────────── -->
+        {% if top_songs %}
+        <section class="profile-section" aria-labelledby="all-songs-heading">
+            <h2 class="profile-section__title" id="all-songs-heading">
+                Canciones más escuchadas este mes
+            </h2>
+
+            <div class="profile-cards-grid profile-cards-grid--songs">
+                {% for song in top_songs %}
+                <article class="track-card" data-track-id="{{ song.pk }}">
+                    <div class="track-card__link" onclick="playSongA({{ song.pk }}); return false;" style="cursor: pointer;">
+                        <div class="track-card__cover-wrap">
+                            <img src="{% if song.album.cover %}{{ song.album.cover.url }}{% else %}{% static 'img/album-default.png' %}{% endif %}"
+                                 alt="{% if song.album %}{{ song.album.title }}{% else %}{{ song.title }}{% endif %}"
+                                 class="track-card__cover"
+                                 loading="lazy">
+                            <div class="track-card__play-overlay" aria-hidden="true">
+                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                            </div>
+                        </div>
+                        <h3 class="track-card__title">{{ song.title }}</h3>
+                        <p class="track-card__sub">{{ song.artist.user.username }}</p>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% else %}
+        <p class="profile-empty">No hay canciones escuchadas este mes.</p>
+        {% endif %}
+    </div><!-- /profile-page__inner -->
+</div><!-- /profile-page -->
+
+<style>
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color var(--duration-fast);
+    }
+    .back-link:hover {
+        color: var(--color-text-primary);
+    }
+</style>
+{% endblock %}
