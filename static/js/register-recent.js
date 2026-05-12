@@ -9,9 +9,9 @@ function registerRecentItem(contentType, objectId) {
         console.warn('❌ registerRecentItem: contentType o objectId faltante');
         return;
     }
-
+    
     const url = `/accounts/sidebar/add-recent/${contentType}/${objectId}/`;
-
+    
     fetch(url, {
         method: 'POST',
         headers: {
@@ -47,5 +47,4 @@ function getCookie(name) {
     }
     return cookieValue;
 }
-
 

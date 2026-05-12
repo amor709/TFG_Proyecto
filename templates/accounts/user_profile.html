@@ -24,7 +24,7 @@
 
     <!-- ── FONDO DIFUMINADO (avatar del usuario) ── -->
     <div class="profile-page__backdrop"
-         style="background-image: url('{% if profile_user.profile.avatar %}{{ profile_user.profile.avatar.url }}{% else %}{% static "img/avatar-default.png" %}{% endif %}');"
+         style="background-image: url('{% if profile_user.listener_profile.avatar %}{{ profile_user.listener_profile.avatar.url }}{% else %}{% static "img/avatar-default.png" %}{% endif %}');"
          aria-hidden="true"></div>
     <div class="profile-page__overlay" aria-hidden="true"></div>
 
@@ -37,8 +37,8 @@
 
             <!-- Avatar circular -->
             <div class="profile-hero__avatar-wrap">
-                {% if profile_user.profile.avatar %}
-                    <img src="{{ profile_user.profile.avatar.url }}"
+                {% if profile_user.listener_profile.avatar %}
+                    <img src="{{ profile_user.listener_profile.avatar.url }}"
                          alt="Avatar de {{ profile_user.username }}"
                          class="profile-hero__avatar">
                 {% else %}
@@ -53,9 +53,9 @@
                 <div class="profile-hero__meta">
                     <h1 class="profile-hero__username">{% if profile_user.nickname %}{{ profile_user.nickname }}{% else %}{{ profile_user.username }}{% endif %}</h1>
                     <p class="profile-hero__stats">
-                        <span>{{ profile_user.profile.playlist_count }} Playlist{{ profile_user.profile.playlist_count|pluralize:"s" }}</span>
+                        <span>{{ profile_user.listener_profile.playlist_count }} Playlist{{ profile_user.listener_profile.playlist_count|pluralize:"s" }}</span>
                         <span class="profile-hero__dot">•</span>
-                        <span>Siguiendo {{ profile_user.profile.following_count }} artista{{ profile_user.profile.following_count|pluralize:"s" }}</span>
+                        <span>Siguiendo {{ profile_user.listener_profile.following_count }} artista{{ profile_user.listener_profile.following_count|pluralize:"s" }}</span>
                     </p>
                 </div>
 

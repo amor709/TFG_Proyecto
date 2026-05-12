@@ -133,23 +133,19 @@
                                 data-track-id="{{ song.pk }}"
                                 aria-label="{% if song.is_liked %}Quitar de Me gusta{% else %}Añadir a Me gusta{% endif %}">
                             {% if song.is_liked %}
-                                <img src="{% static 'img/icon-heart-filled.png' %}" alt="Me gusta" class="icon--sm icon--liked">
+                                <img src="{% static 'img/diamond-red.png' %}" alt="Me gusta" class="icon--sm icon--liked">
                             {% else %}
-                                <img src="{% static 'img/icon-heart-outline.png' %}" alt="Me gusta" class="icon--sm">
+                                <img src="{% static 'img/diamond-white.png' %}" alt="Me gusta" class="icon--sm">
                             {% endif %}
                         </button>
 
                         <!-- Botón "Más opciones" -->
                         <button class="track-action-btn track-more-btn"
                                 data-track-id="{{ song.pk }}"
+                                data-album-id="{{ album.pk }}"
                                 aria-label="Más opciones para {{ song.title }}">
                             <img src="{% static 'img/icon-more-dots.png' %}" alt="···" class="icon--sm">
                         </button>
-
-                        <!-- Menú de opciones -->
-                        <div class="track-options-menu" id="menu-{{ song.pk }}" style="display: none;">
-                            <button class="option-item add-to-playlist-btn" data-song-id="{{ song.pk }}">Añadir a Playlist</button>
-                        </div>
                     </span>
 
                 </li>
@@ -194,24 +190,10 @@
     </div><!-- /album-detail__inner -->
 </div><!-- /album-detail -->
 
-<!-- Modal para añadir a playlist -->
-<div id="add-to-playlist-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-        <h3>Añadir a Playlist</h3>
-        <div id="playlists-list"></div>
-        <button id="close-modal">Cerrar</button>
-    </div>
-</div>
-
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-     // ====== REGISTRAR EN RECIENTES ======
-     registerRecentItem('album', {{ album.pk }});
-
-     const modal = document.getElementById('add-to-playlist-modal');
-    const playlistsList = document.getElementById('playlists-list');
-    const closeModal = document.getElementById('close-modal');
-    let currentSongId = null;
+    // ====== REGISTRAR EN RECIENTES ======
+    registerRecentItem('album', {{ album.pk }});
 
     // ────────────────────────────────────────────────────────
     // REPRODUCCIÓN DE CANCIONES
@@ -240,68 +222,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-
-    // ────────────────────────────────────────────────────────
-    // MENÚ DE OPCIONES
-    // ────────────────────────────────────────────────────────
-
-    // Manejar clics en "Más opciones"
-    document.querySelectorAll('.track-more-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.stopPropagation();
-            const songId = this.dataset.trackId;
-            const menu = document.getElementById(`menu-${songId}`);
-            // Ocultar otros menús
-            document.querySelectorAll('.track-options-menu').forEach(m => {
-                if (m !== menu) m.style.display = 'none';
-            });
-            // Toggle este menú
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
-        });
-    });
-
-    // Ocultar menús al hacer clic fuera
-    document.addEventListener('click', function() {
-        document.querySelectorAll('.track-options-menu').forEach(menu => {
-            menu.style.display = 'none';
-        });
-    });
-
-    // Manejar "Añadir a Playlist"
-    document.querySelectorAll('.add-to-playlist-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            currentSongId = this.dataset.songId;
-            fetch('/playlists/user-playlists/')
-                .then(response => response.json())
-                .then(data => {
-                    playlistsList.innerHTML = '';
-                    data.forEach(p => {
-                        const btn = document.createElement('button');
-                        btn.textContent = p.name;
-                        btn.addEventListener('click', () => addToPlaylist(p.id, currentSongId));
-                        playlistsList.appendChild(btn);
-                    });
-                    modal.style.display = 'block';
-                });
-        });
-    });
-
-    closeModal.addEventListener('click', () => {
-        modal.style.display = 'none';
-    });
-
-    function addToPlaylist(playlistId, songId) {
-        fetch(`/playlists/${playlistId}/add/${songId}/`, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Canción añadida a la playlist');
-                    modal.style.display = 'none';
-                } else {
-                    alert(data.message || 'Error');
-                }
-            });
-    }
 });
 </script>
 

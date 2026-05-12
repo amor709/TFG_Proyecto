@@ -1,7 +1,8 @@
 <!DOCTYPE html>
-<html lang="es">
+{% load static %}
+<html lang="es" data-static-url="{% static '' %}">
 <head>
-    {% load static %}
+    {% csrf_token %}
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SoundMusik{% block title %}{% endblock %}</title>
@@ -55,7 +56,7 @@
             <div class="header__avatar-container">
                 <div class="header__avatar" aria-label="Perfil de usuario" onclick="toggleUserDropdown(event)">
                     {% if request.user.is_authenticated %}
-                        {% if request.user.listener_profile.avatar %}
+                        {% if request.user.listener_profile and request.user.listener_profile.avatar %}
                             <img src="{{ request.user.listener_profile.avatar.url }}" alt="{{ request.user.username }}" class="avatar-img">
                         {% else %}
                             <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
@@ -116,17 +117,27 @@
 
             <ul id="sidebar-list" class="sidebar__list">
                 {# Sección "Mis joyas" (playlist Me gusta) #}
+                {% if request.user.is_authenticated and not request.user.is_artist %}
                 <li class="sidebar-item sidebar-item--fixed">
-                    <div class="sidebar-item__link">
+                    {% with liked_playlist=request.user.playlists.first %}
+                    {% if liked_playlist.is_liked_playlist %}
+                    <a href="{% url 'playlists:detail' liked_playlist.pk %}" class="sidebar-item__link">
                         <div class="sidebar-item__thumb sidebar-item__thumb--liked">
-                            <img src="{% static 'img/diamond-black.png' %}" alt="" class="icon--md">
+                            {% if liked_playlist.liked_playlist_cover %}
+                                <img src="{{ liked_playlist.liked_playlist_cover.url }}" alt="{{ liked_playlist.name }}" class="sidebar-item__img">
+                            {% else %}
+                                <img src="{% static 'img/diamond-black.png' %}" alt="" class="icon--md">
+                            {% endif %}
                         </div>
                         <div class="sidebar-item__info">
                             <span class="sidebar-item__name">Mis joyas</span>
                             <span class="sidebar-item__sub">Tus "Me gusta"</span>
                         </div>
-                    </div>
+                    </a>
+                    {% endif %}
+                    {% endwith %}
                 </li>
+                {% endif %}
 
                 {# Bucle dinámico sobre los ítems de la biblioteca del usuario #}
                 {% for item in library_items %}
@@ -216,7 +227,7 @@
                     <span class="player__song-title" id="track-title">{{ current_track.title }}</span>
                     <span class="player__song-artist" id="track-artist">{{ current_track.artist.user.username }}</span>
                 </div>
-                <button class="player__like-btn" aria-label="Me gusta">
+                <button class="player__like-btn like-btn not-liked" data-song-id="{{ current_track.id }}" aria-label="Me gusta">
                     <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--sm">
                 </button>
                 {% else %}
@@ -539,5 +550,7 @@ document.addEventListener('click', function(event) {
 <script src="{% static 'js/ajax-player.js' %}"></script>
 <script src="{% static 'js/sidebar.js' %}"></script>
 <script src="{% static 'js/register-recent.js' %}"></script>
+<script src="{% static 'js/liked-songs.js' %}"></script>
+<script src="{% static 'js/song-options-menu.js' %}"></script>
 </body>
 </html>

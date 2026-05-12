@@ -2,7 +2,6 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
-from music.decorators import listener_required
 from .models import Playlist, PlaylistSong
 from .forms import PlaylistForm
 from music.models import Song
@@ -10,12 +9,26 @@ from music.models import Song
 
 def playlist_detail(request, pk):
     playlist = get_object_or_404(Playlist, pk=pk)
+
+    # "Mis Joyas" solo es accesible para el dueño
+    if playlist.is_liked_playlist and playlist.user != request.user:
+        messages.error(request, "No tienes acceso a esta playlist.")
+        return redirect('home')
+
     # Check privacy: if private and not owner, deny access
     if not playlist.is_public and playlist.user != request.user:
         messages.error(request, "Esta playlist es privada.")
         return redirect('home')
     # Obtener las canciones ordenadas
-    songs = playlist.songs.all().order_by('playlistsong__order')
+    if playlist.is_liked_playlist:
+        # Para "Mis joyas", aplicar el ordenamiento especificado
+        if playlist.order_by_field == 'name':
+            songs = playlist.songs.all().order_by('title')
+        else:
+            songs = playlist.songs.all().order_by('-playlistsong__id')
+    else:
+        songs = playlist.songs.all().order_by('playlistsong__order')
+
     is_saved = request.user.is_authenticated and request.user.saved_playlists.filter(pk=pk).exists()
     context = {
         'playlist': playlist,

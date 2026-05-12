@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from .models import (
-    User, ArtistProfile, ListenerProfile, PlaybackSession, RecentItem,
+    User, ArtistProfile, ListenerProfile, PlaybackSession,
     ArtistPlayCount, SongPlayCount, MonthlyArtistStats, MonthlySongStats
 )
 
@@ -36,15 +36,6 @@ class ListenerProfileAdmin(admin.ModelAdmin):
     search_fields = ('user__username', 'user__email')
     ordering = ('user__username',)
     readonly_fields = ('id',)
-
-
-@admin.register(RecentItem)
-class RecentItemAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'content_type', 'object_id', 'timestamp')
-    list_filter = ('content_type', 'timestamp')
-    search_fields = ('user__username',)
-    ordering = ('-timestamp',)
-    readonly_fields = ('id', 'timestamp')
 
 
 @admin.register(PlaybackSession)

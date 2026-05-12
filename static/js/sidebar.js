@@ -144,7 +144,6 @@ class SidebarManager {
         fixedItems.forEach(item => this.sidebarList.appendChild(item));
 
         if (items.length === 0) {
-            this.showMessage('No hay items');
             return;
         }
 

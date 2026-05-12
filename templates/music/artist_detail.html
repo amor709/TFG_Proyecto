@@ -354,10 +354,11 @@
 
 {% block extra_scripts %}
 <script>
-// ====== REGISTRAR EN RECIENTES ======
-registerRecentItem('artistprofile', {{ artist.pk }});
+document.addEventListener('DOMContentLoaded', function() {
+    // ====== REGISTRAR EN RECIENTES ======
+    registerRecentItem('artistprofile', {{ artist.pk }});
 
-const artistSongs = [
+    const artistSongs = [
 {% for song in top_songs %}
 {
     title: "{{ song.title }}",
@@ -423,6 +424,7 @@ document.querySelectorAll('.carousel-nav-btn').forEach(btn => {
         cur = Math.min(0, Math.max(-max, cur - dir * step));
         track.style.transform = `translateX(${cur}px)`;
     });
+});
 });
 </script>
 {% endblock %}
