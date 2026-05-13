@@ -10,44 +10,103 @@
 
 {% block content %}
 <div class="edit-profile-container">
-    <h1>Editar Perfil de Artista</h1>
-    <form method="post" enctype="multipart/form-data" class="edit-profile-form" id="edit-form">
-        {% csrf_token %}
-        <div class="form-group">
-            <label for="{{ form.bio.id_for_label }}">Biografía</label>
-            {{ form.bio }}
-        </div>
-        <div class="form-group">
-            <label for="{{ form.photo.id_for_label }}">Foto de perfil</label>
-            {{ form.photo }}
-        </div>
-        <div class="form-group">
-            <label for="{{ form.banner.id_for_label }}">Banner de perfil</label>
-            {{ form.banner }}
-            <div id="cropper-container" style="display: none;">
-                <img id="cropper-image" src="" alt="Imagen a recortar">
-                <button type="button" id="crop-btn">Recortar y Aplicar</button>
-                <button type="button" id="cancel-crop-btn">Cancelar</button>
+    <div class="edit-profile-card">
+        <h1 class="edit-profile__title">Editar Perfil de Artista</h1>
+
+        <form method="post" enctype="multipart/form-data" class="edit-profile-form" id="edit-form">
+            {% csrf_token %}
+
+            <!-- Biografía -->
+            <div class="form-group">
+                <label for="{{ form.bio.id_for_label }}" class="form-label">Biografía</label>
+                {{ form.bio }}
+                {% if form.bio.errors %}
+                    <div class="form-errors">
+                        {% for error in form.bio.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
             </div>
-        </div>
-        <div class="form-group">
-            <label for="{{ form.website.id_for_label }}">Sitio web</label>
-            {{ form.website }}
-        </div>
-        <button type="submit" class="btn-submit">Guardar Cambios</button>
-    </form>
+
+            <!-- Foto de perfil -->
+            <div class="form-group">
+                <label for="{{ form.photo.id_for_label }}" class="form-label">Foto de perfil</label>
+                {{ form.photo }}
+                {% if form.photo.errors %}
+                    <div class="form-errors">
+                        {% for error in form.photo.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Banner de perfil -->
+            <div class="form-group">
+                <label for="{{ form.banner.id_for_label }}" class="form-label">Banner de perfil</label>
+                {{ form.banner }}
+                {% if form.banner.errors %}
+                    <div class="form-errors">
+                        {% for error in form.banner.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Cropper Container -->
+                <div id="cropper-container" style="display: none;">
+                    <img id="cropper-image" src="" alt="Imagen a recortar">
+                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
+                        <button type="button" id="crop-btn" class="btn btn-primary">Recortar y Aplicar</button>
+                        <button type="button" id="cancel-crop-btn" class="btn btn-secondary">Cancelar</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sitio web -->
+            <div class="form-group">
+                <label for="{{ form.website.id_for_label }}" class="form-label">Sitio web</label>
+                {{ form.website }}
+                {% if form.website.errors %}
+                    <div class="form-errors">
+                        {% for error in form.website.errors %}
+                            <p class="error-text">{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Errores generales -->
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}
+                        <p class="error-text">{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <!-- Buttons -->
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
+                <a href="{% url 'listener_profile' user.id %}" class="btn btn-secondary">Cancelar</a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const bannerInput = document.getElementById('{{ form.banner.id_for_label }}');
+    const bannerInput = document.getElementById('id_banner');
     const cropperContainer = document.getElementById('cropper-container');
     const cropperImage = document.getElementById('cropper-image');
     const cropBtn = document.getElementById('crop-btn');
     const cancelCropBtn = document.getElementById('cancel-crop-btn');
     const form = document.getElementById('edit-form');
     let cropper;
+
+    if (!bannerInput) return;
 
     bannerInput.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -81,9 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cropBtn.addEventListener('click', function() {
         if (cropper) {
             cropper.getCroppedCanvas().toBlob(function(blob) {
-                // Crear un nuevo archivo con el blob recortado
                 const croppedFile = new File([blob], 'banner_cropped.png', { type: 'image/png' });
-                // Crear un DataTransfer para asignar el archivo al input
                 const dt = new DataTransfer();
                 dt.items.add(croppedFile);
                 bannerInput.files = dt.files;

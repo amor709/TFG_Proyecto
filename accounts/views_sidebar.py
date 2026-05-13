@@ -22,10 +22,6 @@ def add_to_recent(request, content_type, object_id):
         ct = ContentType.objects.get(model=content_type)
         obj = ct.get_object_for_this_type(pk=object_id)
 
-        # Excluir "Mis Joyas" de recientes
-        if content_type == 'playlist' and hasattr(obj, 'is_liked_playlist') and obj.is_liked_playlist:
-            return JsonResponse({'success': False, 'error': 'No se puede agregar Mis Joyas a recientes'}, status=400)
-
         recent_item, created = RecentItem.objects.get_or_create(
             user=request.user,
             content_type=ct,
@@ -66,10 +62,6 @@ def get_recent_items(request):
             if item.content_type.model == 'user':
                 continue
 
-            # Excluir "Mis Joyas" de recientes
-            if item.content_type.model == 'playlist' and hasattr(obj, 'is_liked_playlist') and obj.is_liked_playlist:
-                continue
-
             if hasattr(obj, 'cover'):
                 cover = obj.cover.url if obj.cover else None
             else:
@@ -104,8 +96,7 @@ def get_saved_items(request):
     """Obtiene los elementos guardados del usuario (álbumes y playlists) en orden alfabético."""
     # Obtener elementos guardados ordenados alfabéticamente por título
     saved_albums = request.user.listener_profile.saved_albums.all().order_by('title')
-    # Excluir "Mis Joyas" de playlists guardadas
-    saved_playlists = request.user.saved_playlists.filter(is_liked_playlist=False).order_by('name')
+    saved_playlists = request.user.saved_playlists.all().order_by('name')
 
     items = []
 
@@ -119,7 +110,7 @@ def get_saved_items(request):
             'artist': album.artist.user.username,
         })
 
-    # Añadir playlists (ordenadas por nombre, excluyendo "Mis Joyas")
+    # Añadir playlists (ordenadas por nombre)
     for playlist in saved_playlists:
         items.append({
             'id': playlist.pk,
@@ -152,10 +143,6 @@ def sidebar_search(request):
             try:
                 obj = item.content_object
                 if obj is None:
-                    continue
-
-                # Excluir "Mis Joyas" de búsquedas
-                if item.content_type.model == 'playlist' and hasattr(obj, 'is_liked_playlist') and obj.is_liked_playlist:
                     continue
 
                 # Obtener título y verificar si coincide con la búsqueda
@@ -202,9 +189,9 @@ def sidebar_search(request):
                     'artist': album.artist.user.username,
                 })
 
-        # Buscar en playlists guardados (solo si el usuario es oyente, excluyendo "Mis Joyas")
+        # Buscar en playlists guardados (solo si el usuario es oyente)
         if not request.user.is_artist:
-            saved_playlists = request.user.saved_playlists.filter(is_liked_playlist=False)
+            saved_playlists = request.user.saved_playlists.all()
             for playlist in saved_playlists:
                 if query.lower() in playlist.name.lower() or query.lower() in playlist.user.username.lower():
                     results.append({

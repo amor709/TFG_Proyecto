@@ -121,13 +121,9 @@
                 <li class="sidebar-item sidebar-item--fixed">
                     {% with liked_playlist=request.user.playlists.first %}
                     {% if liked_playlist.is_liked_playlist %}
-                    <a href="{% url 'playlists:detail' liked_playlist.pk %}" class="sidebar-item__link">
+                    <a href="{% url 'playlists:detail' liked_playlist.pk %}" class="sidebar-item__link" onclick="sidebarManager.addToRecent('playlist', {{ liked_playlist.pk }}, event)">
                         <div class="sidebar-item__thumb sidebar-item__thumb--liked">
-                            {% if liked_playlist.liked_playlist_cover %}
-                                <img src="{{ liked_playlist.liked_playlist_cover.url }}" alt="{{ liked_playlist.name }}" class="sidebar-item__img">
-                            {% else %}
-                                <img src="{% static 'img/diamond-black.png' %}" alt="" class="icon--md">
-                            {% endif %}
+                            <img src="{% static 'img/diamond-black.png' %}" alt="" class="icon--md">
                         </div>
                         <div class="sidebar-item__info">
                             <span class="sidebar-item__name">Mis joyas</span>

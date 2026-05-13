@@ -25,7 +25,7 @@ class Playlist(models.Model):
     @property
     def save_count(self):
         return self.saved_by.count()
-
+    
     @property
     def get_cover(self):
         """Retorna el cover apropiado: personalizado para Mis Joyas, o el cover normal"""

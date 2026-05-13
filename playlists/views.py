@@ -9,12 +9,12 @@ from music.models import Song
 
 def playlist_detail(request, pk):
     playlist = get_object_or_404(Playlist, pk=pk)
-
+    
     # "Mis Joyas" solo es accesible para el dueño
     if playlist.is_liked_playlist and playlist.user != request.user:
         messages.error(request, "No tienes acceso a esta playlist.")
         return redirect('home')
-
+    
     # Check privacy: if private and not owner, deny access
     if not playlist.is_public and playlist.user != request.user:
         messages.error(request, "Esta playlist es privada.")
