@@ -1,0 +1,172 @@
+/* ════════════════════════════════════════════════════════════════════
+   queue_panel.css  –  Cola de reproducción (panel derecho)
+   Enlazar después de soundmusik.css para heredar las variables.
+   ════════════════════════════════════════════════════════════════════ */
+
+
+/* ───────────────────────────────────────────────────────────────────
+   CONTENEDOR RAÍZ
+   El panel derecho (.right-panel) ya está en soundmusik.css con
+   overflow-y: auto. Este componente ocupa todo ese espacio.
+   ─────────────────────────────────────────────────────────────────── */
+
+.queue-panel {
+  display: flex;
+  flex-direction: column;
+  /* Ocupa la altura completa del right-panel heredado */
+  height: 100%;
+  /* Sin padding propio: lo gestiona el right-panel padre */
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   CABECERA  –  "A continuación" + "Borrar"
+   ─────────────────────────────────────────────────────────────────── */
+
+.queue-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-4) var(--space-3);
+  flex-shrink: 0;   /* nunca se comprime aunque la lista sea larga */
+}
+
+.queue-panel__title {
+  font-size: var(--text-md);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.01em;
+}
+
+/* "Borrar" en rojo acento, sin fondo */
+.queue-panel__clear-btn {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  transition: color       var(--duration-fast),
+              background  var(--duration-fast);
+}
+.queue-panel__clear-btn:hover {
+  color: var(--color-accent-hover);
+  background: var(--color-accent-muted);
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
+   LISTA DE CANCIONES
+   ─────────────────────────────────────────────────────────────────── */
+
+.queue-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  /* La lista hace scroll dentro del right-panel (overflow-y:auto padre) */
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;          /* Firefox – oculto para limpieza visual */
+}
+.queue-list::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
+
+
+/* ── Fila individual ── */
+.queue-item {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  /* Separador sutil entre filas */
+  border-bottom: 1px solid var(--color-surface-03);
+  transition: background var(--duration-fast);
+}
+.queue-item:last-child { border-bottom: none; }
+.queue-item:hover { background: rgba(255, 255, 255, 0.06); }
+
+
+/* ── Cover ── */
+.queue-item__cover-wrap {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-surface-02);
+}
+
+.queue-item__cover {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--duration-normal) var(--ease-out);
+}
+.queue-item:hover .queue-item__cover { transform: scale(1.06); }
+
+/* Overlay play al hover */
+.queue-item__play-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.52);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity var(--duration-fast);
+}
+.queue-item:hover .queue-item__play-overlay { opacity: 1; }
+
+
+/* ── Info: título + artista ── */
+.queue-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;        /* permite que el ellipsis funcione */
+  overflow: hidden;
+}
+
+.queue-item__title {
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+
+.queue-item__artist {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+
+/* ── Duración ── */
+.queue-item__duration {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  font-variant-numeric: tabular-nums;  /* dígitos de ancho fijo */
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+
+/* ── Estado vacío ── */
+.queue-empty {
+  padding: var(--space-8) var(--space-4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

@@ -1,0 +1,72 @@
+{% load static %}
+<!-- ════════════════════════════════════════════════════════════════════
+     QUEUE PANEL  –  Fragmento para el panel derecho (right-panel)
+     Incluir con: {# {% include "queue_panel.html" %} #}
+     Contexto Django esperado (opcional):
+       · queue_tracks  → QuerySet / lista de Track en orden de cola
+                         cada ítem: .title, .artist.name,
+                         .album.cover.url, .duration_display
+     ════════════════════════════════════════════════════════════════════ -->
+
+<div class="queue-panel">
+
+    <!-- ── Cabecera: título + botón Borrar ── -->
+    <div class="queue-panel__header">
+        <h2 class="queue-panel__title">A continuación</h2>
+        <button class="queue-panel__clear-btn"
+                id="btn-queue-clear"
+                onclick="queueSystem.clearQueue(); return false;"
+                aria-label="Borrar cola de reproducción">
+            Borrar
+        </button>
+    </div>
+
+    <!-- ── Lista de canciones ── -->
+    <ol class="queue-list" id="queue-list" aria-label="Cola de reproducción">
+        {% if queue_tracks %}
+            {% for track in queue_tracks %}
+            <li class="queue-item" data-track-id="{{ track.pk }}" onclick="queueSystem.playQueueTrackAt({{ forloop.counter0 }}); return false;">
+
+                <!-- Cover del álbum -->
+                <div class="queue-item__cover-wrap">
+                    <img src="{% if track.album %}{{ track.album.cover.url }}{% else %}/static/img/album-placeholder.png{% endif %}"
+                         alt="{% if track.album %}{{ track.album.title }}{% else %}{{ track.title }}{% endif %}"
+                         class="queue-item__cover"
+                         loading="lazy">
+                    <!-- Overlay play al hover -->
+                    <div class="queue-item__play-overlay" aria-hidden="true">
+                        <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
+                    </div>
+                </div>
+
+                <!-- Nombre + artista -->
+                <div class="queue-item__info">
+                    <p class="queue-item__title">{{ track.title }}</p>
+                    <p class="queue-item__artist">
+                        {{ track.artist.user.username }}
+                        {% for feat in track.collaborators.all %}
+                            & {{ feat.user.username }}
+                        {% endfor %}
+                    </p>
+                </div>
+
+                <!-- Duración -->
+                <span class="queue-item__duration">{{ track.duration_display }}</span>
+
+            </li>
+            {% endfor %}
+        {% else %}
+        <li class="queue-empty">La cola está vacía.</li>
+        {% endif %}
+    </ol>
+
+</div>
+
+<script>
+    // Actualizar el panel de cola dinámicamente
+    document.addEventListener('trackChanged', function() {
+        if (typeof queueSystem !== 'undefined' && queueSystem) {
+            queueSystem.updateQueueDisplay();
+        }
+    });
+</script>

@@ -111,11 +111,38 @@ async function playSongA(trackId) {
             });
         }
 
-        // Disparar evento para actualizar paneles
-        document.dispatchEvent(new CustomEvent('trackChanged'));
-
         // Guardar información de la canción actual en localStorage
         saveCurrentTrackToStorage(trackData);
+
+        // ⭐ IMPORTANTE: Cargar sugerencias y actualizar cola
+        if (typeof queueSystem !== 'undefined' && queueSystem) {
+            console.log('🔄 Preparando cola para nuevas sugerencias...');
+            
+            // Detectar si venimos de reproducción manual o automática
+            const isPlayingFromQueue = window.__isPlayingFromQueue === true;
+            window.__isPlayingFromQueue = false; // Resetear el flag
+
+            if (!isPlayingFromQueue) {
+                // Es una reproducción manual → VACIAR y cargar sugerencias nuevas
+                console.log('Reproducción manual detectada → vaciando cola y cargando sugerencias');
+                queueSystem.queue = [];
+                queueSystem.fromAlbum = false;
+                queueSystem.currentAlbumId = null;
+                queueSystem.saveQueueToStorage();
+            } else {
+                // Es reproducción automática desde cola → MANTENER cola y solo agregar sugerencias al final
+                console.log('Reproducción desde cola detectada → manteniendo cola intacta');
+            }
+
+            // Cargar sugerencias para esta canción
+            console.log('📥 Cargando sugerencias para la canción:', trackId);
+            await loadSuggestedTracksToQueue(trackId, !isPlayingFromQueue);
+        } else {
+            console.warn('⚠queueSystem no está disponible');
+        }
+
+        // Disparar evento para actualizar paneles (DESPUÉS de cargar sugerencias)
+        document.dispatchEvent(new CustomEvent('trackChanged'));
 
     } catch (error) {
         console.error('❌ Error en playSongA:', error.message);
@@ -123,11 +150,69 @@ async function playSongA(trackId) {
     }
 }
 
+/**
+ * Cargar canciones sugeridas en la cola después de reproducir una canción
+ * @param trackId - ID de la canción actual
+ * @param isManualPlay - Si es true, significa que fue clickeada manualmente (no automático desde cola)
+ */
+async function loadSuggestedTracksToQueue(trackId, isManualPlay = true) {
+    try {
+        console.log('🔍 Buscando canciones sugeridas para:', trackId);
+        const response = await fetch(`/music/api/suggested-tracks/${trackId}/`);
+        
+        console.log('📡 Respuesta del endpoint suggested-tracks:', response.status, response.statusText);
+
+        if (!response.ok) {
+            console.warn(`Error en endpoint: HTTP ${response.status}`);
+            return;
+        }
+
+        const data = await response.json();
+        console.log('Respuesta JSON:', data);
+        
+        const suggestedIds = data.suggested_ids || [];
+
+        if (suggestedIds.length > 0) {
+            console.log('Canciones sugeridas cargadas:', suggestedIds);
+            // Agregar las sugerencias a la cola
+            if (typeof queueSystem !== 'undefined' && queueSystem) {
+                console.log('➕ Agregando', suggestedIds.length, 'canciones a la cola');
+                queueSystem.addMultipleToQueue(suggestedIds);
+                console.log('✅ Canciones agregadas. Cola actual:', queueSystem.queue);
+                
+                // Forzar actualización inmediata de la cola en el DOM
+                console.log('🎨 Forzando renderizado de la cola...');
+                // Pequeño delay para asegurar que addMultipleToQueue completó
+                await new Promise(resolve => setTimeout(resolve, 50));
+                if (typeof queueSystem !== 'undefined' && queueSystem.loadQueueHTML) {
+                    await queueSystem.loadQueueHTML();
+                    console.log('✅ Cola renderizada en el DOM');
+                }
+            } else {
+                console.warn('⚠️ queueSystem no disponible para agregar sugerencias');
+            }
+        } else {
+            console.log(' No hay canciones sugeridas disponibles');
+            // Si no hay sugerencias Y es reproducción manual, mostrar "vacía"
+            if (isManualPlay) {
+                const queueList = document.getElementById('queue-list');
+                if (queueList) {
+                    queueList.innerHTML = '<li class="queue-empty">La cola está vacía.</li>';
+                    console.log('Cola vacía: sin sugerencias disponibles');
+                }
+            }
+        }
+    } catch (error) {
+        console.error('❌ Error al cargar canciones sugeridas:', error);
+        // Si hay error, continuaré sin sugerencias (no es crítico)
+    }
+}
+
 // Aqui se cambia el player
 function updatePlayer(trackData) {
     // Validar que trackData exista y tenga las propiedades necesarias
     if (!trackData || !trackData.title || !trackData.artist) {
-        console.warn('⚠trackData incompleto para actualizar player');
+        console.warn('trackData incompleto para actualizar player');
         return;
     }
 
@@ -142,30 +227,39 @@ function updatePlayer(trackData) {
     console.log(`Player actualizado: ${trackData.title} - ${trackData.artist}`);
 }
 
-// Aqui se cambia el panel derecho
+// Aqui se cambia el panel derecho (SOLO la sección superior)
 function updateRightPanel(trackData) {
-    const rightPanel = document.querySelector('.right-panel');
+    // Actualizar SOLO la sección superior (.right-panel__top)
+    // La sección inferior (.right-panel__bottom) con la cola se mantiene intacta
+    // Esto es FUNDAMENTAL para que la cola no desaparezca
+    const topPanel = document.querySelector('.right-panel__top');
 
-    if (!rightPanel) return;
-
-    // Validar que trackData y sus propiedades principales existan
-    if (!trackData || !trackData.title || !trackData.artist) {
-        console.warn('trackData incompleto para actualizar panel derecho');
+    if (!topPanel) {
+        console.warn('❌ .right-panel__top no encontrado en el DOM');
         return;
     }
 
-    // Construir HTML seguro usando template literal
+    // Validar que trackData y sus propiedades principales existan
+    if (!trackData || !trackData.title || !trackData.artist) {
+        console.warn('⚠️ trackData incompleto para actualizar panel derecho', trackData);
+        return;
+    }
+
+    // Construir HTML seguro para la sección superior
     let html = `
         <div class="right-panel__album-cover">
-            <img src="${trackData.cover || '/static/img/logo.png'}" alt="${trackData.title}" class="album-cover__img">
-            <p class="album-cover__title">${trackData.title}</p>
+            <img src="${escapeHtml(trackData.cover || '/static/img/logo.png')}" 
+                 alt="${escapeHtml(trackData.title)}" 
+                 class="album-cover__img"
+                 loading="lazy">
+            <p class="album-cover__title">${escapeHtml(trackData.title)}</p>
         </div>
         
         <div class="right-panel__track-info">
-            <h3 class="track-info__title">${trackData.title}</h3>
+            <h3 class="track-info__title">${escapeHtml(trackData.title)}</h3>
             <div class="track-info__meta">
                 <img src="/static/img/diamond-white.png" alt="" class="icon--xs">
-                <span class="track-info__artist">${trackData.artist}</span>
+                <span class="track-info__artist">${escapeHtml(trackData.artist)}</span>
             </div>
         </div>
     `;
@@ -176,14 +270,15 @@ function updateRightPanel(trackData) {
             <div class="right-panel__related">
                 <h4 class="related__heading">Cancioncita de…</h4>
                 <div class="related__artist-card">
-                    <img src="${trackData.related_artist.photo || '/static/img/artist-placeholder.png'}" 
-                         alt="${trackData.related_artist.name}" 
-                         class="related__artist-photo">
+                    <img src="${escapeHtml(trackData.related_artist.photo || '/static/img/artist-placeholder.png')}" 
+                         alt="${escapeHtml(trackData.related_artist.name)}" 
+                         class="related__artist-photo"
+                         loading="lazy">
                     <div class="related__artist-info">
-                        <span class="related__artist-name">${trackData.related_artist.name}</span>
+                        <span class="related__artist-name">${escapeHtml(trackData.related_artist.name)}</span>
                         <button class="btn-follow" 
                                 data-artist-id="${trackData.related_artist.id}" 
-                                aria-label="Seguir a ${trackData.related_artist.name}">
+                                aria-label="Seguir a ${escapeHtml(trackData.related_artist.name)}">
                             + Seguir
                         </button>
                     </div>
@@ -192,7 +287,25 @@ function updateRightPanel(trackData) {
         `;
     }
 
-    rightPanel.innerHTML = html;
+    // Actualizar SOLO el contenido de .right-panel__top (NO afecta .right-panel__bottom que contiene la cola)
+    topPanel.innerHTML = html;
+    console.log('✅ Sección superior del panel derecho actualizada:', {
+        title: trackData.title,
+        artist: trackData.artist,
+        hasRelatedArtist: !!trackData.related_artist
+    });
+}
+
+// Función auxiliar para escapar HTML y prevenir inyecciones
+function escapeHtml(text) {
+    const map = {
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+    };
+    return text.replace(/[&<>"']/g, m => map[m]);
 }
 
 // Función para obtener el token CSRF

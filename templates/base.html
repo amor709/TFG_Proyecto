@@ -12,7 +12,14 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
+    <!-- LOADING SCREEN - CSS de carga (debe ir primero) -->
+    <link rel="stylesheet" href="{% static 'css/loading-screen.css' %}?v=1">
+
     <link rel="stylesheet" href="{% static 'css/soundmusik.css' %}?v=1">
+    <link rel="stylesheet" href="{% static 'css/queue_panel.css' %}?v=1">
+
+    <!-- LOADING SCREEN - Script de detección (debe ir en head) -->
+    <script src="{% static 'js/page-loader.js' %}?v=1"></script>
 
     {% block extra_head %}{% endblock %}
 </head>
@@ -166,43 +173,69 @@
 
         <!-- ────────────────────────────────────────
              PANEL DERECHO  – Canción actual (~18% ancho)
+             ██ Sección superior: Info de canción
+             ██ Sección inferior: Cola de reproducción
              ──────────────────────────────────────── -->
         <aside class="right-panel" aria-label="Canción actual y artista">
 
             {% if current_track %}
-            <!-- Álbum / portada grande -->
-            <div class="right-panel__album-cover">
-                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
-                     alt="{{ current_track.title }}"
-                     class="album-cover__img">
-            </div>
 
-            <!-- Info de la pista -->
-            <div class="right-panel__track-info">
-                <h3 class="track-info__title">{{ current_track.title }}</h3>
-                <div class="track-info__meta">
-                    <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--xs">
-                    <span class="track-info__artist">{{ current_track.artist.user.username }}</span>
+            <!-- ══ SECCIÓN SUPERIOR: Info de la canción ══ -->
+            <div class="right-panel__top">
+                <!-- Álbum / portada grande -->
+                <div class="right-panel__album-cover">
+                    <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
+                         alt="{{ current_track.title }}"
+                         class="album-cover__img">
                 </div>
-            </div>
 
-            <!-- Sección "Cancioncita de…" (artista relacionado) -->
-            {% if related_artist %}
-            <div class="right-panel__related">
-                <h4 class="related__heading">Cancioncita de…</h4>
-                <div class="related__artist-card">
-                    <img src="{% if related_artist.photo %}{{ related_artist.photo.url }}{% else %}{% static 'img/userdefault.png' %}{% endif %}"
-                         alt="{{ related_artist.user.username }}"
-                         class="related__artist-photo">
-                    <div class="related__artist-info">
-                        <span class="related__artist-name">{{ related_artist.user.username }}</span>
-                        <button class="btn-follow" data-artist-id="{{ related_artist.pk }}" aria-label="Seguir a {{ related_artist.user.username }}">
-                            + Seguir
-                        </button>
+                <!-- Info de la pista -->
+                <div class="right-panel__track-info">
+                    <h3 class="track-info__title">{{ current_track.title }}</h3>
+                    <div class="track-info__meta">
+                        <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--xs">
+                        <span class="track-info__artist">{{ current_track.artist.user.username }}</span>
                     </div>
                 </div>
+
+                <!-- Sección "Cancioncita de…" (artista relacionado) -->
+                {% if related_artist %}
+                <div class="right-panel__related">
+                    <h4 class="related__heading">Cancioncita de…</h4>
+                    <div class="related__artist-card">
+                        <img src="{% if related_artist.photo %}{{ related_artist.photo.url }}{% else %}{% static 'img/userdefault.png' %}{% endif %}"
+                             alt="{{ related_artist.user.username }}"
+                             class="related__artist-photo">
+                        <div class="related__artist-info">
+                            <span class="related__artist-name">{{ related_artist.user.username }}</span>
+                            <button class="btn-follow" data-artist-id="{{ related_artist.pk }}" aria-label="Seguir a {{ related_artist.user.username }}">
+                                + Seguir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
             </div>
-            {% endif %}
+
+            <!-- ══ SECCIÓN INFERIOR: Cola de reproducción ══ -->
+            <div class="right-panel__bottom">
+                <!-- Cabecera: título + botón Borrar -->
+                <div class="queue-panel__header">
+                    <h2 class="queue-panel__title">A continuación</h2>
+                    <button class="queue-panel__clear-btn"
+                            id="btn-queue-clear"
+                            onclick="queueSystem.clearQueue(); return false;"
+                            aria-label="Borrar cola de reproducción">
+                        Borrar
+                    </button>
+                </div>
+
+                <!-- Lista de canciones -->
+                <ol class="queue-list" id="queue-list" aria-label="Cola de reproducción">
+                    <li class="queue-empty">La cola está vacía.</li>
+                </ol>
+            </div>
+
             {% else %}
             <p class="right-panel__empty">Reproduce algo para empezar </p>
             {% endif %}
@@ -492,14 +525,34 @@ document.addEventListener('click', function(event) {
     }
 
     function nextSong() {
-        if (playlist.length > 0) {
+        console.log('▶️ Botón siguiente clickeado');
+
+        // Prioridad 1: Si hay cola en queueSystem, reproducir de ahí
+        if (typeof queueSystem !== 'undefined' && queueSystem && queueSystem.queue.length > 0) {
+            console.log('📋 Usando queueSystem para siguiente (cola tiene', queueSystem.queue.length, 'canciones)');
+            queueSystem.onTrackFinished();
+        }
+        // Fallback: usar el playlist global antiguo (backward compatibility)
+        else if (playlist.length > 0) {
+            console.log('⚠️ Cola vacía, usando playlist global como fallback');
             trackIndex = (trackIndex + 1) % playlist.length;
             console.log(' Siguiente canción:', trackIndex);
             loadSong(trackIndex);
+        } else {
+            console.warn('❌ No hay canciones disponibles');
         }
     }
 
     function prevSong() {
+        console.log('⏮️ Botón anterior clickeado');
+
+        // En el sistema de cola, no hay "anterior" porque las canciones se eliminan al reproducir
+        if (typeof queueSystem !== 'undefined' && queueSystem) {
+            console.warn('ℹ️ No hay "anterior" en la cola (las canciones se eliminan al reproducir)');
+            return;
+        }
+
+        // Fallback al antigua playlist
         if (playlist.length > 0) {
             trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;
             console.log('Canción anterior:', trackIndex);
@@ -539,14 +592,31 @@ document.addEventListener('click', function(event) {
     }
 </script>
 
-<script src="{% static 'js/script.js' %}"></script>
-<script src="{% static 'js/playback-state.js' %}"></script>
-<script src="{% static 'js/audio-player-sync.js' %}"></script>
+<script src="{% static 'js/script.js' %}" defer></script>
+<script src="{% static 'js/queue-system.js' %}" defer></script>
+<script src="{% static 'js/playback-state.js' %}" defer></script>
+<script src="{% static 'js/audio-player-sync.js' %}" defer></script>
 <!-- <script src="{% static 'js/update-player-panels.js' %}"></script> --> <!-- Desactivado para evitar conflictos con ajax-player.js -->
-<script src="{% static 'js/ajax-player.js' %}"></script>
-<script src="{% static 'js/sidebar.js' %}"></script>
-<script src="{% static 'js/register-recent.js' %}"></script>
-<script src="{% static 'js/liked-songs.js' %}"></script>
-<script src="{% static 'js/song-options-menu.js' %}"></script>
+<script src="{% static 'js/ajax-player.js' %}" defer></script>
+<script src="{% static 'js/sidebar.js' %}" defer></script>
+<script src="{% static 'js/register-recent.js' %}" defer></script>
+<script src="{% static 'js/liked-songs.js' %}" defer></script>
+<script src="{% static 'js/song-options-menu.js' %}" defer></script>
+
+<!-- Queue panel actualización dinámica -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    if (typeof queueSystem !== 'undefined') {
+        queueSystem.updateQueueDisplay();
+    }
+});
+
+document.addEventListener('trackChanged', function() {
+    if (typeof queueSystem !== 'undefined') {
+        queueSystem.updateQueueDisplay();
+    }
+});
+</script>
+
 </body>
 </html>

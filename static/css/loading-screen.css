@@ -1,0 +1,138 @@
+/* ════════════════════════════════════════════════════════════════════
+   loading-screen.css  –  Pantalla de carga y prevención de FOUC
+   Oculta todo hasta que la página esté completamente lista
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Estado por defecto: todo oculto, solo se ve el loader */
+html.is-loading {
+  overflow: hidden;
+}
+
+html.is-loading body {
+  opacity: 0;
+  visibility: hidden;
+}
+
+html.is-loading .app-shell {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Contenedor del loader - siempre visible durante carga */
+.loading-screen {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #0e0e0e 0%, #1a1a1a 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 300ms ease-out, visibility 300ms ease-out;
+}
+
+/* Cuando la página está lista */
+html.is-ready body {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 300ms ease-out;
+}
+
+html.is-ready .app-shell {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 300ms ease-out;
+}
+
+html.is-ready .loading-screen {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 300ms ease-out, visibility 300ms ease-out;
+}
+
+/* Transición de desaparición suave */
+@keyframes fadeInContent {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Spinner animado */
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  position: relative;
+  margin-bottom: 20px;
+}
+
+.loading-spinner::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border: 3px solid rgba(232, 33, 46, 0.2);
+  border-top-color: #e8212e;
+  border-right-color: rgba(232, 33, 46, 0.4);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Texto de carga */
+.loading-text {
+  color: #9a9a9a;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  text-align: center;
+  opacity: 0.8;
+  animation: pulse 1.2s ease-in-out infinite;
+  letter-spacing: 0.5px;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* Logo opcional */
+.loading-logo {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 30px;
+  opacity: 0.9;
+  animation: slideInLogo 400ms ease-out;
+}
+
+@keyframes slideInLogo {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 0.9;
+    transform: scale(1);
+  }
+}
+
+
+
+
+
+
+
+

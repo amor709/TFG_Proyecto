@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import api_views
 
 app_name = 'music'
 
@@ -7,6 +8,11 @@ urlpatterns = [
     # Vista principal
     path('', views.song_list, name='song_list'),
     path('api/track/<int:track_id>/', views.get_track_data, name='get_track_data'),
+
+    # API endpoints para cola
+    path('api/queue-html/', api_views.queue_html, name='queue_html'),
+    path('api/album-tracks/<int:album_id>/<int:track_id>/', api_views.album_tracks, name='album_tracks'),
+    path('api/suggested-tracks/<int:track_id>/', api_views.suggested_tracks, name='suggested_tracks'),
 
     # Vista de artista
     path('artist/', views.artist_detail, name='artist_detail'),
