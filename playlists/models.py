@@ -8,11 +8,11 @@ class Playlist(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_public = models.BooleanField(default=False)
     songs = models.ManyToManyField('music.Song', through='PlaylistSong', related_name='playlists')
-    cover = models.FileField(upload_to='covers/', blank=True, null=True)
+    cover = models.FileField(upload_to='covers/', max_length=255, blank=True, null=True)
     saved_by = models.ManyToManyField('accounts.User', related_name='saved_playlists', blank=True)
     is_liked_playlist = models.BooleanField(default=False)  # Para marcar "Mis joyas"
     order_by_field = models.CharField(max_length=20, default='added', choices=[('added', 'Añadida'), ('name', 'Nombre')])
-    liked_playlist_cover = models.ImageField(upload_to='liked_playlist_covers/', blank=True, null=True)  # Cover personalizado para Mis Joyas
+    liked_playlist_cover = models.ImageField(upload_to='liked_playlist_covers/', max_length=255, blank=True, null=True)  # Cover personalizado para Mis Joyas
 
     @property
     def owner(self):

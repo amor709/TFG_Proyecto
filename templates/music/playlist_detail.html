@@ -117,12 +117,19 @@
                     <!-- Título + artista (thumbnail incluido) -->
                     <span class="tracklist__col tracklist__col--title pl-col-title">
 
-                        <!-- Miniatura del álbum -->
+                        <!-- Miniatura del álbum (o de la canción si es single) -->
                         <div class="pl-track-thumb-wrap">
-                            <img src="{{ song.album.cover.url }}"
-                                 alt="{{ song.album.title }}"
+                            {% if song.cover %}
+                            <img src="{{ song.cover.url }}"
+                                 alt="{{ song.title }}"
                                  class="pl-track-thumb"
                                  loading="lazy">
+                            {% else %}
+                            <img src="{% static 'img/logo.png' %}"
+                                 alt="{{ song.title }}"
+                                 class="pl-track-thumb"
+                                 loading="lazy">
+                            {% endif %}
                         </div>
 
                         <!-- Texto -->

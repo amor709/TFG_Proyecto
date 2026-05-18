@@ -89,10 +89,17 @@
 
                 <!-- Thumbnail -->
                 <div class="sr-song-row__thumb-wrap">
-                    <img src="{{ song.album.cover.url }}"
-                         alt="{{ song.album.title }}"
-                         class="sr-song-row__thumb"
-                         loading="lazy">
+                    {% if song.cover %}
+                        <img src="{{ song.cover.url }}"
+                             alt="{{ song.title }}"
+                             class="sr-song-row__thumb"
+                             loading="lazy">
+                    {% else %}
+                        <img src="{% static 'img/logo.png' %}"
+                             alt="{{ song.title }}"
+                             class="sr-song-row__thumb"
+                             loading="lazy">
+                    {% endif %}
                     <!-- Overlay play al hover -->
                     <div class="sr-song-row__play-overlay" aria-hidden="true">
                         <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">

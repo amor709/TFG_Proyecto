@@ -102,10 +102,17 @@
 
                     <!-- Thumbnail -->
                     <div class="top-song-row__thumb-wrap">
-                        <img src="{{ song.album.cover.url }}"
-                             alt="{{ song.album.title }}"
+                        {% if song.cover %}
+                        <img src="{{ song.cover.url }}"
+                             alt="{{ song.title }}"
                              class="top-song-row__thumb"
                              loading="lazy">
+                        {% else %}
+                        <img src="{% static 'img/logo.png' %}"
+                             alt="{{ song.title }}"
+                             class="top-song-row__thumb"
+                             loading="lazy">
+                        {% endif %}
                         <!-- Overlay play al hover -->
                         <div class="top-song-row__play-overlay" aria-hidden="true">
                             <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
@@ -153,8 +160,13 @@
                     <article class="track-card carousel__item">
                         <a href="{% if item.album %}{% url 'music:album_detail' item.album.pk %}{% else %}#{% endif %}" class="track-card__link">
                             <div class="track-card__cover-wrap">
+                                {% if item.cover %}
                                 <img src="{{ item.cover.url }}" alt="{{ item.title }}"
                                      class="track-card__cover" loading="lazy">
+                                {% else %}
+                                <img src="{% static 'img/logo.png' %}" alt="{{ item.title }}"
+                                     class="track-card__cover" loading="lazy">
+                                {% endif %}
                                 <div class="track-card__play-overlay" aria-hidden="true">
                                     <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
                                 </div>
@@ -262,8 +274,13 @@
                         <article class="track-card carousel__item" data-track-id="{{ single.pk }}">
                             <a href="#" class="track-card__link">
                                 <div class="track-card__cover-wrap">
+                                    {% if single.cover %}
                                     <img src="{{ single.cover.url }}" alt="{{ single.title }}"
                                          class="track-card__cover" loading="lazy">
+                                    {% else %}
+                                    <img src="{% static 'img/logo.png' %}" alt="{{ single.title }}"
+                                         class="track-card__cover" loading="lazy">
+                                    {% endif %}
                                     <div class="track-card__play-overlay" aria-hidden="true">
                                         <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
                                     </div>
@@ -308,8 +325,13 @@
                     <article class="track-card carousel__item" data-track-id="{{ item.pk }}">
                         <a href="#" class="track-card__link">
                             <div class="track-card__cover-wrap">
+                                {% if item.cover %}
                                 <img src="{{ item.cover.url }}" alt="{{ item.title }}"
                                      class="track-card__cover" loading="lazy">
+                                {% else %}
+                                <img src="{% static 'img/logo.png' %}" alt="{{ item.title }}"
+                                     class="track-card__cover" loading="lazy">
+                                {% endif %}
                                 <div class="track-card__play-overlay" aria-hidden="true">
                                     <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
                                 </div>

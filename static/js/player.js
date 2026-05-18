@@ -53,13 +53,13 @@ function initializePlayer() {
         }
     });
 
-    // Cuando termina la canción
+    // Cuando termina la canción.
+    // Si NO es repeat, queue-system.js (queueSystem.onTrackFinished) se encarga
+    // de avanzar; no llamamos a nextSong aquí para evitar doble shift de la cola.
     audio.addEventListener('ended', function() {
         if (isRepeating) {
             audio.currentTime = 0;
             audio.play();
-        } else {
-            nextSong();
         }
     });
 
@@ -105,20 +105,12 @@ function restartSong() {
 }
 
 function nextSong() {
-    console.log('▶️ Botón siguiente clickeado');
-    
-    // Prioridad 1: Si hay cola en queueSystem, reproducir de ahí
-    if (typeof queueSystem !== 'undefined' && queueSystem && queueSystem.queue.length > 0) {
-        console.log(' Usando queueSystem para siguiente (cola tiene', queueSystem.queue.length, 'canciones)');
+    if (typeof queueSystem === 'undefined' || !queueSystem) return;
+    if (queueSystem.queue.length > 0) {
         queueSystem.onTrackFinished();
-    } 
-    // Fallback: usar el playlist global antiguo (backward compatibility)
-    else if (playlist.length > 0) {
-        console.log('⚠️ Cola vacía, usando playlist global como fallback');
-        trackIndex = (trackIndex + 1) % playlist.length;
-        loadSong(trackIndex);
-    } else {
-        console.warn('❌ No hay canciones disponibles');
+    } else if (queueSystem.history.length > 0) {
+        // Cola vacía: pedir sugerencias por la última del historial.
+        queueSystem.performAutoPlay();
     }
 }
 

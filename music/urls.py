@@ -13,6 +13,7 @@ urlpatterns = [
     path('api/queue-html/', api_views.queue_html, name='queue_html'),
     path('api/album-tracks/<int:album_id>/<int:track_id>/', api_views.album_tracks, name='album_tracks'),
     path('api/suggested-tracks/<int:track_id>/', api_views.suggested_tracks, name='suggested_tracks'),
+    path('api/album-suggested-tracks/<int:album_id>/', api_views.album_suggested_tracks, name='album_suggested_tracks'),
     path('api/artist-tracks/<int:artist_id>/', api_views.artist_tracks, name='artist_tracks'),
 
     # Vista de artista

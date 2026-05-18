@@ -41,8 +41,8 @@ class ArtistProfile(models.Model):
     )
     bio = models.TextField(max_length=500, blank=True)
 
-    photo = models.FileField(upload_to='profiles/', blank=True, null=True)
-    banner = models.FileField(upload_to='profiles/', blank=True, null=True)
+    photo = models.FileField(upload_to='profiles/', max_length=255, blank=True, null=True)
+    banner = models.FileField(upload_to='profiles/', max_length=255, blank=True, null=True)
     website = models.URLField(blank=True)
     total_plays = models.PositiveIntegerField(default=0)
     slug = models.SlugField(unique=True, null=True, blank=True)
@@ -78,7 +78,7 @@ class ListenerProfile(models.Model):
         related_name='listener_profile'
     )
 
-    avatar = models.FileField(upload_to='profiles/', blank=True, null=True)
+    avatar = models.FileField(upload_to='profiles/', max_length=255, blank=True, null=True)
 
     following = models.ManyToManyField(ArtistProfile, blank=True, related_name='followers')
     saved_albums = models.ManyToManyField('music.Album', related_name='saved_by_users', blank=True)

@@ -89,8 +89,8 @@
                 <article class="track-card" data-track-id="{{ song.pk }}">
                     <div class="track-card__link" onclick="playStandalone({{ song.pk }}); return false;" style="cursor: pointer;">
                         <div class="track-card__cover-wrap">
-                            <img src="{% if song.album.cover %}{{ song.album.cover.url }}{% else %}{% static 'img/album-default.png' %}{% endif %}"
-                                 alt="{% if song.album %}{{ song.album.title }}{% else %}{{ song.title }}{% endif %}"
+                            <img src="{% if song.cover %}{{ song.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
+                                 alt="{{ song.title }}"
                                  class="track-card__cover"
                                  loading="lazy">
                             <div class="track-card__play-overlay" aria-hidden="true">

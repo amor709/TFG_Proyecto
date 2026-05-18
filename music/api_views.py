@@ -40,7 +40,12 @@ def queue_html(request):
             track = track_dict[track_id]
             duration_display = track.duration_display if hasattr(track, 'duration_display') else '0:00'
 
-            cover_url = track.album.cover.url if track.album and track.album.cover else '/static/img/album-placeholder.png'
+            if track.cover:
+                cover_url = track.cover.url
+            elif track.album and track.album.cover:
+                cover_url = track.album.cover.url
+            else:
+                cover_url = '/static/img/logo.png'
             artist_name = track.artist.user.username if track.artist else 'Desconocido'
 
             collaborators_html = ''
@@ -153,6 +158,52 @@ def suggested_tracks(request, track_id):
             return JsonResponse({'suggested_ids': suggested})
         except:
             return JsonResponse({'suggested_ids': []})
+
+
+@csrf_exempt
+@require_http_methods(["GET"])
+def album_suggested_tracks(request, album_id):
+    """
+    Sugerencias basadas en los tags del álbum entero, excluyendo sus propias
+    canciones. Mismo orden de prioridad que suggested_tracks pero a nivel álbum.
+    Endpoint: /music/api/album-suggested-tracks/{album_id}/
+    """
+    try:
+        from playlists.models import Playlist
+
+        album = Album.objects.get(id=album_id)
+        album_tags = album.tags.all()
+        album_song_ids = list(album.songs.values_list('id', flat=True))
+        suggested = []
+
+        if album_tags.exists():
+            if request.user.is_authenticated:
+                liked_playlists = Playlist.objects.filter(
+                    user=request.user,
+                    is_liked_playlist=True
+                )
+                if liked_playlists.exists():
+                    suggested = list(
+                        Song.objects.filter(
+                            playlists__in=liked_playlists,
+                            tags__in=album_tags
+                        ).exclude(id__in=album_song_ids).distinct().values_list('id', flat=True)[:10]
+                    )
+
+        if not suggested and album_tags.exists():
+            suggested = list(Song.objects.filter(
+                tags__in=album_tags
+            ).exclude(id__in=album_song_ids).distinct().values_list('id', flat=True)[:10])
+
+        if not suggested:
+            suggested = list(
+                Song.objects.exclude(id__in=album_song_ids)
+                .order_by('?').values_list('id', flat=True)[:10]
+            )
+
+        return JsonResponse({'suggested_ids': suggested})
+    except Album.DoesNotExist:
+        return JsonResponse({'suggested_ids': []})
 
 
 @csrf_exempt

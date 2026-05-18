@@ -35,8 +35,9 @@ def search_view(request):
         Q(artist__user__username__icontains=query)
     ).distinct().select_related('artist').order_by('-release_date')[:50]
 
-    # Artistas: nombre álbum asociado o canción asociada
+    # Artistas: nombre del artista, álbum asociado o canción asociada
     artists = ArtistProfile.objects.filter(
+        Q(user__username__icontains=query) |
         Q(albums__title__icontains=query) |
         Q(songs__title__icontains=query)
     ).distinct().order_by('user__username')[:50]
@@ -71,6 +72,7 @@ def search_all_view(request):
         return render(request, 'search_all.html', context)
     elif type_filter == 'artists':
         artists = ArtistProfile.objects.filter(
+            Q(user__username__icontains=query) |
             Q(albums__title__icontains=query) |
             Q(songs__title__icontains=query)
         ).distinct().order_by('user__username')

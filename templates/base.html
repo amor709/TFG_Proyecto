@@ -39,7 +39,6 @@
         <div class="header__search">
             <div class="search-bar">
                 <img src="{% static 'img/home-icon.png' %}" alt="Inicio" class="search-bar__home-icon icon--md">
-                <img src="{% static 'img/search-icon.png' %}" alt="Buscar" class="search-bar__search-icon icon--md">
                 <input
                     type="text"
                     class="search-bar__input"
@@ -54,16 +53,18 @@
         <!-- Controles de cabecera derecha -->
         <div class="header__controls">
             <button class="header-btn" aria-label="Cola de reproducción">
-                <img src="{% static 'img/queue.png' %}" alt="" class="icon--sm">
+                <img src="{% static 'img/play-left.png' %}" alt="" class="icon--sm">
             </button>
             <button class="header-btn" aria-label="Pantalla completa">
-                <img src="{% static 'img/fullscreen.png' %}" alt="" class="icon--sm">
+                <img src="{% static 'img/play-right.png' %}" alt="" class="icon--sm">
             </button>
             <!-- Avatar de usuario -->
             <div class="header__avatar-container">
                 <div class="header__avatar" aria-label="Perfil de usuario" onclick="toggleUserDropdown(event)">
                     {% if request.user.is_authenticated %}
-                        {% if request.user.listener_profile and request.user.listener_profile.avatar %}
+                        {% if request.user.is_artist and request.user.artist_profile.photo %}
+                            <img src="{{ request.user.artist_profile.photo.url }}" alt="{{ request.user.username }}" class="avatar-img">
+                        {% elif request.user.listener_profile and request.user.listener_profile.avatar %}
                             <img src="{{ request.user.listener_profile.avatar.url }}" alt="{{ request.user.username }}" class="avatar-img">
                         {% else %}
                             <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
@@ -380,6 +381,12 @@ document.addEventListener('click', function(event) {
 
         if (volumeSlider) {
             console.log('✅ Volumen slider encontrado');
+
+            const savedVolume = localStorage.getItem('soundmusik_volume');
+            if (savedVolume !== null) {
+                volumeSlider.value = savedVolume;
+            }
+
             audio.volume = volumeSlider.value / 100;
             document.documentElement.style.setProperty('--volume', volumeSlider.value + '%');
 
@@ -387,6 +394,7 @@ document.addEventListener('click', function(event) {
                 const newVolume = this.value / 100;
                 audio.volume = newVolume;
                 document.documentElement.style.setProperty('--volume', this.value + '%');
+                localStorage.setItem('soundmusik_volume', this.value);
                 console.log('Volumen actualizado a:', (newVolume * 100).toFixed(1) + '%');
             });
 
@@ -561,21 +569,12 @@ document.addEventListener('click', function(event) {
     }
 
     function nextSong() {
-        console.log('▶️ Botón siguiente clickeado');
-
-        // Prioridad 1: Si hay cola en queueSystem, reproducir de ahí
-        if (typeof queueSystem !== 'undefined' && queueSystem && queueSystem.queue.length > 0) {
-            console.log('📋 Usando queueSystem para siguiente (cola tiene', queueSystem.queue.length, 'canciones)');
+        if (typeof queueSystem === 'undefined' || !queueSystem) return;
+        if (queueSystem.queue.length > 0) {
             queueSystem.onTrackFinished();
-        }
-        // Fallback: usar el playlist global antiguo (backward compatibility)
-        else if (playlist.length > 0) {
-            console.log('⚠️ Cola vacía, usando playlist global como fallback');
-            trackIndex = (trackIndex + 1) % playlist.length;
-            console.log(' Siguiente canción:', trackIndex);
-            loadSong(trackIndex);
-        } else {
-            console.warn('❌ No hay canciones disponibles');
+        } else if (queueSystem.history.length > 0) {
+            // Cola vacía: pedir sugerencias por la última del historial.
+            queueSystem.performAutoPlay();
         }
     }
 

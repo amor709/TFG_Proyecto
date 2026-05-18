@@ -89,7 +89,11 @@
                 {% for song in songs %}
                 <article class="tracklist__track" data-track-id="{{ song.pk }}">
                     <div class="tracklist__track-thumb-wrap">
-                        <img src="{{ song.album.cover.url }}" alt="{{ song.album.title }}" class="tracklist__track-thumb" loading="lazy">
+                        {% if song.cover %}
+                        <img src="{{ song.cover.url }}" alt="{{ song.title }}" class="tracklist__track-thumb" loading="lazy">
+                        {% else %}
+                        <img src="{% static 'img/logo.png' %}" alt="{{ song.title }}" class="tracklist__track-thumb" loading="lazy">
+                        {% endif %}
                         <div class="tracklist__track-play-overlay" aria-hidden="true">
                             <img src="{% static 'img/icon-play-sm.png' %}" alt="" class="icon--xs">
                         </div>
@@ -132,7 +136,7 @@ document.addEventListener('DOMContentLoaded', function() {
      {
          title: "{{ song.title }}",
          url: "{{ song.audio_file.url }}",
-         cover: "{{ song.album.cover.url }}",
+         cover: "{% if song.cover %}{{ song.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}",
          artist: "{{ song.artist.name }}",
          id: {{ song.pk }}
      }{% if not forloop.last %},{% endif %}

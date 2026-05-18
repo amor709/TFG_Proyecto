@@ -58,6 +58,11 @@ class QueueSystem {
             // Remover todo lo anterior a este índice (incluido este)
             this.queue.splice(0, index + 1);
             this.saveQueueToStorage();
+            // Marca: la siguiente reproducción viene de la cola, no debe
+            // vaciarla ni recargar sugerencias en playSongA.
+            if (typeof window !== 'undefined') {
+                window.__isPlayingFromQueue = true;
+            }
             playSongA(trackId);
             return trackId;
         }
@@ -143,8 +148,9 @@ class QueueSystem {
              }
 
              playSongA(nextTrackId);
-         } else if (this.isAutoPlayPending) {
-             // Si no hay cola pendiente y hay que hacer autoplay, hacerlo
+         } else if (this.history.length > 0) {
+             // Cola vacía pero hay historial → autoplay: pide sugerencias por
+             // la última canción reproducida (backend tiene fallback aleatorio).
              this.performAutoPlay();
          }
      }
@@ -172,6 +178,22 @@ class QueueSystem {
              if (albumTracks.length > 0) {
                  this.addMultipleToQueue(albumTracks);
                  console.log(`Cola del álbum llena con ${albumTracks.length} canciones`);
+             }
+
+             // Sugerencias por tags del ÁLBUM, no de la canción.
+             // Se añaden detrás del resto del álbum para sonar al terminar.
+             try {
+                 const sugResponse = await fetch(`/music/api/album-suggested-tracks/${albumId}/`);
+                 if (sugResponse.ok) {
+                     const sugData = await sugResponse.json();
+                     const suggestedTracks = sugData.suggested_ids || [];
+                     if (suggestedTracks.length > 0) {
+                         this.addMultipleToQueue(suggestedTracks);
+                         console.log(`Cola: ${suggestedTracks.length} sugerencias por tags del álbum`);
+                     }
+                 }
+             } catch (sugError) {
+                 console.warn('No se pudieron cargar sugerencias del álbum:', sugError);
              }
 
              // ⭐ MARCAR COMO REPRODUCCIÓN DESDE ÁLBUM (antes de reproducir)

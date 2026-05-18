@@ -120,31 +120,23 @@ async function playSongA(trackId) {
          // Guardar información de la canción actual en localStorage
          saveCurrentTrackToStorage(trackData);
 
-        // ⭐ IMPORTANTE: Cargar sugerencias y actualizar cola
+        // Gestión de la cola tras reproducir una canción.
+        // - Si viene de la cola/álbum/artista: la cola ya está preparada por
+        //   quien disparó la reproducción (playTrackWithAlbum, playTrackFromArtist,
+        //   onTrackFinished, playQueueTrackAt). No tocar.
+        // - Si es reproducción manual (single suelto): vaciar y precargar sugerencias
+        //   por los tags de esta canción.
         if (typeof queueSystem !== 'undefined' && queueSystem) {
-            console.log('🔄 Preparando cola para nuevas sugerencias...');
-            
-            // Detectar si venimos de reproducción manual o automática
             const isPlayingFromQueue = window.__isPlayingFromQueue === true;
-            window.__isPlayingFromQueue = false; // Resetear el flag
+            window.__isPlayingFromQueue = false;
 
             if (!isPlayingFromQueue) {
-                // Es una reproducción manual → VACIAR y cargar sugerencias nuevas
-                console.log('Reproducción manual detectada → vaciando cola y cargando sugerencias');
                 queueSystem.queue = [];
                 queueSystem.fromAlbum = false;
                 queueSystem.currentAlbumId = null;
                 queueSystem.saveQueueToStorage();
-            } else {
-                // Es reproducción automática desde cola → MANTENER cola y solo agregar sugerencias al final
-                console.log('Reproducción desde cola detectada → manteniendo cola intacta');
+                await loadSuggestedTracksToQueue(trackId, true);
             }
-
-            // Cargar sugerencias para esta canción
-            console.log('📥 Cargando sugerencias para la canción:', trackId);
-            await loadSuggestedTracksToQueue(trackId, !isPlayingFromQueue);
-        } else {
-            console.warn('⚠queueSystem no está disponible');
         }
 
          // Disparar evento para actualizar paneles (DESPUÉS de cargar sugerencias)

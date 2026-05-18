@@ -8,11 +8,21 @@
 <ul class="song-list">
 {% for song in songs %}
 <li class="song-item">
-    <img src="{{ song.cover_url }}" alt="Portada de {{ song.title }}" class="song-cover">
+    {% if song.cover %}
+        <img src="{{ song.cover.url }}" alt="Portada de {{ song.title }}" class="song-cover">
+    {% else %}
+        <img src="{% static 'img/logo.png' %}" alt="Portada de {{ song.title }}" class="song-cover">
+    {% endif %}
     <div class="song-info">
-        <h3><a href="{% url 'music:song_detail' song.pk %}">{{ song.title }}</a></h3>
+        <h3>
+            {% if song.album %}
+                <a href="{% url 'music:album_detail' song.album.id %}">{{ song.title }}</a>
+            {% else %}
+                <a href="{% url 'music:artist_detail_public' song.artist.id %}">{{ song.title }}</a>
+            {% endif %}
+        </h3>
         <p>{{ song.artist.user.username }}</p>
-        <p>{{ song.genre.name|default:"Sin género" }}</p>
+        <p>{% if song.album %}{{ song.album.title }}{% else %}Single{% endif %}</p>
     </div>
 </li>
 {% endfor %}

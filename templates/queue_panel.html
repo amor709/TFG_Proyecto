@@ -27,10 +27,10 @@
             {% for track in queue_tracks %}
             <li class="queue-item" data-track-id="{{ track.pk }}" onclick="queueSystem.playQueueTrackAt({{ forloop.counter0 }}); return false;">
 
-                <!-- Cover del álbum -->
+                <!-- Cover del álbum (o de la canción si es single) -->
                 <div class="queue-item__cover-wrap">
-                    <img src="{% if track.album %}{{ track.album.cover.url }}{% else %}/static/img/album-placeholder.png{% endif %}"
-                         alt="{% if track.album %}{{ track.album.title }}{% else %}{{ track.title }}{% endif %}"
+                    <img src="{% if track.cover %}{{ track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
+                         alt="{{ track.title }}"
                          class="queue-item__cover"
                          loading="lazy">
                     <!-- Overlay play al hover -->
