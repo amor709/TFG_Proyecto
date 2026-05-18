@@ -5,15 +5,14 @@
  */
 class QueueSystem {
     constructor() {
-        this.queue = [];
-        this.history = [];
-        this.currentTrackIndex = null;
-        this.maxHistorySize = 20;
-        this.fromAlbum = false;
-        this.currentAlbumId = null;
-        this.isAutoPlayPending = false;
-        this.init();
-    }
+         this.queue = [];
+         this.history = [];
+         this.currentTrackIndex = null;
+         this.maxHistorySize = 20;
+         this.fromAlbum = false;
+         this.currentAlbumId = null;
+         this.init();
+     }
     init() {
         this.loadQueueFromStorage();
         this.loadHistoryFromStorage();
@@ -157,70 +156,130 @@ class QueueSystem {
      * Se llama desde templates de álbum
      */
     async playTrackWithAlbum(trackId, albumId) {
-        try {
-            console.log(` Reproduciendo canción ${trackId} del álbum ${albumId}`);
-            // Primero, limpiar la cola actual
-            this.clearQueue();
-            this.setFromAlbum(albumId);
-            // Obtener las canciones restantes del álbum
-            const response = await fetch(`/music/api/album-tracks/${albumId}/${trackId}/`);
-            if (!response.ok) {
-                throw new Error('Error obteniendo canciones del álbum');
-            }
-            const data = await response.json();
-            const albumTracks = data.album_tracks || [];
-            // Añadir las canciones restantes a la cola
-            if (albumTracks.length > 0) {
-                this.addMultipleToQueue(albumTracks);
-                console.log(`Cola del álbum llena con ${albumTracks.length} canciones`);
-            }
-            // Reproducir la canción actual
-            playSongA(trackId);
-        } catch (error) {
-            console.error('Error al reproducir canción del álbum:', error);
-            // Si hay error, reproducir solo la canción
-            playSongA(trackId);
-        }
-    }
+         try {
+             console.log(` Reproduciendo canción ${trackId} del álbum ${albumId}`);
+             // Primero, limpiar la cola actual
+             this.clearQueue();
+             this.setFromAlbum(albumId);
+             // Obtener las canciones restantes del álbum
+             const response = await fetch(`/music/api/album-tracks/${albumId}/${trackId}/`);
+             if (!response.ok) {
+                 throw new Error('Error obteniendo canciones del álbum');
+             }
+             const data = await response.json();
+             const albumTracks = data.album_tracks || [];
+             // Añadir las canciones restantes a la cola
+             if (albumTracks.length > 0) {
+                 this.addMultipleToQueue(albumTracks);
+                 console.log(`Cola del álbum llena con ${albumTracks.length} canciones`);
+             }
+
+             // ⭐ MARCAR COMO REPRODUCCIÓN DESDE ÁLBUM (antes de reproducir)
+             if (typeof window !== 'undefined') {
+                 window.__isPlayingFromQueue = true;
+             }
+
+             // Reproducir la canción actual
+             playSongA(trackId);
+         } catch (error) {
+             console.error('Error al reproducir canción del álbum:', error);
+             // Si hay error, reproducir solo la canción
+             if (typeof window !== 'undefined') {
+                 window.__isPlayingFromQueue = false;
+             }
+             playSongA(trackId);
+         }
+     }
 
     playTrackStandalone(trackId) {
-        console.log(`Reproduciendo track standalone: ${trackId}`);
-        this.clearQueue();
-        this.clearFromAlbumData();
-        // Marcar para autoplay después
-        this.isAutoPlayPending = true;
-        playSongA(trackId);
-    }
-    performAutoPlay() {
-        if (this.history.length === 0) {
-            return;
-        }
-        const lastTrackId = this.history[this.history.length - 1];
+         console.log(`Reproduciendo track standalone: ${trackId}`);
+         this.clearQueue();
+         this.clearFromAlbumData();
 
-        this.fetchSuggestedTracks(lastTrackId);
-    }
-    async fetchSuggestedTracks(trackId) {
-        try {
-            const response = await fetch(`/music/api/suggested-tracks/${trackId}/`);
-            if (!response.ok) {
-                throw new Error('Error obteniendo canciones sugeridas');
-            }
-            const data = await response.json();
-            if (data.suggested_ids && data.suggested_ids.length > 0) {
-                console.log('✅ Añadiendo', data.suggested_ids.length, 'canciones sugeridas a la cola');
-                this.addMultipleToQueue(data.suggested_ids);
-                this.isAutoPlayPending = false;
-                // Si hay canciones en cola, reproducir la siguiente
-                if (this.queue.length > 0) {
-                    const nextTrackId = this.queue.shift();
-                    this.saveQueueToStorage();
-                    playSongA(nextTrackId);
-                }
-            }
-        } catch (error) {
-            console.error('Error en autoplay:', error);
-        }
-    }
+         // ⭐ MARCAR COMO REPRODUCCIÓN MANUAL (NO desde cola)
+         if (typeof window !== 'undefined') {
+             window.__isPlayingFromQueue = false;
+         }
+
+         // Reproducir la canción actual
+         playSongA(trackId);
+     }
+
+     async playTrackFromArtist(trackId, artistId) {
+         try {
+             console.log(`🎵 Reproduciendo canción ${trackId} del artista ${artistId}`);
+             this.clearQueue();
+             this.clearFromAlbumData();
+
+             const response = await fetch(`/music/api/artist-tracks/${artistId}/`);
+             if (!response.ok) {
+                 throw new Error('Error obteniendo canciones del artista');
+             }
+             const data = await response.json();
+             const artistTracks = data.artist_tracks || [];
+
+             if (artistTracks.length > 0) {
+                 const shuffled = artistTracks.sort(() => 0.5 - Math.random());
+                 this.addMultipleToQueue(shuffled);
+                 console.log(`✅ Cola del artista: ${shuffled.length} canciones`);
+             }
+
+             if (typeof window !== 'undefined') {
+                 window.__isPlayingFromArtist = true;
+                 window.__isPlayingFromQueue = true;
+             }
+
+             playSongA(trackId);
+         } catch (error) {
+             console.error('Error al reproducir canción del artista:', error);
+             if (typeof window !== 'undefined') {
+                 window.__isPlayingFromQueue = false;
+                 window.__isPlayingFromArtist = false;
+             }
+             playSongA(trackId);
+         }
+     }
+    performAutoPlay() {
+         if (this.history.length === 0) {
+             console.log('⚠️ No hay historial, no se puede activar autoplay');
+             return;
+         }
+         const lastTrackId = this.history[this.history.length - 1];
+         console.log('🔄 Ejecutando autoplay con última canción:', lastTrackId);
+
+         this.fetchSuggestedTracks(lastTrackId);
+     }
+     async fetchSuggestedTracks(trackId) {
+         try {
+             console.log('🔍 Buscando sugerencias para:', trackId);
+             const response = await fetch(`/music/api/suggested-tracks/${trackId}/`);
+             if (!response.ok) {
+                 throw new Error('Error obteniendo canciones sugeridas');
+             }
+             const data = await response.json();
+             if (data.suggested_ids && data.suggested_ids.length > 0) {
+                 console.log('✅ Añadiendo', data.suggested_ids.length, 'canciones sugeridas a la cola');
+                 this.addMultipleToQueue(data.suggested_ids);
+
+                 // Reproducir la primera canción sugerida
+                 if (this.queue.length > 0) {
+                     const nextTrackId = this.queue.shift();
+                     this.saveQueueToStorage();
+
+                     // Marcar como reproducción desde queue
+                     if (typeof window !== 'undefined') {
+                         window.__isPlayingFromQueue = true;
+                     }
+
+                     playSongA(nextTrackId);
+                 }
+             } else {
+                 console.log('⚠️ No hay canciones sugeridas disponibles');
+             }
+         } catch (error) {
+             console.error('Error en autoplay:', error);
+         }
+     }
     setFromAlbum(albumId) {
         this.fromAlbum = true;
         this.currentAlbumId = albumId;
@@ -246,22 +305,31 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 function playFromAlbum(trackId, albumId) {
-    if (typeof queueSystem !== 'undefined') {
-        queueSystem.playTrackWithAlbum(trackId, albumId);
-    } else {
-        console.warn('Queue system no cargado');
-        playSongA(trackId);
-    }
-}
+     if (typeof queueSystem !== 'undefined') {
+         queueSystem.playTrackWithAlbum(trackId, albumId);
+     } else {
+         console.warn('Queue system no cargado');
+         playSongA(trackId);
+     }
+ }
 
-function playStandalone(trackId) {
-    if (typeof queueSystem !== 'undefined') {
-        queueSystem.playTrackStandalone(trackId);
-    } else {
-        console.warn('Queue system no cargado');
-        playSongA(trackId);
-    }
-}
+ function playFromArtist(trackId, artistId) {
+     if (typeof queueSystem !== 'undefined') {
+         queueSystem.playTrackFromArtist(trackId, artistId);
+     } else {
+         console.warn('Queue system no cargado');
+         playSongA(trackId);
+     }
+ }
+
+ function playStandalone(trackId) {
+     if (typeof queueSystem !== 'undefined') {
+         queueSystem.playTrackStandalone(trackId);
+     } else {
+         console.warn('Queue system no cargado');
+         playSongA(trackId);
+     }
+ }
 /**
  * Añadir una canción a la cola sin reproducir
  * Uso: onclick="addToQueueFromUI(trackId)"

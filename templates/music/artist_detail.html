@@ -380,18 +380,31 @@ function loadSongByData(songData) {
 }
 
 // Shuffle button
-document.getElementById('btn-artist-shuffle').addEventListener('click', () => {
-    if (artistSongs.length > 0 && typeof playSongA === 'function') {
-        const randomIndex = Math.floor(Math.random() * artistSongs.length);
-        playSongA(artistSongs[randomIndex].id);
+document.getElementById('btn-artist-shuffle').addEventListener('click', async () => {
+    const artistId = document.getElementById('btn-artist-shuffle').dataset.artistId;
+    if (typeof queueSystem !== 'undefined' && queueSystem) {
+        // Obtener TODAS las canciones del artista
+        try {
+            const response = await fetch(`/music/api/artist-tracks/${artistId}/`);
+            const data = await response.json();
+            const allArtistTracks = data.artist_tracks || [];
+
+            if (allArtistTracks.length > 0) {
+                // Seleccionar una canción aleatoria de todos los tracks
+                const randomTrackId = allArtistTracks[Math.floor(Math.random() * allArtistTracks.length)];
+                playFromArtist(randomTrackId, artistId);
+            }
+        } catch (error) {
+            console.error('Error al obtener canciones del artista:', error);
+        }
     }
 });
 
 // Top songs click
 document.querySelectorAll('.top-song-row').forEach((row, index) => {
     row.addEventListener('click', () => {
-        if (artistSongs[index] && typeof playSongA === 'function') {
-            playSongA(artistSongs[index].id);
+        if (artistSongs[index] && typeof playStandalone === 'function') {
+            playStandalone(artistSongs[index].id);
         }
     });
 });
@@ -402,10 +415,10 @@ document.querySelectorAll('.track-card__link[href="#"]').forEach(link => {
         e.preventDefault();
         // Buscar el elemento padre que tenga data-track-id
         const card = this.closest('[data-track-id]');
-        if (card && typeof playSongA === 'function') {
+        if (card && typeof playStandalone === 'function') {
             const trackId = card.dataset.trackId;
             if (trackId) {
-                playSongA(trackId);
+                playStandalone(trackId);
             }
         }
     });

@@ -616,18 +616,10 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 }
 .track-card__link:hover .track-card__cover { transform: scale(1.04); }
 
-/* Overlay de play al hover (oculto por defecto, visible con CSS) */
+/* Overlay de play al hover - DESHABILITADO */
 .track-card__play-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transition: opacity var(--duration-normal) var(--ease-out);
+  display: none !important;
 }
-.track-card__link:hover .track-card__play-overlay { opacity: 1; }
 
 .track-card__title {
   font-size: var(--text-base);
@@ -793,12 +785,29 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   font-weight: 600;
   color: var(--color-text-primary);
   background: var(--color-surface-02);
-  transition: background var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast);
+  transition: background var(--duration-fast), border-color var(--duration-fast), box-shadow var(--duration-fast), color var(--duration-fast);
+  cursor: pointer;
 }
 .btn-follow:hover {
   background: var(--color-accent);
   border-color: var(--color-accent);
   box-shadow: var(--shadow-accent);
+  color: #000;
+}
+.btn--following {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #000;
+}
+.btn--following:hover {
+  background: var(--color-surface-02);
+  border-color: var(--color-surface-03);
+  color: var(--color-text-primary);
+}
+.btn--not-following {
+  background: var(--color-surface-02);
+  border-color: var(--color-surface-03);
+  color: var(--color-text-primary);
 }
 
 /* Estado vacío del panel derecho */
@@ -1328,7 +1337,11 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   font-size: var(--text-xs);
 }
 
-/* Elemento fijo del sidebar (ej: "Mis Joyas") */
+/* Elemento fijo del sidebar (ej: "Mis Joyas") - SIEMPRE ARRIBA */
+.sidebar-item--fixed {
+  order: -9999;  /* Asegurar que siempre esté lo primero */
+}
+
 .sidebar-item--fixed .sidebar-item__link {
   font-weight: 600;
   border-bottom: 1px solid var(--color-surface-03);
@@ -1385,3 +1398,122 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   padding-left: calc(var(--space-2) - 3px);
 }
 
+/* ───────────────────────────────────────────────────────────────────
+   MENÚ DE OPCIONES DE CANCIONES  (3 puntos)
+   Similar al dropdown del perfil del usuario
+   ─────────────────────────────────────────────────────────────────── */
+
+/* Contenedor flotante del menú principal */
+.song-options-menu-floating {
+  position: fixed;
+  background: var(--color-surface-02);
+  border: 1px solid var(--color-surface-03);
+  border-radius: var(--radius-md);
+  min-width: 200px;
+  max-width: 250px;
+  z-index: 10000;
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-fast), visibility var(--duration-fast);
+}
+
+.song-options-menu-floating.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Contenedor del contenido del menú */
+.song-options-menu-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Elementos del menú (botones y enlaces) */
+.song-options-item {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  font-size: var(--text-sm);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  transition: background var(--duration-fast);
+}
+
+.song-options-item:hover {
+  background: var(--color-surface-03);
+}
+
+.song-options-item:active {
+  background: rgba(232, 33, 46, 0.1);
+}
+
+/* Divisor visual entre secciones */
+.song-options-divider {
+  height: 1px;
+  background: var(--color-surface-03);
+  margin: var(--space-1) 0;
+}
+
+/* Submenu de playlists */
+.playlist-submenu-floating {
+  position: fixed;
+  background: var(--color-surface-02);
+  border: 1px solid var(--color-surface-03);
+  border-radius: var(--radius-md);
+  min-width: 180px;
+  max-width: 220px;
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 10001;
+  box-shadow: var(--shadow-card);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--duration-fast), visibility var(--duration-fast);
+}
+
+.playlist-submenu-floating.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Elementos del submenu de playlists */
+.playlist-item {
+  display: block;
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-primary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  font-size: var(--text-sm);
+  transition: background var(--duration-fast);
+}
+
+.playlist-item:hover {
+  background: var(--color-surface-03);
+}
+
+.playlist-item:active {
+  background: rgba(232, 33, 46, 0.1);
+}
+
+/* Estados especiales */
+.submenu-loader,
+.no-playlists,
+.error-msg {
+  padding: var(--space-3) var(--space-4);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.error-msg {
+  color: var(--color-accent);
+}

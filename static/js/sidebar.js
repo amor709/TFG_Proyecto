@@ -19,37 +19,69 @@ class SidebarManager {
     }
 
     init() {
-        // Cargar sección inicial (Recientes)
-        this.loadSidebarSection('recent');
+         // Cargar sección guardada en localStorage o por defecto "recent"
+         const savedSection = localStorage.getItem('sidebarActiveSection');
 
-        // Event listeners para los chips de filtro
-        this.filterChips.forEach(chip => {
-            chip.addEventListener('click', (e) => this.onFilterChipClick(e));
-        });
 
-        // Event listener para la búsqueda
-        if (this.searchInput) {
-            this.searchInput.addEventListener('input', (e) => this.onSearchInput(e));
-        }
+         this.currentSection = savedSection || 'recent';
 
-        console.log('✅ SidebarManager inicializado');
-    }
 
-    /**
-     * Maneja el clic en los chips de filtro (Recientes/Guardados)
-     */
-    onFilterChipClick(e) {
-        const section = e.target.dataset.section;
-        if (section === this.currentSection) return;
+         // Actualizar UI de chips ANTES de cargar contenido
+         this.updateFilterChipUI(this.currentSection);
 
-        // Actualizar estado visual de los chips
-        this.filterChips.forEach(c => c.classList.remove('filter-chip--active'));
-        e.target.classList.add('filter-chip--active');
+         // Luego cargar la sección
+         this.loadSidebarSection(this.currentSection);
 
-        // Limpiar búsqueda y cargar nueva sección
-        this.currentSection = section;
-        this.searchInput.value = '';
-        this.loadSidebarSection(section);
+         // Event listeners para los chips de filtro
+         this.filterChips.forEach(chip => {
+             chip.addEventListener('click', (e) => this.onFilterChipClick(e));
+         });
+
+         // Event listener para la búsqueda
+         if (this.searchInput) {
+             this.searchInput.addEventListener('input', (e) => this.onSearchInput(e));
+         }
+
+
+     }
+
+     /**
+      * Actualizar UI de los chips de filtro
+      */
+     updateFilterChipUI(section) {
+         console.log('🎨 Actualizando UI de chips para sección:', section);
+         this.filterChips.forEach(chip => {
+             const chipSection = chip.dataset.section;
+             console.log('Evaluando chip con data-section:', chipSection, '| Match:', chipSection === section);
+
+             if (chipSection === section) {
+                 chip.classList.add('filter-chip--active');
+             } else {
+                 chip.classList.remove('filter-chip--active');
+             }
+         });
+     }
+
+     /**
+      * Maneja el clic en los chips de filtro (Recientes/Guardados)
+      */
+     onFilterChipClick(e) {
+         const section = e.target.dataset.section;
+         if (section === this.currentSection) {
+
+             return;
+         }
+
+         // Actualizar estado visual de los chips
+         this.updateFilterChipUI(section);
+
+         // Actualizar sección actual y guardar en localStorage
+         this.currentSection = section;
+         localStorage.setItem('sidebarActiveSection', section);
+
+         // Limpiar búsqueda y cargar nueva sección
+         this.searchInput.value = '';
+         this.loadSidebarSection(section);
     }
 
     /**
@@ -57,6 +89,8 @@ class SidebarManager {
      */
     reloadCurrentSection() {
         if (this.currentSection === 'recent') {
+            this.loadSidebarSection(this.currentSection);
+        } else if (this.currentSection === 'saved') {
             this.loadSidebarSection(this.currentSection);
         }
     }
@@ -85,10 +119,13 @@ class SidebarManager {
      */
     loadSidebarSection(section) {
         this.setLoading(true);
+        console.log('📥 Cargando sección:', section);
 
         const url = section === 'recent'
             ? '/accounts/sidebar/recent/'
             : '/accounts/sidebar/saved/';
+
+        console.log('URL:', url);
 
         fetch(url)
             .then(response => {
@@ -96,11 +133,12 @@ class SidebarManager {
                 return response.json();
             })
             .then(data => {
+                console.log('Items recibidos:', data.items?.length || 0);
                 this.renderSidebarItems(data.items);
                 this.setLoading(false);
             })
             .catch(error => {
-                console.error('❌ Error al cargar sidebar:', error);
+                console.error('Error al cargar sidebar:', error);
                 this.setLoading(false);
                 this.showError('Error al cargar items');
             });

@@ -40,7 +40,7 @@
         <div class="carousel__track">
             {% for track in recently_played %}
             <article class="track-card carousel__item">
-                <div class="track-card__link" onclick="playSongA({{ track.pk }}); return false;" style="cursor: pointer;">
+                <div class="track-card__link" onclick="playStandalone({{ track.pk }}); return false;" style="cursor: pointer;">
                     <div class="track-card__cover-wrap">
                         <img src="{% if track.cover %}{{ track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
                              alt="{{ track.title }}"
@@ -160,7 +160,7 @@
         <div class="carousel__track">
             {% for track in back_to_music %}
             <article class="track-card carousel__item">
-                <div class="track-card__link" onclick="playSongA({{ track.pk }}); return false;" style="cursor: pointer;">
+                <div class="track-card__link" onclick="playStandalone({{ track.pk }}); return false;" style="cursor: pointer;">
                     <div class="track-card__cover-wrap">
                         <img src="{% if track.cover %}{{ track.cover.url }}{% else %}{% static 'img/album-placeholder.png' %}{% endif %}"
                              alt="{{ track.title }}"
@@ -194,30 +194,29 @@
 </section><!-- /back to music -->
 
 <!-- ── SECCIÓN: Tus playlists ── -->
-{% if user.is_authenticated %}
+{% if user.is_authenticated and not request.user.is_artist %}
 <section class="content-section" aria-labelledby="playlists-heading">
     <h2 class="section-title" id="playlists-heading">Tus playlists</h2>
     <div class="carousel" id="carousel-playlists">
         <div class="carousel__track">
-            {% for playlist in user_playlists %}
-            <article class="track-card carousel__item">
-                <a href="{% url 'playlists:detail' playlist.pk %}" class="track-card__link">
-                    <div class="track-card__cover-wrap">
-                        <img src="{% static 'img/playlist-placeholder.png' %}"
-                             alt="{{ playlist.name }}"
-                             class="track-card__cover"
-                             loading="lazy">
-                        <div class="track-card__play-overlay" aria-hidden="true">
-                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
-                        </div>
-                    </div>
-                    <h3 class="track-card__title">{{ playlist.name }}</h3>
-                    <p class="track-card__sub">
-                        Playlist · {{ playlist.created_at|date:"M Y" }}
-                    </p>
-                </a>
-            </article>
-            {% empty %}
+             {% for playlist in user_playlists %}
+             {% if not playlist.is_liked_playlist %}
+             <article class="track-card carousel__item">
+                 <a href="{% url 'playlists:detail' playlist.pk %}" class="track-card__link">
+                     <div class="track-card__cover-wrap">
+                         <img src="{% if playlist.cover %}{{ playlist.cover.url }}{% else %}{% static 'img/playlist-placeholder.png' %}{% endif %}"
+                              alt="{{ playlist.name }}"
+                              class="track-card__cover"
+                              loading="lazy">
+                     </div>
+                     <h3 class="track-card__title">{{ playlist.name }}</h3>
+                     <p class="track-card__sub">
+                         Playlist · {{ playlist.created_at|date:"M Y" }}
+                     </p>
+                 </a>
+             </article>
+             {% endif %}
+             {% empty %}
             <p class="empty-state">No tienes playlists aún.</p>
             {% endfor %}
         </div>

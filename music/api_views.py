@@ -109,11 +109,11 @@ def suggested_tracks(request, track_id):
     try:
         from playlists.models import Playlist
         from django.db.models import Q
-        
+
         track = Song.objects.get(id=track_id)
         track_tags = track.tags.all()
         suggested = []
-        
+
         if track_tags.exists():
             # Obtener "Mis Joyas" del usuario actual si está autenticado
             if request.user.is_authenticated:
@@ -121,7 +121,7 @@ def suggested_tracks(request, track_id):
                     user=request.user,
                     is_liked_playlist=True
                 )
-                
+
                 if liked_playlists.exists():
                     # Intento 1: Canciones de "Mis Joyas" con tags en común
                     suggested = list(
@@ -130,7 +130,7 @@ def suggested_tracks(request, track_id):
                             tags__in=track_tags
                         ).exclude(id=track.id).distinct().values_list('id', flat=True)[:10]
                     )
-        
+
         # Intento 2: Si no hay en "Mis Joyas", canciones con tags en común en general
         if not suggested and track_tags.exists():
             suggested = list(Song.objects.filter(
@@ -155,7 +155,19 @@ def suggested_tracks(request, track_id):
             return JsonResponse({'suggested_ids': []})
 
 
+@csrf_exempt
+@require_http_methods(["GET"])
+def artist_tracks(request, artist_id):
+    """
+    Obtiene TODAS las canciones de un artista para reproducción aleatoria.
+    Endpoint: /music/api/artist-tracks/{artist_id}/
+    """
+    try:
+        from accounts.models import ArtistProfile
 
+        artist = ArtistProfile.objects.get(id=artist_id)
+        tracks = list(artist.songs.all().values_list('id', flat=True))
 
-
-
+        return JsonResponse({'artist_tracks': tracks})
+    except:
+        return JsonResponse({'artist_tracks': []})

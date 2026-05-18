@@ -205,8 +205,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             const trackId = this.dataset.trackId;
-            if (trackId && typeof playSongA === 'function') {
-                playSongA(trackId);
+            const albumId = {{ album.pk }};
+            if (trackId && typeof playFromAlbum === 'function') {
+                playFromAlbum(trackId, albumId);
             }
         });
     });
@@ -217,8 +218,9 @@ document.addEventListener('DOMContentLoaded', function() {
             e.preventDefault();
             e.stopPropagation();
             const trackId = this.dataset.trackId;
-            if (trackId && typeof playSongA === 'function') {
-                playSongA(trackId);
+            const albumId = {{ album.pk }};
+            if (trackId && typeof playFromAlbum === 'function') {
+                playFromAlbum(trackId, albumId);
             }
         });
     });

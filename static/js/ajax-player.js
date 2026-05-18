@@ -101,18 +101,24 @@ async function playSongA(trackId) {
         // Cargar el audio
         audio.load();
 
-        // Guardar en persistencia si está disponible
-        if (typeof audioPlayerSync !== 'undefined' && audioPlayerSync) {
-            audioPlayerSync.setCurrentTrack(trackId, {
-                title: trackData.title,
-                artist: trackData.artist,
-                cover: trackData.cover,
-                url: trackData.audio_url
-            });
-        }
+         // Guardar en persistencia si está disponible
+         if (typeof audioPlayerSync !== 'undefined' && audioPlayerSync) {
+             audioPlayerSync.setCurrentTrack(trackId, {
+                 title: trackData.title,
+                 artist: trackData.artist,
+                 cover: trackData.cover,
+                 url: trackData.audio_url
+             });
+         }
 
-        // Guardar información de la canción actual en localStorage
-        saveCurrentTrackToStorage(trackData);
+         // ⭐ Agregar a historial del sistema de cola (para autoplay)
+         if (typeof queueSystem !== 'undefined' && queueSystem) {
+             queueSystem.addToHistory(trackId);
+             console.log('📝 Canción agregada al historial del queue system:', trackId);
+         }
+
+         // Guardar información de la canción actual en localStorage
+         saveCurrentTrackToStorage(trackData);
 
         // ⭐ IMPORTANTE: Cargar sugerencias y actualizar cola
         if (typeof queueSystem !== 'undefined' && queueSystem) {
@@ -141,8 +147,34 @@ async function playSongA(trackId) {
             console.warn('⚠queueSystem no está disponible');
         }
 
-        // Disparar evento para actualizar paneles (DESPUÉS de cargar sugerencias)
-        document.dispatchEvent(new CustomEvent('trackChanged'));
+         // Disparar evento para actualizar paneles (DESPUÉS de cargar sugerencias)
+         document.dispatchEvent(new CustomEvent('trackChanged', {
+             detail: {
+                 id: trackData.id,
+                 title: trackData.title,
+                 artist: trackData.artist,
+                 artist_id: trackData.artist_id,
+                 cover: trackData.cover
+             }
+         }));
+
+         // Actualizar inmediatamente el icono del diamond y botón del player
+         setTimeout(() => {
+             if (typeof likedSongsManager !== 'undefined' && likedSongsManager && trackData.id) {
+                 const isLiked = likedSongsManager.likedSongs.has(trackData.id);
+                 console.log(`🎵 Actualizando iconos para la canción ${trackData.id}: ${isLiked ? 'Liked' : 'Not liked'}`);
+
+                 // Actualizar el icono del diamond del panel derecho
+                 likedSongsManager.updateDiamondInfoIcons(trackData.id, isLiked);
+
+                 // Actualizar el botón del player
+                 const playerLikeBtn = document.querySelector('#player-like-btn');
+                 if (playerLikeBtn) {
+                     playerLikeBtn.dataset.songId = trackData.id;
+                     likedSongsManager.updateLikeButton(playerLikeBtn, isLiked);
+                 }
+             }
+         }, 50);
 
     } catch (error) {
         console.error('❌ Error en playSongA:', error.message);
@@ -258,7 +290,7 @@ function updateRightPanel(trackData) {
         <div class="right-panel__track-info">
             <h3 class="track-info__title">${escapeHtml(trackData.title)}</h3>
             <div class="track-info__meta">
-                <img src="/static/img/diamond-white.png" alt="" class="icon--xs">
+                <img src="/static/img/diamond-white.png" alt="" class="icon--xs" id="artist-badge-info">
                 <span class="track-info__artist">${escapeHtml(trackData.artist)}</span>
             </div>
         </div>
@@ -275,13 +307,14 @@ function updateRightPanel(trackData) {
                          class="related__artist-photo"
                          loading="lazy">
                     <div class="related__artist-info">
-                        <span class="related__artist-name">${escapeHtml(trackData.related_artist.name)}</span>
-                        <button class="btn-follow" 
-                                data-artist-id="${trackData.related_artist.id}" 
-                                aria-label="Seguir a ${escapeHtml(trackData.related_artist.name)}">
-                            + Seguir
-                        </button>
-                    </div>
+                         <span class="related__artist-name">${escapeHtml(trackData.related_artist.name)}</span>
+                         <button id="artist-follow-btn" 
+                                 class="btn-follow btn--not-following" 
+                                 data-artist-id="${trackData.related_artist.id}" 
+                                 aria-label="Seguir a ${escapeHtml(trackData.related_artist.name)}">
+                             + Seguir
+                         </button>
+                     </div>
                 </div>
             </div>
         `;

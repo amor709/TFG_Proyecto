@@ -139,29 +139,29 @@ document.addEventListener('DOMContentLoaded', function() {
      {% endfor %}
      ];
 
-     // ====== REPRODUCIR CANCIÓN AL HACER CLICK EN FILA ======
-     document.querySelectorAll('.tracklist__row').forEach((row) => {
-         row.addEventListener('click', function(e) {
-             // Evitar si se hace clic en botones de acción
-             if (e.target.closest('.track-action-btn, .remove-song-btn')) {
-                 return;
-             }
-             const trackId = parseInt(this.dataset.trackId);
-             if (trackId && typeof playSongA === 'function') {
-                 playSongA(trackId);
-             }
-         });
-     });
+      // ====== REPRODUCIR CANCIÓN AL HACER CLICK EN FILA ======
+      document.querySelectorAll('.tracklist__row').forEach((row) => {
+          row.addEventListener('click', function(e) {
+              // Evitar si se hace clic en botones de acción
+              if (e.target.closest('.track-action-btn, .remove-song-btn')) {
+                  return;
+              }
+              const trackId = parseInt(this.dataset.trackId);
+              if (trackId && typeof playStandalone === 'function') {
+                  playStandalone(trackId);
+              }
+          });
+      });
 
-     // ====== BOTÓN PLAY ======
-     document.querySelectorAll('.track-play-btn').forEach((btn, index) => {
-         btn.addEventListener('click', function(e) {
-             e.stopPropagation();
-             if (playlistSongs[index] && typeof playSongA === 'function') {
-                 playSongA(playlistSongs[index].id);
-             }
-         });
-     });
+      // ====== BOTÓN PLAY ======
+      document.querySelectorAll('.track-play-btn').forEach((btn, index) => {
+          btn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              if (playlistSongs[index] && typeof playStandalone === 'function') {
+                  playStandalone(playlistSongs[index].id);
+              }
+          });
+      });
 
      // ====== BOTÓN DE GUARDAR PLAYLIST ======
      const saveBtn = document.querySelector('.save-btn');

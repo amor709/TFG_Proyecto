@@ -82,6 +82,10 @@ def player_context(request):
 
     # Items de biblioteca del usuario (para el sidebar)
     if request.user.is_authenticated and not request.user.is_artist:
+        # Obtener explícitamente la playlist "Mis Joyas"
+        liked_playlist = Playlist.objects.filter(user=request.user, is_liked_playlist=True).first()
+        context['liked_playlist_obj'] = liked_playlist
+
         # Combinar playlists del usuario con álbumes/artistas seguidos
         user_playlists = Playlist.objects.filter(user=request.user)[:10]
         library_items = []
@@ -113,6 +117,7 @@ def player_context(request):
         context['library_items'] = library_items
     else:
         context['library_items'] = []
+        context['liked_playlist_obj'] = None
 
     return context
 

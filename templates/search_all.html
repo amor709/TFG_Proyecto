@@ -112,16 +112,16 @@
 // Hacer que las canciones en búsqueda sean clickeables para reproducirlas
 document.addEventListener('DOMContentLoaded', function() {
     document.querySelectorAll('.sr-song-row').forEach(row => {
-        row.addEventListener('click', function(e) {
-            // Evitar que el evento se propague si se hace clic en un enlace
-            if (e.target.closest('a')) return;
+         row.addEventListener('click', function(e) {
+             // Evitar que el evento se propague si se hace clic en un enlace
+             if (e.target.closest('a')) return;
 
-            const trackId = this.dataset.trackId;
-            if (trackId && typeof playSongA === 'function') {
-                playSongA(trackId);
-            }
-        });
-    });
-});
+             const trackId = this.dataset.trackId;
+             if (trackId && typeof playStandalone === 'function') {
+                 playStandalone(trackId);
+             }
+         });
+     });
+ });
 </script>
 {% endblock %}

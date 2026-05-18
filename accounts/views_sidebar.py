@@ -62,6 +62,10 @@ def get_recent_items(request):
             if item.content_type.model == 'user':
                 continue
 
+            # Excluir "Mis joyas" (playlist de "Me gusta")
+            if item.content_type.model == 'playlist' and hasattr(obj, 'is_liked_playlist') and obj.is_liked_playlist:
+                continue
+
             if hasattr(obj, 'cover'):
                 cover = obj.cover.url if obj.cover else None
             else:
@@ -93,12 +97,23 @@ def get_recent_items(request):
 
 @login_required
 def get_saved_items(request):
-    """Obtiene los elementos guardados del usuario (álbumes y playlists) en orden alfabético."""
+    """Obtiene los elementos guardados del usuario (álbumes, playlists y artistas seguidos) en orden alfabético."""
     # Obtener elementos guardados ordenados alfabéticamente por título
     saved_albums = request.user.listener_profile.saved_albums.all().order_by('title')
     saved_playlists = request.user.saved_playlists.all().order_by('name')
+    following_artists = request.user.listener_profile.following.all().order_by('user__username')
 
     items = []
+
+    # Añadir artistas seguidos
+    for artist in following_artists:
+        items.append({
+            'id': artist.pk,
+            'title': artist.user.username,
+            'type': 'artistprofile',
+            'cover': artist.photo.url if artist.photo else None,
+            'artist': artist.user.username,
+        })
 
     # Añadir álbumes (ordenados por título)
     for album in saved_albums:
@@ -110,8 +125,11 @@ def get_saved_items(request):
             'artist': album.artist.user.username,
         })
 
-    # Añadir playlists (ordenadas por nombre)
+     # Añadir playlists (ordenadas por nombre) - Excluir "Mis joyas"
     for playlist in saved_playlists:
+        # Excluir playlists de "Me gusta"
+        if hasattr(playlist, 'is_liked_playlist') and playlist.is_liked_playlist:
+            continue
         items.append({
             'id': playlist.pk,
             'title': playlist.name,
@@ -148,6 +166,10 @@ def sidebar_search(request):
                 # Obtener título y verificar si coincide con la búsqueda
                 title = getattr(obj, 'title', getattr(obj, 'name', str(obj)))
 
+                # Excluir "Mis joyas"
+                if item.content_type.model == 'playlist' and hasattr(obj, 'is_liked_playlist') and obj.is_liked_playlist:
+                    continue
+
                 # Verificar si el query coincide con el título u otro atributo
                 if query.lower() in title.lower():
                     if hasattr(obj, 'cover'):
@@ -177,6 +199,18 @@ def sidebar_search(request):
     elif section == 'saved':
         # Búsqueda solo dentro de "Guardados"
         saved_albums = request.user.listener_profile.saved_albums.all()
+        following_artists = request.user.listener_profile.following.all()
+
+        # Buscar en artistas seguidos
+        for artist in following_artists:
+            if query.lower() in artist.user.username.lower():
+                results.append({
+                    'id': artist.pk,
+                    'title': artist.user.username,
+                    'type': 'artistprofile',
+                    'cover': artist.photo.url if artist.photo else None,
+                    'artist': artist.user.username,
+                })
 
         # Buscar en álbumes guardados
         for album in saved_albums:
@@ -193,6 +227,9 @@ def sidebar_search(request):
         if not request.user.is_artist:
             saved_playlists = request.user.saved_playlists.all()
             for playlist in saved_playlists:
+                # Excluir "Mis joyas"
+                if hasattr(playlist, 'is_liked_playlist') and playlist.is_liked_playlist:
+                    continue
                 if query.lower() in playlist.name.lower() or query.lower() in playlist.user.username.lower():
                     results.append({
                         'id': playlist.pk,

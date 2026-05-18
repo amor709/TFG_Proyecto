@@ -380,3 +380,107 @@ def add_to_listening_history(request):
         return JsonResponse({
             'error': str(e)
         }, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+def toggle_follow_artist(request, artist_id):
+    """
+    Alternar seguimiento de un artista (seguir/dejar de seguir)
+    POST /accounts/api/follow-artist/{artist_id}/
+    """
+    try:
+        listener_profile = request.user.listener_profile
+
+        try:
+            artist = ArtistProfile.objects.get(pk=artist_id)
+        except ArtistProfile.DoesNotExist:
+            return JsonResponse({
+                'error': 'Artista no encontrado'
+            }, status=404)
+
+        is_following = listener_profile.following.filter(pk=artist_id).exists()
+
+        if is_following:
+            listener_profile.following.remove(artist)
+            status = 'unfollowed'
+        else:
+            listener_profile.following.add(artist)
+            status = 'followed'
+
+        logger.info(f'{request.user.username} {status} {artist.user.username}')
+
+        return JsonResponse({
+            'status': 'success',
+            'action': status,
+            'is_following': not is_following
+        })
+
+    except Exception as e:
+        logger.error(f'Error al alternar seguimiento: {str(e)}')
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def check_following_artist(request, artist_id):
+    """
+    Verificar si el usuario sigue a un artista
+    GET /accounts/api/check-following/{artist_id}/
+    """
+    try:
+        listener_profile = request.user.listener_profile
+        is_following = listener_profile.following.filter(pk=artist_id).exists()
+
+        return JsonResponse({
+            'is_following': is_following
+        })
+
+    except Exception as e:
+        logger.error(f'Error al verificar seguimiento: {str(e)}')
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)
+
+
+@login_required
+@require_http_methods(["GET"])
+def get_following_artists(request, limit=5):
+    """
+    Obtener artistas que sigue el usuario
+    GET /accounts/api/following-artists/?limit=5
+    """
+    try:
+        listener_profile = request.user.listener_profile
+        limit_param = request.GET.get('limit', limit)
+        
+        try:
+            limit_param = int(limit_param)
+        except (ValueError, TypeError):
+            limit_param = limit
+        
+        following = listener_profile.following.all()[:limit_param]
+        
+        artists = []
+        for artist in following:
+            artists.append({
+                'id': artist.id,
+                'name': artist.user.username,
+                'photo': artist.photo.url if artist.photo else '/static/img/userdefault.png',
+                'bio': artist.bio[:100] if artist.bio else '',
+                'followers_count': artist.followers_count
+            })
+        
+        return JsonResponse({
+            'status': 'success',
+            'artists': artists,
+            'total_count': listener_profile.following.count()
+        })
+    
+    except Exception as e:
+        logger.error(f'Error al obtener artistas seguidos: {str(e)}')
+        return JsonResponse({
+            'error': str(e)
+        }, status=500)

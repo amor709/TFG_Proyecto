@@ -4,9 +4,24 @@ from django.conf import settings
 from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
+from django.core.validators import RegexValidator
+
+
+# Validador personalizado que permite espacios
+username_validator = RegexValidator(
+    regex=r'^[\w\s.@+-]+$',
+    message='Introduzca un nombre de usuario válido. Este valor puede contener únicamente letras, números, espacios y los caracteres @/./+/-/_',
+    code='invalid_username',
+)
 
 
 class User(AbstractUser):
+    username = models.CharField(
+        max_length=150,
+        unique=True,
+        validators=[username_validator],
+        help_text='150 caracteres como máximo. Letras, dígitos, espacios y @/./+/-/_',
+    )
     email = models.EmailField(unique=True)
     nickname = models.CharField(max_length=50, blank=True, null=True)
     is_artist = models.BooleanField(default=False)

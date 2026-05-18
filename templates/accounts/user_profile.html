@@ -87,7 +87,7 @@
             <div class="profile-cards-grid profile-cards-grid--songs">
                 {% for song in top_songs|slice:":5" %}
                 <article class="track-card" data-track-id="{{ song.pk }}">
-                    <div class="track-card__link" onclick="playSongA({{ song.pk }}); return false;" style="cursor: pointer;">
+                    <div class="track-card__link" onclick="playStandalone({{ song.pk }}); return false;" style="cursor: pointer;">
                         <div class="track-card__cover-wrap">
                             <img src="{% if song.album.cover %}{{ song.album.cover.url }}{% else %}{% static 'img/album-default.png' %}{% endif %}"
                                  alt="{% if song.album %}{{ song.album.title }}{% else %}{{ song.title }}{% endif %}"

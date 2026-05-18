@@ -105,32 +105,32 @@ function restartSong() {
 }
 
 function nextSong() {
-    console.log(' Botón siguiente clickeado');
-
+    console.log('▶️ Botón siguiente clickeado');
+    
     // Prioridad 1: Si hay cola en queueSystem, reproducir de ahí
     if (typeof queueSystem !== 'undefined' && queueSystem && queueSystem.queue.length > 0) {
         console.log(' Usando queueSystem para siguiente (cola tiene', queueSystem.queue.length, 'canciones)');
         queueSystem.onTrackFinished();
-    }
+    } 
     // Fallback: usar el playlist global antiguo (backward compatibility)
     else if (playlist.length > 0) {
-        console.log('⚠Cola vacía, usando playlist global como fallback');
+        console.log('⚠️ Cola vacía, usando playlist global como fallback');
         trackIndex = (trackIndex + 1) % playlist.length;
         loadSong(trackIndex);
     } else {
-        console.warn(' No hay canciones disponibles');
+        console.warn('❌ No hay canciones disponibles');
     }
 }
 
 function prevSong() {
-    console.log('⏮ Botón anterior clickeado');
-
+    console.log('⏮️ Botón anterior clickeado');
+    
     // Nota: No hay "anterior" en la cola porque se elimina cuando se reproduce
     if (typeof queueSystem !== 'undefined' && queueSystem) {
-        console.warn('ℹ No hay "anterior" en la cola (las canciones se eliminan al reproducir)');
+        console.warn('ℹ️ No hay "anterior" en la cola (las canciones se eliminan al reproducir)');
         return;
     }
-
+    
     // Fallback al antigua playlist
     if (playlist.length > 0) {
         trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;

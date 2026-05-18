@@ -24,6 +24,11 @@ urlpatterns = [
     path('api/playback/stop/', api_views.stop_playback_session, name='api_stop_playback_session'),
     path('api/add-to-history/', api_views.add_to_listening_history, name='api_add_to_history'),
 
+    # API endpoints para seguimiento de artistas
+    path('api/follow-artist/<int:artist_id>/', api_views.toggle_follow_artist, name='api_toggle_follow'),
+    path('api/check-following/<int:artist_id>/', api_views.check_following_artist, name='api_check_following'),
+    path('api/following-artists/', api_views.get_following_artists, name='api_get_following_artists'),
+
     # Perfil del oyente
     path('profile/<int:user_id>/', views.listener_profile_view, name='listener_profile'),
     path('profile/<int:user_id>/songs/', views.listener_profile_songs_view, name='listener_profile_songs'),

@@ -144,7 +144,7 @@ class HomeView(TemplateView):
                 recent_song_ids = [h.song_id for h in recent_history]
                 recently_played = Song.objects.filter(id__in=recent_song_ids).order_by('?')[:10]
             else:
-                recently_played = Song.objects.all().order_by('?')[:10]
+                recently_played = []  # Lista vacía cuando no hay historial
             context['recently_played'] = recently_played
 
             # Artistas que suelen estar contigo: 5 aleatorios de los más escuchados el último mes
@@ -158,15 +158,19 @@ class HomeView(TemplateView):
                 top_artist_ids = sorted(artist_counts, key=artist_counts.get, reverse=True)[:10]  # top 10, then random 5
                 companion_artists = ArtistProfile.objects.filter(id__in=top_artist_ids).order_by('?')[:5]
             else:
-                companion_artists = ArtistProfile.objects.all().order_by('?')[:5]
+                companion_artists = []  # Lista vacía cuando no hay historial
             context['companion_artists'] = companion_artists
 
-            # Recomendaciones para tus oídos: 5 álbumes aleatorios con tags de canciones escuchadas el último mes
+            # Recomendaciones para tus oídos: 
+            # Si nunca ha escuchado → canciones aleatorias
+            # Si ha escuchado algo → álbumes con tags de canciones escuchadas
             user_tags = UserTag.objects.filter(user=user, last_listened__gte=one_month_ago - timedelta(days=30))
             if user_tags:
+                # Ha escuchado algo → usar sistema de tags
                 tag_ids = [ut.tag_id for ut in user_tags]
                 recommended_albums = Album.objects.filter(tags__id__in=tag_ids).distinct().order_by('?')[:5]
             else:
+                # Nunca ha escuchado → mostrar álbumes aleatorios
                 recommended_albums = Album.objects.all().order_by('?')[:5]
             context['recommended_albums'] = recommended_albums
 
@@ -175,7 +179,7 @@ class HomeView(TemplateView):
                 monthly_song_ids = list(set([h.song_id for h in monthly_history]))
                 back_to_music = Song.objects.filter(id__in=monthly_song_ids).order_by('?')[:5]
             else:
-                back_to_music = Song.objects.all().order_by('?')[:5]
+                back_to_music = []  # Lista vacía cuando no hay historial
             context['back_to_music'] = back_to_music
 
             # Tus playlists: todas las playlists del usuario

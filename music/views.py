@@ -71,6 +71,7 @@ def get_track_data(request, track_id):
             'id': track.id,
             'title': track.title,
             'artist': track.artist.user.username,
+            'artist_id': track.artist.id,
             'cover': track.cover.url if track.cover else '/static/img/logo.png',
             'audio_url': track.audio_file.url if track.audio_file else '',
             'related_artist': {
