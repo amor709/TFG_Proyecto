@@ -116,15 +116,38 @@ function nextSong() {
 
 function prevSong() {
     console.log('⏮️ Botón anterior clickeado');
-    
-    // Nota: No hay "anterior" en la cola porque se elimina cuando se reproduce
+
     if (typeof queueSystem !== 'undefined' && queueSystem) {
-        console.warn('ℹ️ No hay "anterior" en la cola (las canciones se eliminan al reproducir)');
+        const history = queueSystem.history;
+        // history.last === canción actual. Necesitamos al menos 2 entradas
+        // para tener una "anterior" distinta.
+        if (history.length < 2) {
+            if (typeof audio !== 'undefined' && audio) {
+                audio.currentTime = 0;
+            }
+            return;
+        }
+        const currentTrackId = history.pop();   // saca la actual
+        const prevTrackId = history.pop();      // saca la anterior (la reproduciremos)
+        queueSystem.saveHistoryToStorage();
+
+        // Re-añadir la actual al inicio de la cola para que "siguiente" la recupere
+        if (currentTrackId !== undefined && currentTrackId !== null) {
+            queueSystem.queue.unshift(currentTrackId);
+            queueSystem.saveQueueToStorage();
+            queueSystem.updateQueueDisplay();
+        }
+
+        // Evitar que playSongA vacíe la cola y recargue sugerencias
+        if (typeof window !== 'undefined') {
+            window.__isPlayingFromQueue = true;
+        }
+        playSongA(prevTrackId);
         return;
     }
-    
+
     // Fallback al antigua playlist
-    if (playlist.length > 0) {
+    if (typeof playlist !== 'undefined' && playlist.length > 0) {
         trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;
         loadSong(trackIndex);
     }

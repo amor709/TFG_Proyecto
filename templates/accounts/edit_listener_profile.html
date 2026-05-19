@@ -1,73 +1,157 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Editar perfil{% endblock %}
+{% block title %} – Editar perfil{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/edit_artist_profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<style>
+    /* La auth-card vive dentro del shell SPA, sin gradiente full-screen */
+    .main-content .auth-container {
+        background: transparent;
+        padding: 2rem 0;
+        min-height: auto;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="edit-profile-container">
-    <div class="edit-profile-card">
-        <h1 class="edit-profile__title">Editar perfil</h1>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-card__header">
+            <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
+            <h1 class="auth-title">Editar perfil</h1>
+            <p class="auth-subtitle">Actualiza tus datos y tu foto de perfil</p>
+        </div>
 
-        <form method="post" enctype="multipart/form-data" class="edit-profile-form">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="auth-form">
             {% csrf_token %}
 
-            <!-- Avatar -->
             <div class="form-group">
-                <label for="{{ avatar_form.avatar.id_for_label }}" class="form-label">Foto de perfil</label>
-                {% if user.listener_profile.avatar %}
-                    <div class="current-image">
-                        <img src="{{ user.listener_profile.avatar.url }}" alt="Foto actual" class="current-image__img">
-                        <p class="current-image__text">Foto actual</p>
+                <label class="form-label">Foto de perfil</label>
+                {% if avatar_form.avatar.errors %}<span class="form-error">{{ avatar_form.avatar.errors.0 }}</span>{% endif %}
+                <div class="file-input-wrapper">
+                    <input type="file" id="{{ avatar_form.avatar.id_for_label }}" name="avatar" accept="image/*" class="file-input">
+                    <label for="{{ avatar_form.avatar.id_for_label }}" class="file-input-label {% if user.listener_profile.avatar %}file-input-label--has-image{% endif %}" id="avatar-label">
+                        {% if user.listener_profile.avatar %}
+                            <img src="{{ user.listener_profile.avatar.url }}" alt="Foto actual" class="file-input__preview">
+                        {% else %}
+                            <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md">
+                            <span>Selecciona tu foto</span>
+                        {% endif %}
+                    </label>
+                </div>
+                <div id="crop-modal" class="crop-modal" style="display: none;">
+                    <div class="crop-modal-content">
+                        <img id="crop-image" src="" alt="Imagen a recortar">
+                        <div class="crop-buttons">
+                            <button type="button" id="crop-cancel">Cancelar</button>
+                            <button type="button" id="crop-confirm">Confirmar</button>
+                        </div>
                     </div>
-                {% endif %}
-                {{ avatar_form.avatar }}
-                {% if avatar_form.avatar.errors %}
-                    <div class="form-errors">
-                        {% for error in avatar_form.avatar.errors %}
-                            <p class="error-text">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                </div>
             </div>
 
-            <!-- Nickname -->
             <div class="form-group">
-                <label for="{{ nickname_form.nickname.id_for_label }}" class="form-label">Nombre de usuario</label>
-                {{ nickname_form.nickname }}
-                {% if nickname_form.nickname.errors %}
-                    <div class="form-errors">
-                        {% for error in nickname_form.nickname.errors %}
-                            <p class="error-text">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
+                <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Primer nombre</label>
+                {% if user_form.first_name.errors %}<span class="form-error">{{ user_form.first_name.errors.0 }}</span>{% endif %}
+                {{ user_form.first_name }}
             </div>
 
-            <!-- Errores no-field -->
-            {% if avatar_form.non_field_errors or nickname_form.non_field_errors %}
+            <div class="form-group">
+                <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Segundo nombre</label>
+                {% if user_form.last_name.errors %}<span class="form-error">{{ user_form.last_name.errors.0 }}</span>{% endif %}
+                {{ user_form.last_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.username.id_for_label }}" class="form-label">Nombre de usuario</label>
+                {% if user_form.username.errors %}<span class="form-error">{{ user_form.username.errors.0 }}</span>{% endif %}
+                {{ user_form.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.email.id_for_label }}" class="form-label">Correo electrónico</label>
+                {% if user_form.email.errors %}<span class="form-error">{{ user_form.email.errors.0 }}</span>{% endif %}
+                {{ user_form.email }}
+            </div>
+
+            {% if avatar_form.non_field_errors or user_form.non_field_errors %}
                 <div class="form-errors">
-                    {% for error in avatar_form.non_field_errors %}
-                        <p class="error-text">{{ error }}</p>
-                    {% endfor %}
-                    {% for error in nickname_form.non_field_errors %}
-                        <p class="error-text">{{ error }}</p>
-                    {% endfor %}
+                    {% for error in avatar_form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                    {% for error in user_form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
                 </div>
             {% endif %}
 
-            <!-- Buttons -->
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Guardar cambios</button>
-                <a href="{% url 'listener_profile' user.id %}" class="btn btn-secondary">Cancelar</a>
-            </div>
+            <button type="submit" class="btn-submit">Guardar cambios</button>
         </form>
+
+        <div class="auth-footer">
+            <p><a href="{% url 'listener_profile' user.id %}" class="auth-link">← Volver al perfil</a></p>
+        </div>
     </div>
 </div>
 {% endblock %}
 
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const fileInput = document.getElementById('{{ avatar_form.avatar.id_for_label }}');
+        const labelEl = document.getElementById('avatar-label');
+        const modal = document.getElementById('crop-modal');
+        const imageEl = document.getElementById('crop-image');
+        const cancelBtn = document.getElementById('crop-cancel');
+        const confirmBtn = document.getElementById('crop-confirm');
+        let cropper;
 
+        function setPreview(src) {
+            labelEl.classList.add('file-input-label--has-image');
+            labelEl.innerHTML = `<img src="${src}" alt="Vista previa" class="file-input__preview">`;
+        }
 
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                imageEl.src = ev.target.result;
+                modal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(imageEl, {
+                    aspectRatio: 1, viewMode: 1, responsive: true,
+                    modal: true, guides: true, center: true, autoCropArea: 0.8,
+                });
+            };
+            reader.readAsDataURL(file);
+        });
+
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            fileInput.value = '';
+            if (cropper) { cropper.destroy(); cropper = null; }
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            if (!cropper) return;
+            cropper.getCroppedCanvas({ width: 400, height: 400 }).toBlob(function(blob) {
+                const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+                setPreview(URL.createObjectURL(blob));
+                modal.style.display = 'none';
+                cropper.destroy();
+                cropper = null;
+            });
+        });
+    });
+</script>
+{% endblock %}

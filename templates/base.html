@@ -52,25 +52,23 @@
 
         <!-- Controles de cabecera derecha -->
         <div class="header__controls">
-            <button class="header-btn" aria-label="Cola de reproducción">
+            <button type="button" class="header-btn" aria-label="Atrás" onclick="history.back(); return false;">
                 <img src="{% static 'img/play-left.png' %}" alt="" class="icon--sm">
             </button>
-            <button class="header-btn" aria-label="Pantalla completa">
+            <button type="button" class="header-btn" aria-label="Adelante" onclick="history.forward(); return false;">
                 <img src="{% static 'img/play-right.png' %}" alt="" class="icon--sm">
             </button>
             <!-- Avatar de usuario -->
             <div class="header__avatar-container">
                 <div class="header__avatar" aria-label="Perfil de usuario" onclick="toggleUserDropdown(event)">
                     {% if request.user.is_authenticated %}
-                        {% if request.user.is_artist and request.user.artist_profile.photo %}
-                            <img src="{{ request.user.artist_profile.photo.url }}" alt="{{ request.user.username }}" class="avatar-img">
-                        {% elif request.user.listener_profile and request.user.listener_profile.avatar %}
-                            <img src="{{ request.user.listener_profile.avatar.url }}" alt="{{ request.user.username }}" class="avatar-img">
+                        {% if request.user.is_artist %}
+                            <img src="{{ request.user.artist_profile.photo_url }}" alt="{{ request.user.username }}" class="avatar-img">
                         {% else %}
-                            <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
+                            <img src="{{ request.user.listener_profile.avatar_url }}" alt="{{ request.user.username }}" class="avatar-img">
                         {% endif %}
                     {% else %}
-                        <img src="{% static 'img/userdefault.png' %}" alt="Usuario" class="avatar-img">
+                        <img src="{% static 'img/pfp_default.jpg' %}" alt="Usuario" class="avatar-img">
                     {% endif %}
                 </div>
                 {% if request.user.is_authenticated %}
@@ -196,7 +194,9 @@
                 <div class="right-panel__track-info">
                     <h3 class="track-info__title">{{ current_track.title }}</h3>
                     <div class="track-info__meta">
+                        {% if not request.user.is_artist %}
                         <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--xs artist-badge" id="artist-badge-info">
+                        {% endif %}
                         <span class="track-info__artist">{{ current_track.artist.user.username }}</span>
                     </div>
                 </div>
@@ -206,7 +206,7 @@
                 <div class="right-panel__related">
                     <h4 class="related__heading">Cancioncita de…</h4>
                     <div class="related__artist-card">
-                        <img src="{% if related_artist.photo %}{{ related_artist.photo.url }}{% else %}{% static 'img/userdefault.png' %}{% endif %}"
+                        <img src="{{ related_artist.photo_url }}"
                              alt="{{ related_artist.user.username }}"
                              class="related__artist-photo">
                          <div class="related__artist-info">
@@ -229,8 +229,8 @@
                     <h2 class="queue-panel__title">A continuación</h2>
                     <button class="queue-panel__clear-btn"
                             id="btn-queue-clear"
-                            onclick="queueSystem.clearQueue(); return false;"
-                            aria-label="Borrar cola de reproducción">
+                            onclick="queueSystem.removeFromQueue(0); return false;"
+                            aria-label="Quitar la siguiente canción de la cola">
                         Borrar
                     </button>
                 </div>
@@ -261,9 +261,11 @@
                     <span class="player__song-title" id="track-title">{{ current_track.title }}</span>
                     <span class="player__song-artist" id="track-artist">{{ current_track.artist.user.username }}</span>
                 </div>
+                {% if not request.user.is_artist %}
                 <button class="player__like-btn like-btn not-liked" id="player-like-btn" data-song-id="{{ current_track.id }}" aria-label="Me gusta">
                     <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--sm" id="player-like-icon">
                 </button>
+                {% endif %}
                 {% else %}
                 <div class="player__meta">
                     <span class="player__song-title">No hay canción</span>
@@ -326,7 +328,7 @@
             id: {{ song.id }},
             title: "{{ song.title }}",
             url: "{{ song.audio_file.url }}",
-            cover: "{{ song.cover.url }}",
+            cover: "{% if song.cover %}{{ song.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}",
             artist: "{{ song.artist.user.username }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
@@ -583,13 +585,34 @@ document.addEventListener('click', function(event) {
     function prevSong() {
         console.log('⏮️ Botón anterior clickeado');
 
-        // En el sistema de cola, no hay "anterior" porque las canciones se eliminan al reproducir
         if (typeof queueSystem !== 'undefined' && queueSystem) {
-            console.warn('ℹ️ No hay "anterior" en la cola (las canciones se eliminan al reproducir)');
+            const history = queueSystem.history;
+            // history.last === canción actual. Necesitamos al menos 2 entradas
+            // para tener una "anterior" distinta.
+            if (history.length < 2) {
+                if (audio) {
+                    audio.currentTime = 0;
+                }
+                return;
+            }
+            const currentTrackId = history.pop();
+            const prevTrackId = history.pop();
+            queueSystem.saveHistoryToStorage();
+
+            // Re-añadir la actual al inicio de la cola para que "siguiente" la recupere
+            if (currentTrackId !== undefined && currentTrackId !== null) {
+                queueSystem.queue.unshift(currentTrackId);
+                queueSystem.saveQueueToStorage();
+                queueSystem.updateQueueDisplay();
+            }
+
+            // Evitar que playSongA vacíe la cola y recargue sugerencias
+            window.__isPlayingFromQueue = true;
+            playSongA(prevTrackId);
             return;
         }
 
-        // Fallback al antigua playlist
+        // Fallback a la antigua playlist
         if (playlist.length > 0) {
             trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;
             console.log('Canción anterior:', trackIndex);
@@ -687,6 +710,7 @@ document.addEventListener('click', function(event) {
 
 <script>
     window.CURRENT_USER_ID = {% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %};
+    window.CURRENT_USER_IS_ARTIST = {% if request.user.is_authenticated and request.user.is_artist %}true{% else %}false{% endif %};
 </script>
 <script src="{% static 'js/script.js' %}" defer></script>
 <script src="{% static 'js/queue-system.js' %}" defer></script>

@@ -2,11 +2,25 @@ from django.contrib.contenttypes.models import ContentType
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.templatetags.static import static
 from django.utils import timezone
 from accounts.models import RecentItem
 from music.models import Album
 from playlists.models import Playlist
 from accounts.models import ArtistProfile
+
+
+def _cover_for(obj, model_name):
+    """Devuelve siempre una URL válida (con fallback al default correspondiente)."""
+    if model_name == 'playlist':
+        return obj.cover_url
+    if model_name == 'artistprofile':
+        return obj.photo_url
+    if hasattr(obj, 'cover') and obj.cover:
+        return obj.cover.url
+    if hasattr(obj, 'photo') and obj.photo:
+        return obj.photo.url
+    return static('img/logo.png')
 
 
 @login_required
@@ -66,10 +80,7 @@ def get_recent_items(request):
             if item.content_type.model == 'playlist' and hasattr(obj, 'is_liked_playlist') and obj.is_liked_playlist:
                 continue
 
-            if hasattr(obj, 'cover'):
-                cover = obj.cover.url if obj.cover else None
-            else:
-                cover = obj.photo.url if hasattr(obj, 'photo') and obj.photo else None
+            cover = _cover_for(obj, item.content_type.model)
 
             # Determinar el campo "artist" según el tipo de objeto
             artist_name = None
@@ -111,7 +122,7 @@ def get_saved_items(request):
             'id': artist.pk,
             'title': artist.user.username,
             'type': 'artistprofile',
-            'cover': artist.photo.url if artist.photo else None,
+            'cover': artist.photo_url,
             'artist': artist.user.username,
         })
 
@@ -121,7 +132,7 @@ def get_saved_items(request):
             'id': album.pk,
             'title': album.title,
             'type': 'album',
-            'cover': album.cover.url if album.cover else None,
+            'cover': album.cover.url if album.cover else static('img/logo.png'),
             'artist': album.artist.user.username,
         })
 
@@ -134,7 +145,7 @@ def get_saved_items(request):
             'id': playlist.pk,
             'title': playlist.name,
             'type': 'playlist',
-            'cover': playlist.cover.url if playlist.cover else None,
+            'cover': playlist.cover_url,
             'artist': playlist.user.username,
         })
 
@@ -172,10 +183,7 @@ def sidebar_search(request):
 
                 # Verificar si el query coincide con el título u otro atributo
                 if query.lower() in title.lower():
-                    if hasattr(obj, 'cover'):
-                        cover = obj.cover.url if obj.cover else None
-                    else:
-                        cover = obj.photo.url if hasattr(obj, 'photo') and obj.photo else None
+                    cover = _cover_for(obj, item.content_type.model)
 
                     # Determinar el campo "artist" según el tipo de objeto para búsqueda
                     artist_name = None
@@ -208,7 +216,7 @@ def sidebar_search(request):
                     'id': artist.pk,
                     'title': artist.user.username,
                     'type': 'artistprofile',
-                    'cover': artist.photo.url if artist.photo else None,
+                    'cover': artist.photo_url,
                     'artist': artist.user.username,
                 })
 
@@ -219,7 +227,7 @@ def sidebar_search(request):
                     'id': album.pk,
                     'title': album.title,
                     'type': 'album',
-                    'cover': album.cover.url if album.cover else None,
+                    'cover': album.cover.url if album.cover else static('img/logo.png'),
                     'artist': album.artist.user.username,
                 })
 
@@ -235,7 +243,7 @@ def sidebar_search(request):
                         'id': playlist.pk,
                         'title': playlist.name,
                         'type': 'playlist',
-                        'cover': playlist.cover.url if playlist.cover else None,
+                        'cover': playlist.cover_url,
                         'artist': playlist.user.username,
                     })
 

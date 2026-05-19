@@ -1,206 +1,219 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}Editar Perfil de Artista{% endblock %}
+{% block title %} – Editar perfil de artista{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/edit_artist_profile.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<style>
+    /* La auth-card vive dentro del shell SPA, sin gradiente full-screen */
+    .main-content .auth-container {
+        background: transparent;
+        padding: 2rem 0;
+        min-height: auto;
+    }
+    .auth-form textarea.form-control {
+        min-height: 140px;
+        resize: vertical;
+        line-height: 1.5;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="edit-profile-container">
-    <div class="edit-profile-card">
-        <h1 class="edit-profile__title">Editar Perfil de Artista</h1>
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-card__header">
+            <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
+            <h1 class="auth-title">Editar perfil de artista</h1>
+            <p class="auth-subtitle">Actualiza tu foto, banner, biografía y datos</p>
+        </div>
 
-        <form method="post" enctype="multipart/form-data" class="edit-profile-form" id="edit-form">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+        <form method="post" enctype="multipart/form-data" class="auth-form">
             {% csrf_token %}
 
-            <!-- Biografía -->
-            <div class="form-group">
-                <label for="{{ form.bio.id_for_label }}" class="form-label">Biografía</label>
-                {{ form.bio }}
-                {% if form.bio.errors %}
-                    <div class="form-errors">
-                        {% for error in form.bio.errors %}
-                            <p class="error-text">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </div>
-
-            <!-- Foto de perfil -->
             <div class="form-group">
                 <label class="form-label">Foto de perfil</label>
-                <div class="file-input-wrapper file-input-wrapper--photo">
-                    <label for="{{ form.photo.id_for_label }}" class="file-input-label {% if form.instance.photo %}file-input-label--has-image{% endif %}" id="photo-label">
-                        {% if form.instance.photo %}
-                            <img src="{{ form.instance.photo.url }}" alt="Foto actual" class="file-input__preview" id="photo-preview">
+                {% if profile_form.photo.errors %}<span class="form-error">{{ profile_form.photo.errors.0 }}</span>{% endif %}
+                <div class="file-input-wrapper">
+                    <input type="file" id="{{ profile_form.photo.id_for_label }}" name="photo" accept="image/*" class="file-input">
+                    <label for="{{ profile_form.photo.id_for_label }}" class="file-input-label {% if profile_form.instance.photo %}file-input-label--has-image{% endif %}" id="photo-label">
+                        {% if profile_form.instance.photo %}
+                            <img src="{{ profile_form.instance.photo.url }}" alt="Foto actual" class="file-input__preview">
                         {% else %}
-                            <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md" id="photo-placeholder-icon">
-                            <span id="photo-placeholder-text">Selecciona tu foto</span>
+                            <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md">
+                            <span>Selecciona tu foto</span>
                         {% endif %}
                     </label>
-                    {{ form.photo }}
                 </div>
-                {% if form.photo.errors %}
-                    <div class="form-errors">
-                        {% for error in form.photo.errors %}
-                            <p class="error-text">{{ error }}</p>
-                        {% endfor %}
+                <div id="crop-modal-avatar" class="crop-modal" style="display: none;">
+                    <div class="crop-modal-content">
+                        <img id="crop-image-avatar" src="" alt="Imagen a recortar">
+                        <div class="crop-buttons">
+                            <button type="button" id="crop-cancel-avatar">Cancelar</button>
+                            <button type="button" id="crop-confirm-avatar">Confirmar</button>
+                        </div>
                     </div>
-                {% endif %}
+                </div>
             </div>
 
-            <!-- Banner de perfil -->
             <div class="form-group">
                 <label class="form-label">Banner de perfil</label>
-                <div class="file-input-wrapper file-input-wrapper--banner">
-                    <label for="{{ form.banner.id_for_label }}" class="file-input-label file-input-label--banner {% if form.instance.banner %}file-input-label--has-image{% endif %}" id="banner-label">
-                        {% if form.instance.banner %}
-                            <img src="{{ form.instance.banner.url }}" alt="Banner actual" class="file-input__preview file-input__preview--banner" id="banner-preview">
+                {% if profile_form.banner.errors %}<span class="form-error">{{ profile_form.banner.errors.0 }}</span>{% endif %}
+                <div class="file-input-wrapper">
+                    <input type="file" id="{{ profile_form.banner.id_for_label }}" name="banner" accept="image/*" class="file-input">
+                    <label for="{{ profile_form.banner.id_for_label }}" class="file-input-label {% if profile_form.instance.banner %}file-input-label--has-image{% endif %}" id="banner-label">
+                        {% if profile_form.instance.banner %}
+                            <img src="{{ profile_form.instance.banner.url }}" alt="Banner actual" class="file-input__preview file-input__preview--banner">
                         {% else %}
-                            <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md" id="banner-placeholder-icon">
-                            <span id="banner-placeholder-text">Selecciona tu banner (ratio 11:3)</span>
+                            <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md">
+                            <span>Selecciona tu banner (ratio 11:3)</span>
                         {% endif %}
                     </label>
-                    {{ form.banner }}
                 </div>
-                {% if form.banner.help_text %}
-                    <p class="form-help">{{ form.banner.help_text }}</p>
-                {% endif %}
-                {% if form.banner.errors %}
-                    <div class="form-errors">
-                        {% for error in form.banner.errors %}
-                            <p class="error-text">{{ error }}</p>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-
-                <!-- Cropper Container -->
-                <div id="cropper-container" style="display: none;">
-                    <img id="cropper-image" src="" alt="Imagen a recortar">
-                    <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                        <button type="button" id="crop-btn" class="btn btn-primary">Recortar y Aplicar</button>
-                        <button type="button" id="cancel-crop-btn" class="btn btn-secondary">Cancelar</button>
+                <div id="crop-modal-banner" class="crop-modal" style="display: none;">
+                    <div class="crop-modal-content">
+                        <img id="crop-image-banner" src="" alt="Banner a recortar">
+                        <div class="crop-buttons">
+                            <button type="button" id="crop-cancel-banner">Cancelar</button>
+                            <button type="button" id="crop-confirm-banner">Confirmar</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Errores generales -->
-            {% if form.non_field_errors %}
+            <div class="form-group">
+                <label for="{{ user_form.first_name.id_for_label }}" class="form-label">Primer nombre</label>
+                {% if user_form.first_name.errors %}<span class="form-error">{{ user_form.first_name.errors.0 }}</span>{% endif %}
+                {{ user_form.first_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.last_name.id_for_label }}" class="form-label">Segundo nombre</label>
+                {% if user_form.last_name.errors %}<span class="form-error">{{ user_form.last_name.errors.0 }}</span>{% endif %}
+                {{ user_form.last_name }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.username.id_for_label }}" class="form-label">Nombre del artista</label>
+                {% if user_form.username.errors %}<span class="form-error">{{ user_form.username.errors.0 }}</span>{% endif %}
+                {{ user_form.username }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ user_form.email.id_for_label }}" class="form-label">Correo electrónico</label>
+                {% if user_form.email.errors %}<span class="form-error">{{ user_form.email.errors.0 }}</span>{% endif %}
+                {{ user_form.email }}
+            </div>
+
+            <div class="form-group">
+                <label for="{{ profile_form.bio.id_for_label }}" class="form-label">Biografía</label>
+                {% if profile_form.bio.errors %}<span class="form-error">{{ profile_form.bio.errors.0 }}</span>{% endif %}
+                {{ profile_form.bio }}
+            </div>
+
+            {% if profile_form.non_field_errors or user_form.non_field_errors %}
                 <div class="form-errors">
-                    {% for error in form.non_field_errors %}
-                        <p class="error-text">{{ error }}</p>
-                    {% endfor %}
+                    {% for error in profile_form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                    {% for error in user_form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
                 </div>
             {% endif %}
 
-            <!-- Buttons -->
-            <div class="form-actions">
-                <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                <a href="{% url 'music:artist_detail_public' request.user.artist_profile.pk %}" class="btn btn-secondary">Cancelar</a>
-            </div>
+            <button type="submit" class="btn-submit">Guardar cambios</button>
         </form>
+
+        <div class="auth-footer">
+            <p><a href="{% url 'music:artist_detail_public' request.user.artist_profile.pk %}" class="auth-link">← Volver al perfil</a></p>
+        </div>
     </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const bannerInput = document.getElementById('id_banner');
-    const photoInput = document.getElementById('id_photo');
-    const photoLabel = document.getElementById('photo-label');
-    const bannerLabel = document.getElementById('banner-label');
-    const cropperContainer = document.getElementById('cropper-container');
-    const cropperImage = document.getElementById('cropper-image');
-    const cropBtn = document.getElementById('crop-btn');
-    const cancelCropBtn = document.getElementById('cancel-crop-btn');
-    const form = document.getElementById('edit-form');
-    let cropper;
+    document.addEventListener('DOMContentLoaded', function() {
+        function setupCropper(opts) {
+            const fileInput = document.getElementById(opts.inputId);
+            const labelEl = document.getElementById(opts.labelId);
+            const modal = document.getElementById(opts.modalId);
+            const imageEl = document.getElementById(opts.imageId);
+            const cancelBtn = document.getElementById(opts.cancelId);
+            const confirmBtn = document.getElementById(opts.confirmId);
+            let cropper;
 
-    function setLabelPreview(label, src, isBanner) {
-        const previewClass = isBanner
-            ? 'file-input__preview file-input__preview--banner'
-            : 'file-input__preview';
-        label.classList.add('file-input-label--has-image');
-        label.innerHTML = `<img src="${src}" alt="Vista previa" class="${previewClass}">`;
-    }
+            function setPreview(src) {
+                labelEl.classList.add('file-input-label--has-image');
+                const cls = opts.isBanner ? 'file-input__preview file-input__preview--banner' : 'file-input__preview';
+                labelEl.innerHTML = `<img src="${src}" alt="Vista previa" class="${cls}">`;
+            }
 
-    if (photoInput) {
-        photoInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
+            fileInput.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
                 const reader = new FileReader();
-                reader.onload = function(event) {
-                    setLabelPreview(photoLabel, event.target.result, false);
+                reader.onload = function(ev) {
+                    imageEl.src = ev.target.result;
+                    modal.style.display = 'flex';
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(imageEl, {
+                        aspectRatio: opts.aspectRatio, viewMode: 1, responsive: true,
+                        modal: true, guides: true, center: true, autoCropArea: 0.8,
+                    });
                 };
                 reader.readAsDataURL(file);
-            }
-        });
-    }
+            });
 
-    if (!bannerInput) return;
+            cancelBtn.addEventListener('click', function() {
+                modal.style.display = 'none';
+                fileInput.value = '';
+                if (cropper) { cropper.destroy(); cropper = null; }
+            });
 
-    bannerInput.addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                cropperImage.src = event.target.result;
-                cropperContainer.style.display = 'block';
-                if (cropper) {
+            confirmBtn.addEventListener('click', function() {
+                if (!cropper) return;
+                const w = opts.isBanner ? 1100 : 400;
+                const h = opts.isBanner ? 300 : 400;
+                cropper.getCroppedCanvas({ width: w, height: h }).toBlob(function(blob) {
+                    const fname = opts.isBanner ? 'banner.jpg' : 'photo.jpg';
+                    const file = new File([blob], fname, { type: 'image/jpeg' });
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    fileInput.files = dt.files;
+                    setPreview(URL.createObjectURL(blob));
+                    modal.style.display = 'none';
                     cropper.destroy();
-                }
-                cropper = new Cropper(cropperImage, {
-                    aspectRatio: 11 / 3,
-                    viewMode: 1,
-                    responsive: true,
-                    restore: false,
-                    checkCrossOrigin: false,
-                    checkOrientation: false,
-                    modal: true,
-                    guides: true,
-                    center: true,
-                    highlight: false,
-                    background: false,
-                    autoCropArea: 0.8,
+                    cropper = null;
                 });
-            };
-            reader.readAsDataURL(file);
-        }
-    });
-
-    cropBtn.addEventListener('click', function() {
-        if (cropper) {
-            cropper.getCroppedCanvas().toBlob(function(blob) {
-                const croppedFile = new File([blob], 'banner_cropped.png', { type: 'image/png' });
-                const dt = new DataTransfer();
-                dt.items.add(croppedFile);
-                bannerInput.files = dt.files;
-                setLabelPreview(bannerLabel, URL.createObjectURL(blob), true);
-                cropperContainer.style.display = 'none';
-                cropper.destroy();
-                cropper = null;
             });
         }
-    });
 
-    cancelCropBtn.addEventListener('click', function() {
-        cropperContainer.style.display = 'none';
-        if (cropper) {
-            cropper.destroy();
-            cropper = null;
-        }
-        bannerInput.value = '';
-    });
+        setupCropper({
+            inputId: '{{ profile_form.photo.id_for_label }}',
+            labelId: 'photo-label',
+            modalId: 'crop-modal-avatar',
+            imageId: 'crop-image-avatar',
+            cancelId: 'crop-cancel-avatar',
+            confirmId: 'crop-confirm-avatar',
+            aspectRatio: 1, isBanner: false,
+        });
 
-    form.addEventListener('submit', function(e) {
-        if (cropperContainer.style.display === 'block') {
-            e.preventDefault();
-            alert('Por favor, recorta la imagen del banner antes de guardar.');
-        }
+        setupCropper({
+            inputId: '{{ profile_form.banner.id_for_label }}',
+            labelId: 'banner-label',
+            modalId: 'crop-modal-banner',
+            imageId: 'crop-image-banner',
+            cancelId: 'crop-cancel-banner',
+            confirmId: 'crop-confirm-banner',
+            aspectRatio: 11 / 3, isBanner: true,
+        });
     });
-});
 </script>
 {% endblock %}

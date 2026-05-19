@@ -124,16 +124,44 @@ class ListenerProfileForm(forms.ModelForm):
 
 
 class ListenerProfileEditForm(forms.ModelForm):
-    """Formulario para editar nickname del usuario oyente"""
+    """Formulario para editar el nombre de usuario del oyente."""
     class Meta:
         model = User
-        fields = ['nickname']
+        fields = ['username']
         widgets = {
-            'nickname': forms.TextInput(attrs={
+            'username': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Tu nombre de usuario'
             })
         }
         labels = {
-            'nickname': 'Nombre de usuario',
+            'username': 'Nombre de usuario',
         }
+
+
+class UserEditForm(forms.ModelForm):
+    """Editar campos del User: nombre, apellido, username, email."""
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'username', 'email']
+        widgets = {
+            'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Primer nombre'}),
+            'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Segundo nombre'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
+            'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
+        }
+        labels = {
+            'first_name': 'Primer nombre',
+            'last_name': 'Segundo nombre',
+            'username': 'Nombre de usuario',
+            'email': 'Correo electrónico',
+        }
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
+        qs = User.objects.filter(email=email)
+        if self.instance.pk:
+            qs = qs.exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("Este correo electrónico ya está en uso.")
+        return email

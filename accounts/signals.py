@@ -23,9 +23,8 @@ def create_liked_playlist(sender, instance, created, **kwargs):
     if created:
         from playlists.models import Playlist
         from django.core.files.base import ContentFile
-        from django.conf import settings
-        import os
-        
+        from django.contrib.staticfiles import finders
+
         # Crear playlist "Mis joyas" si no existe
         if not Playlist.objects.filter(user=instance.user, is_liked_playlist=True).exists():
             playlist = Playlist.objects.create(
@@ -35,11 +34,13 @@ def create_liked_playlist(sender, instance, created, **kwargs):
                 is_public=False,
                 is_liked_playlist=True,
             )
-            
-            # Intentar asignar la imagen mis-joyas.png como cover
+
+            # Intentar asignar la imagen mis-joyas.png como cover.
+            # finders.find() funciona tanto en dev (STATICFILES_DIRS) como en
+            # producción (STATIC_ROOT tras collectstatic).
             try:
-                static_path = os.path.join(settings.STATIC_ROOT, 'img', 'mis-joyas.png')
-                if os.path.exists(static_path):
+                static_path = finders.find('img/mis-joyas.png')
+                if static_path:
                     with open(static_path, 'rb') as f:
                         playlist.cover.save(
                             'mis-joyas.png',

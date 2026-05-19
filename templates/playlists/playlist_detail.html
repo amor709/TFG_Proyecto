@@ -10,24 +10,20 @@
 
 {% block content %}
 <div class="playlist-detail">
-    {% if playlist.get_cover %}
-    <div class="playlist-detail__backdrop" style="background-image: url('{{ playlist.get_cover.url }}');"></div>
-    {% elif playlist.is_liked_playlist %}
+    {% if playlist.is_liked_playlist and not playlist.get_cover %}
     <div class="playlist-detail__backdrop" style="background-image: url('{% static 'img/mis-joyas.png' %}');"></div>
+    {% else %}
+    <div class="playlist-detail__backdrop" style="background-image: url('{{ playlist.cover_url }}');"></div>
     {% endif %}
     <div class="playlist-detail__overlay"></div>
 
     <div class="playlist-detail__inner">
         <header class="playlist-detail__header">
             <div class="playlist-detail__cover-wrap">
-                {% if playlist.get_cover %}
-                <img src="{{ playlist.get_cover.url }}" alt="{{ playlist.name }}" class="playlist-detail__cover">
-                {% elif playlist.is_liked_playlist %}
+                {% if playlist.is_liked_playlist and not playlist.get_cover %}
                 <img src="{% static 'img/mis-joyas.png' %}" alt="Mis joyas" class="playlist-detail__cover">
                 {% else %}
-                <div class="playlist-detail__cover playlist-detail__cover--placeholder">
-                    <img src="{% static 'img/icon-playlist.png' %}" alt="" class="icon--lg">
-                </div>
+                <img src="{{ playlist.cover_url }}" alt="{{ playlist.name }}" class="playlist-detail__cover">
                 {% endif %}
             </div>
             <div class="playlist-detail__info">
@@ -46,7 +42,7 @@
                 {% if user.is_authenticated and not playlist.is_liked_playlist %}
                 <div class="playlist-detail__actions">
                     {% if user == playlist.user %}
-                    <button class="btn btn--primary">Editar</button>
+                    <a href="{% url 'playlists:edit' playlist.pk %}" class="btn btn--primary">Editar</a>
                     {% else %}
                     <button class="btn btn--secondary save-btn" data-playlist-id="{{ playlist.pk }}" data-saved="{{ is_saved|yesno:'true,false' }}">
                         {% if is_saved %}
@@ -113,6 +109,7 @@
                     </span>
                     <span class="tracklist__col tracklist__col--duration">{{ song.duration_display }}</span>
                     <span class="tracklist__col tracklist__col--actions">
+                        {% if not request.user.is_artist %}
                         <button class="track-action-btn track-like-btn"
                                 data-track-id="{{ song.pk }}"
                                 aria-label="{% if song.is_liked %}Quitar de Me gusta{% else %}Añadir a Me gusta{% endif %}">
@@ -122,6 +119,7 @@
                                 <img src="{% static 'img/diamond-white.png' %}" alt="Me gusta" class="icon--sm">
                             {% endif %}
                         </button>
+                        {% endif %}
 
                         <button class="track-action-btn track-more-btn"
                                 data-track-id="{{ song.pk }}"

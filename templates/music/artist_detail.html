@@ -14,7 +14,7 @@
 
     <!-- ── FONDO DIFUMINADO (imagen de perfil del artista) ── -->
     <div class="artist-page__backdrop"
-         style="background-image: url('{{ artist.photo.url }}');"
+         style="background-image: url('{{ artist.photo_url }}');"
          aria-hidden="true"></div>
     <div class="artist-page__overlay" aria-hidden="true"></div>
 
@@ -51,6 +51,7 @@
                     <span>Reproducción Aleatoria</span>
                 </button>
 
+                {% if not request.user.is_artist %}
                 <!-- Me gusta (seguir artista) -->
                 <button class="artist-action-btn artist-action-btn--like
                                {% if is_followed %}artist-action-btn--active{% endif %}"
@@ -62,6 +63,7 @@
                          alt=""
                          class="icon--md">
                 </button>
+                {% endif %}
 
                 <!-- Más opciones -->
                 <button class="artist-action-btn artist-action-btn--more"
@@ -223,7 +225,7 @@
                         <article class="track-card carousel__item">
                             <a href="{% url 'music:album_detail' album.pk %}" class="track-card__link">
                                 <div class="track-card__cover-wrap">
-                                    <img src="{{ album.cover.url }}" alt="{{ album.title }}"
+                                    <img src="{% if album.cover %}{{ album.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}" alt="{{ album.title }}"
                                          class="track-card__cover" loading="lazy">
                                     <div class="track-card__play-overlay" aria-hidden="true">
                                         <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
@@ -362,7 +364,7 @@
 
                 <!-- Foto del artista -->
                 <div class="artist-bio__photo-wrap">
-                    <img src="{{ artist.photo.url }}"
+                    <img src="{{ artist.photo_url }}"
                          alt="Foto de {{ artist.name }}"
                          class="artist-bio__photo">
                 </div>
@@ -385,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function() {
 {
     title: "{{ song.title }}",
     url: "{{ song.audio_file.url }}",
-    cover: "{{ song.cover.url }}",
+    cover: "{% if song.cover %}{{ song.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}",
     artist: "{{ song.artist.user.username }}",
     id: {{ song.pk }}
 }{% if not forloop.last %},{% endif %}

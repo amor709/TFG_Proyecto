@@ -1,212 +1,183 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 
-{% block title %} - Crear Sencillo{% endblock %}
+{% block title %} – Crear sencillo{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/create_single.css' %}">
+<link rel="stylesheet" href="{% static 'css/auth.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.css">
+<style>
+    .main-content .auth-container {
+        background: transparent;
+        padding: 2rem 0;
+        min-height: auto;
+    }
+    .auth-card { max-width: 560px; }
+</style>
 {% endblock %}
 
 {% block content %}
-<div class="release-container">
-    <div class="release-header">
-        <h1>🎵 Crear Sencillo</h1>
-        <p>Sube tu próximo sencillo a SoundMusik</p>
-    </div>
-
-    {% if messages %}
-    <div class="messages">
-        {% for message in messages %}
-        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-        {% endfor %}
-    </div>
-    {% endif %}
-
-    <form method="post" enctype="multipart/form-data" id="single-form" novalidate>
-        {% csrf_token %}
-
-        <!-- Título -->
-        <div class="form-group">
-            <label for="id_title">{{ form.title.label }}</label>
-            {{ form.title }}
-            {% if form.title.errors %}
-            <div class="error-message">
-                <ul class="error-list">
-                    {% for error in form.title.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
+<div class="auth-container">
+    <div class="auth-card">
+        <div class="auth-card__header">
+            <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
+            <h1 class="auth-title">Crear sencillo</h1>
+            <p class="auth-subtitle">Sube tu próximo single a SoundMusik</p>
         </div>
 
-        <!-- Fecha de Lanzamiento -->
-        <div class="form-group">
-            <label for="id_release_date">{{ form.release_date.label }}</label>
-            {{ form.release_date }}
-            {% if form.release_date.errors %}
-            <div class="error-message">
-                <ul class="error-list">
-                    {% for error in form.release_date.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-        </div>
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
 
-        <!-- Portada (Validación 1:1) -->
-        <div class="form-group">
-            <label for="id_cover">{{ form.cover.label }}</label>
-            <div class="help-text">{{ form.cover.help_text|safe }}</div>
-            <div class="file-input-wrapper" id="cover-drop-zone" ondrop="handleDrop(event, 'cover')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                <input type="file" name="cover" id="id_cover" accept="image/*" onchange="handleCoverChange(event)">
-                <div class="file-input-text">
-                    <strong>Arrastra tu imagen aquí</strong> o haz clic para seleccionar
+        <form method="post" enctype="multipart/form-data" class="auth-form" id="single-form" novalidate>
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label for="id_title" class="form-label">{{ form.title.label }}</label>
+                {% if form.title.errors %}<span class="form-error">{{ form.title.errors.0 }}</span>{% endif %}
+                {{ form.title }}
+            </div>
+
+            <div class="form-group">
+                <label for="id_release_date" class="form-label">{{ form.release_date.label }}</label>
+                {% if form.release_date.errors %}<span class="form-error">{{ form.release_date.errors.0 }}</span>{% endif %}
+                {{ form.release_date }}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Portada</label>
+                {% if form.cover.help_text %}<p class="help-text">{{ form.cover.help_text|safe }}</p>{% endif %}
+                {% if form.cover.errors %}<span class="form-error">{{ form.cover.errors.0 }}</span>{% endif %}
+                <div class="file-input-wrapper">
+                    <input type="file" name="cover" id="id_cover" accept="image/*" class="file-input">
+                    <label for="id_cover" class="file-input-label" id="cover-label">
+                        <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md">
+                        <span>Selecciona la portada (1:1)</span>
+                    </label>
                 </div>
-                <div class="file-preview" id="cover-preview"></div>
-            </div>
-            {% if form.cover.errors %}
-            <div class="error-message">
-                <ul class="error-list">
-                    {% for error in form.cover.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-        </div>
-
-        <!-- Archivo de Audio -->
-        <div class="form-group">
-            <label for="id_audio_file">{{ form.audio_file.label }}</label>
-            <div class="help-text">{{ form.audio_file.help_text|safe }}</div>
-            <div class="file-input-wrapper" id="audio-drop-zone" ondrop="handleDrop(event, 'audio')" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)">
-                <input type="file" name="audio_file" id="id_audio_file" accept="audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4" onchange="handleAudioChange(event)">
-                <div class="file-input-text">
-                    <strong>Arrastra tu audio aquí</strong> o haz clic para seleccionar
+                <div id="crop-modal" class="crop-modal" style="display: none;">
+                    <div class="crop-modal-content">
+                        <img id="crop-image" src="" alt="Imagen a recortar">
+                        <div class="crop-buttons">
+                            <button type="button" id="crop-cancel">Cancelar</button>
+                            <button type="button" id="crop-confirm">Confirmar</button>
+                        </div>
+                    </div>
                 </div>
             </div>
-            {% if form.audio_file.errors %}
-            <div class="error-message">
-                <ul class="error-list">
-                    {% for error in form.audio_file.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-            {% endif %}
-        </div>
 
-        <!-- Tags/Géneros -->
-        <div class="form-group">
-            <label>{{ form.tags.label }}</label>
-            <div class="tags-section">
+            <div class="form-group">
+                <label class="form-label">Audio</label>
+                {% if form.audio_file.help_text %}<p class="help-text">{{ form.audio_file.help_text|safe }}</p>{% endif %}
+                {% if form.audio_file.errors %}<span class="form-error">{{ form.audio_file.errors.0 }}</span>{% endif %}
+                <div class="file-input-wrapper">
+                    <input type="file" name="audio_file" id="id_audio_file" accept="audio/mpeg,audio/wav,audio/ogg,audio/flac,audio/mp4" class="file-input">
+                    <label for="id_audio_file" class="file-input-label" id="audio-label">
+                        <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md">
+                        <span id="audio-label-text">Selecciona tu archivo de audio</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">{{ form.tags.label }}</label>
                 {{ form.tags }}
+                {% if form.tags.errors %}<span class="form-error">{{ form.tags.errors.0 }}</span>{% endif %}
             </div>
-            {% if form.tags.errors %}
-            <div class="error-message">
-                <ul class="error-list">
-                    {% for error in form.tags.errors %}
-                    <li>{{ error }}</li>
-                    {% endfor %}
-                </ul>
+
+            {% if form.collaborators %}
+            <div class="form-group">
+                <label class="form-label">{{ form.collaborators.label }}</label>
+                {{ form.collaborators }}
+                {% if form.collaborators.errors %}<span class="form-error">{{ form.collaborators.errors.0 }}</span>{% endif %}
             </div>
             {% endif %}
-        </div>
 
-        <!-- Botones de acción -->
-        <div class="btn-group">
-            <button type="reset" class="btn btn-secondary">Limpiar Formulario</button>
-            <button type="submit" class="btn btn-primary" id="submit-btn">Publicar Sencillo</button>
+            {% if form.non_field_errors %}
+                <div class="form-errors">
+                    {% for error in form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="btn-group">
+                <button type="reset" class="btn-secondary">Limpiar</button>
+                <button type="submit" class="btn-submit" id="submit-btn">Publicar sencillo</button>
+            </div>
+        </form>
+
+        <div class="auth-footer">
+            <p><a href="{% url 'home' %}" class="auth-link">← Volver a inicio</a></p>
         </div>
-    </form>
+    </div>
 </div>
+{% endblock %}
 
+{% block extra_scripts %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.12/cropper.min.js"></script>
 <script>
-    // Validación de imagen cuadrada
-    function handleCoverChange(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const preview = document.getElementById('cover-preview');
-                    const width = img.naturalWidth;
-                    const height = img.naturalHeight;
+    document.addEventListener('DOMContentLoaded', function() {
+        // Cover con cropper
+        const coverInput = document.getElementById('id_cover');
+        const coverLabel = document.getElementById('cover-label');
+        const modal = document.getElementById('crop-modal');
+        const imageEl = document.getElementById('crop-image');
+        const cancelBtn = document.getElementById('crop-cancel');
+        const confirmBtn = document.getElementById('crop-confirm');
+        let cropper;
 
-                    if (width !== height) {
-                        preview.innerHTML = `<p style="color: #ff6666; font-weight: 600;">⚠️ Error: La imagen debe ser cuadrada (${width}x${height}). Esperamos ${Math.max(width, height)}x${Math.max(width, height)}</p>`;
-                        document.getElementById('submit-btn').disabled = true;
-                    } else {
-                        preview.innerHTML = `<img src="${e.target.result}" class="preview-image" alt="Preview">
-                                           <p style="color: #00ff88; margin-top: 0.5rem;">✅ Imagen válida (${width}x${height})</p>`;
-                        document.getElementById('submit-btn').disabled = false;
-                    }
-                };
-                img.src = e.target.result;
+        function setCoverPreview(src) {
+            coverLabel.classList.add('file-input-label--has-image');
+            coverLabel.innerHTML = `<img src="${src}" alt="Vista previa" class="file-input__preview file-input__preview--square">`;
+        }
+
+        coverInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                imageEl.src = ev.target.result;
+                modal.style.display = 'flex';
+                if (cropper) cropper.destroy();
+                cropper = new Cropper(imageEl, {
+                    aspectRatio: 1, viewMode: 1, responsive: true,
+                    modal: true, guides: true, center: true, autoCropArea: 0.8,
+                });
             };
             reader.readAsDataURL(file);
-        }
-    }
-
-    function handleAudioChange(event) {
-        const file = event.target.files[0];
-        if (file) {
-            const zone = document.getElementById('audio-drop-zone');
-            zone.querySelector('.file-input-text').innerHTML = `<strong>✅ ${file.name}</strong> seleccionado`;
-        }
-    }
-
-    function handleDrop(event, type) {
-        event.preventDefault();
-        event.stopPropagation();
-        const zone = event.currentTarget;
-        zone.classList.remove('dragover');
-
-        const files = event.dataTransfer.files;
-        if (files.length > 0) {
-            const input = zone.querySelector('input[type="file"]');
-            input.files = files;
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-        }
-    }
-
-    function handleDragOver(event) {
-        event.preventDefault();
-        event.currentTarget.classList.add('dragover');
-    }
-
-    function handleDragLeave(event) {
-        event.currentTarget.classList.remove('dragover');
-    }
-
-    // Manejar cambio de color en botones de tags
-    document.querySelectorAll('.tag-checkboxes input[type="checkbox"]').forEach(checkbox => {
-        checkbox.addEventListener('change', function() {
-            const label = this.nextElementSibling;
-            if (this.checked) {
-                label.classList.add('selected');
-            } else {
-                label.classList.remove('selected');
-            }
         });
-        // Aplicar estado inicial
-        const label = checkbox.nextElementSibling;
-        if (checkbox.checked) {
-            label.classList.add('selected');
-        }
-    });
 
-    // Añadir estilos para el estado dragover
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .file-input-wrapper.dragover {
-            border-color: #e8212e;
-            background: #2f2828;
-        }
-    `;
-    document.head.appendChild(style);
+        cancelBtn.addEventListener('click', function() {
+            modal.style.display = 'none';
+            coverInput.value = '';
+            if (cropper) { cropper.destroy(); cropper = null; }
+        });
+
+        confirmBtn.addEventListener('click', function() {
+            if (!cropper) return;
+            cropper.getCroppedCanvas({ width: 600, height: 600 }).toBlob(function(blob) {
+                const file = new File([blob], 'cover.jpg', { type: 'image/jpeg' });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                coverInput.files = dt.files;
+                setCoverPreview(URL.createObjectURL(blob));
+                modal.style.display = 'none';
+                cropper.destroy();
+                cropper = null;
+            });
+        });
+
+        // Audio: actualizar label con nombre del fichero
+        const audioInput = document.getElementById('id_audio_file');
+        const audioLabel = document.getElementById('audio-label');
+        const audioText = document.getElementById('audio-label-text');
+        audioInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            audioLabel.classList.add('file-input-label--has-audio');
+            audioText.textContent = `✓ ${file.name}`;
+        });
+    });
 </script>
 {% endblock %}

@@ -29,17 +29,18 @@
                 {% csrf_token %}
 
                 <div class="form-group">
-                    <label for="{{ form.avatar.id_for_label }}" class="form-label">Foto de perfil</label>
+                    <label class="form-label">Foto de perfil</label>
                     {% if form.avatar.errors %}
                         <span class="form-error">{{ form.avatar.errors.0 }}</span>
                     {% endif %}
                     <div class="file-input-wrapper">
                         <input type="file" id="{{ form.avatar.id_for_label }}" name="avatar" accept="image/*" class="file-input">
-                        <label for="{{ form.avatar.id_for_label }}" class="file-input-label">
+                        <label for="{{ form.avatar.id_for_label }}" class="file-input-label" id="avatar-label">
                             <img src="{% static 'img/cover-button.png' %}" alt="Seleccionar foto" class="icon--md">
                             <span>Selecciona tu foto (opcional)</span>
                         </label>
                     </div>
+
                     <div id="crop-modal" class="crop-modal" style="display: none;">
                         <div class="crop-modal-content">
                             <img id="crop-image" src="" alt="Imagen a recortar">
@@ -53,57 +54,43 @@
 
                 <div class="form-group">
                     <label for="{{ form.first_name.id_for_label }}" class="form-label">Primer nombre *</label>
-                    {% if form.first_name.errors %}
-                        <span class="form-error">{{ form.first_name.errors.0 }}</span>
-                    {% endif %}
+                    {% if form.first_name.errors %}<span class="form-error">{{ form.first_name.errors.0 }}</span>{% endif %}
                     {{ form.first_name }}
                 </div>
 
                 <div class="form-group">
                     <label for="{{ form.last_name.id_for_label }}" class="form-label">Segundo nombre *</label>
-                    {% if form.last_name.errors %}
-                        <span class="form-error">{{ form.last_name.errors.0 }}</span>
-                    {% endif %}
+                    {% if form.last_name.errors %}<span class="form-error">{{ form.last_name.errors.0 }}</span>{% endif %}
                     {{ form.last_name }}
                 </div>
 
                 <div class="form-group">
-                    <label for="{{ form.nickname.id_for_label }}" class="form-label">Nombre de usuario *</label>
-                    {% if form.nickname.errors %}
-                        <span class="form-error">{{ form.nickname.errors.0 }}</span>
-                    {% endif %}
-                    {{ form.nickname }}
+                    <label for="{{ form.username.id_for_label }}" class="form-label">Nombre de usuario *</label>
+                    {% if form.username.errors %}<span class="form-error">{{ form.username.errors.0 }}</span>{% endif %}
+                    {{ form.username }}
                 </div>
 
                 <div class="form-group">
                     <label for="{{ form.email.id_for_label }}" class="form-label">Correo electrónico *</label>
-                    {% if form.email.errors %}
-                        <span class="form-error">{{ form.email.errors.0 }}</span>
-                    {% endif %}
+                    {% if form.email.errors %}<span class="form-error">{{ form.email.errors.0 }}</span>{% endif %}
                     {{ form.email }}
                 </div>
 
                 <div class="form-group">
                     <label for="{{ form.password.id_for_label }}" class="form-label">Contraseña *</label>
-                    {% if form.password.errors %}
-                        <span class="form-error">{{ form.password.errors.0 }}</span>
-                    {% endif %}
+                    {% if form.password.errors %}<span class="form-error">{{ form.password.errors.0 }}</span>{% endif %}
                     {{ form.password }}
                 </div>
 
                 <div class="form-group">
                     <label for="{{ form.password_confirm.id_for_label }}" class="form-label">Confirmar contraseña *</label>
-                    {% if form.password_confirm.errors %}
-                        <span class="form-error">{{ form.password_confirm.errors.0 }}</span>
-                    {% endif %}
+                    {% if form.password_confirm.errors %}<span class="form-error">{{ form.password_confirm.errors.0 }}</span>{% endif %}
                     {{ form.password_confirm }}
                 </div>
 
                 {% if form.non_field_errors %}
                     <div class="form-errors">
-                        {% for error in form.non_field_errors %}
-                            <p class="form-error">{{ error }}</p>
-                        {% endfor %}
+                        {% for error in form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
                     </div>
                 {% endif %}
 
@@ -120,63 +107,57 @@
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const fileInput = document.getElementById('{{ form.avatar.id_for_label }}');
+            const avatarLabel = document.getElementById('avatar-label');
             const cropModal = document.getElementById('crop-modal');
             const cropImage = document.getElementById('crop-image');
             const cropCancel = document.getElementById('crop-cancel');
             const cropConfirm = document.getElementById('crop-confirm');
             let cropper;
 
+            function setPreview(src) {
+                avatarLabel.classList.add('file-input-label--has-image');
+                avatarLabel.innerHTML = `<img src="${src}" alt="Vista previa" class="file-input__preview">`;
+            }
+
             fileInput.addEventListener('change', function(e) {
                 const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                        cropImage.src = e.target.result;
-                        cropModal.style.display = 'flex';
-                        if (cropper) {
-                            cropper.destroy();
-                        }
-                        cropper = new Cropper(cropImage, {
-                            aspectRatio: 1,
-                            viewMode: 1,
-                            responsive: true,
-                            restore: false,
-                            checkCrossOrigin: false,
-                            checkOrientation: false,
-                            modal: true,
-                            guides: true,
-                            center: true,
-                            highlight: false,
-                            background: false,
-                            autoCropArea: 0.8,
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                }
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    cropImage.src = ev.target.result;
+                    cropModal.style.display = 'flex';
+                    if (cropper) cropper.destroy();
+                    cropper = new Cropper(cropImage, {
+                        aspectRatio: 1,
+                        viewMode: 1,
+                        responsive: true,
+                        modal: true,
+                        guides: true,
+                        center: true,
+                        autoCropArea: 0.8,
+                    });
+                };
+                reader.readAsDataURL(file);
             });
 
             cropCancel.addEventListener('click', function() {
                 cropModal.style.display = 'none';
                 fileInput.value = '';
-                if (cropper) {
-                    cropper.destroy();
-                }
+                if (cropper) { cropper.destroy(); cropper = null; }
             });
 
             cropConfirm.addEventListener('click', function() {
-                if (cropper) {
-                    cropper.getCroppedCanvas({
-                        width: 300,
-                        height: 300,
-                    }).toBlob(function(blob) {
-                        const file = new File([blob], 'cropped-avatar.jpg', { type: 'image/jpeg' });
-                        const dataTransfer = new DataTransfer();
-                        dataTransfer.items.add(file);
-                        fileInput.files = dataTransfer.files;
-                        cropModal.style.display = 'none';
-                        cropper.destroy();
-                    });
-                }
+                if (!cropper) return;
+                cropper.getCroppedCanvas({ width: 400, height: 400 }).toBlob(function(blob) {
+                    const file = new File([blob], 'avatar.jpg', { type: 'image/jpeg' });
+                    const dt = new DataTransfer();
+                    dt.items.add(file);
+                    fileInput.files = dt.files;
+                    setPreview(URL.createObjectURL(blob));
+                    cropModal.style.display = 'none';
+                    cropper.destroy();
+                    cropper = null;
+                });
             });
         });
     </script>

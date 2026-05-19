@@ -11,7 +11,7 @@
 <div class="profile-page">
     <!-- ── FONDO DIFUMINADO ── -->
     <div class="profile-page__backdrop"
-         style="background-image: url('{% if profile_user.listener_profile.avatar %}{{ profile_user.listener_profile.avatar.url }}{% else %}{% static "img/avatar-default.png" %}{% endif %}');"
+         style="background-image: url('{{ profile_user.listener_profile.avatar_url }}');"
          aria-hidden="true"></div>
     <div class="profile-page__overlay" aria-hidden="true"></div>
 

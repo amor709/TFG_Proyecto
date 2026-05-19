@@ -1,3 +1,24 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap');
+
+/* ════════════════════════════════════════════════════════════════════
+   auth.css  –  Páginas de autenticación (registro, login, edit)
+   Coherente con la paleta global de SoundMusik (soundmusik.css :root)
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+    --color-bg: #0e0e0e;
+    --color-surface-02: #1e1e1e;
+    --color-surface-03: #272727;
+    --color-accent: #e8212e;
+    --color-accent-hover: #ff3a46;
+    --color-accent-muted: rgba(232, 33, 46, 0.15);
+    --color-text-primary: #f0f0f0;
+    --color-text-secondary: #9a9a9a;
+    --color-text-muted: #5a5a5a;
+    --font-display: 'Bebas Neue', sans-serif;
+    --font-body: 'DM Sans', sans-serif;
+}
+
 * {
     margin: 0;
     padding: 0;
@@ -7,20 +28,19 @@
 body, html {
     height: 100%;
     width: 100%;
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
 }
 
-/* El contenedor que envuelve a la imagen en el modal */
-.img-container {
-    max-width: 100%;    /* No permite que sea más ancho que el modal */
-    max-height: 70vh;   /* Limita la altura al 70% de la pantalla */
-    overflow: hidden;   /* Evita desbordamientos */
-    margin: 0 auto;
-}
+/* Imagen del modal de crop */
 #crop-image-avatar, #crop-image-banner {
     display: block;
-    max-width: 100%;    /* Esto obliga a la imagen a encogerse al contenedor */
+    max-width: 100%;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Layout
+   ────────────────────────────────────────────────────────────── */
 
 .auth-container {
     display: flex;
@@ -28,17 +48,20 @@ body, html {
     justify-content: center;
     min-height: 100%;
     padding: 2rem;
-    background: linear-gradient(135deg, #000000 0%, #3a0202 100%);
+    background:
+        radial-gradient(ellipse at top left, rgba(232, 33, 46, 0.18) 0%, transparent 50%),
+        radial-gradient(ellipse at bottom right, rgba(232, 33, 46, 0.10) 0%, transparent 60%),
+        var(--color-bg);
 }
 
 .auth-card {
-    background: rgb(0 0 0 / 0, 95);
-    border: 1px solid rgb(0 0 0 / 0, 1);
+    background: #141414;
+    border: 1px solid var(--color-surface-03);
     border-radius: 12px;
     padding: 3rem 2.5rem;
     width: 100%;
     max-width: 450px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
 }
 
 .auth-card__header {
@@ -52,24 +75,28 @@ body, html {
 }
 
 .auth-title {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2rem;
-    color: #fff;
+    font-family: var(--font-display);
+    font-size: 2.25rem;
+    color: var(--color-text-primary);
     margin: 0.5rem 0;
-    letter-spacing: 1px;
+    letter-spacing: 2px;
 }
 
 .auth-subtitle {
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--color-text-secondary);
     margin: 0;
 }
+
+/* ──────────────────────────────────────────────────────────────
+   Formulario
+   ────────────────────────────────────────────────────────────── */
 
 .auth-form {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1.25rem;
 }
 
 .form-group {
@@ -79,36 +106,44 @@ body, html {
 }
 
 .form-label {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
+    font-family: var(--font-body);
+    font-size: 0.85rem;
     font-weight: 500;
-    color: rgba(255, 255, 255, 0.85);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
 }
 
 .form-control {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: var(--color-bg);
+    border: 1px solid var(--color-surface-03);
     border-radius: 6px;
     padding: 0.75rem 1rem;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 0.95rem;
-    color: #fff;
-    transition: all 0.3s ease;
+    color: var(--color-text-primary);
+    transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
 .form-control:focus {
     outline: none;
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.3);
-    box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.1);
+    background: var(--color-bg);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-muted);
 }
 
 .form-control::placeholder {
-    color: rgba(255, 255, 255, 0.4);
+    color: var(--color-text-muted);
 }
+
+/* ──────────────────────────────────────────────────────────────
+   File input
+   ────────────────────────────────────────────────────────────── */
 
 .file-input-wrapper {
     position: relative;
+    width: 100%;
+    max-width: 100%;
 }
 
 .file-input {
@@ -120,163 +155,235 @@ body, html {
     align-items: center;
     justify-content: center;
     gap: 0.5rem;
-    background: rgba(255, 255, 255, 0.08);
-    border: 2px dashed rgba(255, 255, 255, 0.2);
+    background: var(--color-bg);
+    border: 2px dashed var(--color-surface-03);
     border-radius: 6px;
     padding: 1.5rem;
     cursor: pointer;
-    transition: all 0.3s ease;
-    font-family: 'DM Sans', sans-serif;
-    color: rgba(255, 255, 255, 0.7);
+    transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+    font-family: var(--font-body);
+    color: var(--color-text-secondary);
     font-size: 0.9rem;
 }
 
 .file-input-label:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.3);
-    color: #fff;
+    border-color: var(--color-accent);
+    color: var(--color-text-primary);
+    background: rgba(232, 33, 46, 0.05);
 }
 
 .file-input:focus + .file-input-label {
-    border-color: rgba(255, 255, 255, 0.4);
-    background: rgba(255, 255, 255, 0.1);
+    border-color: var(--color-accent);
+    box-shadow: 0 0 0 3px var(--color-accent-muted);
 }
 
+.file-input-label--has-image {
+    padding: 0;
+    border: none;
+    background: transparent;
+    width: 100%;
+    max-width: 100%;
+    overflow: hidden;
+}
+
+@keyframes preview-bounce {
+    0%   { transform: scale(0.4); opacity: 0; }
+    60%  { transform: scale(1.08); opacity: 1; }
+    80%  { transform: scale(0.96); }
+    100% { transform: scale(1); }
+}
+
+.file-input__preview {
+    width: 140px;
+    height: 140px;
+    max-width: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    animation: preview-bounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* Variante cuadrada para portadas (playlist / álbum / sencillo) */
+.file-input__preview--square {
+    width: 180px;
+    height: 180px;
+    border-radius: 8px;
+}
+
+.file-input__preview--banner {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    max-height: 140px;
+    aspect-ratio: 11 / 3;
+    border-radius: 6px;
+    object-fit: cover;
+    display: block;
+    margin: 0 auto;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    animation: preview-bounce 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Mensajes y errores
+   ────────────────────────────────────────────────────────────── */
+
 .form-error {
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 0.85rem;
-    color: #ff6b6b;
+    color: var(--color-accent);
 }
 
 .form-errors {
-    background: rgba(255, 107, 107, 0.1);
-    border: 1px solid rgba(255, 107, 107, 0.3);
+    background: var(--color-accent-muted);
+    border: 1px solid var(--color-accent);
     border-radius: 6px;
-    padding: 1rem;
+    padding: 0.85rem 1rem;
+    color: var(--color-text-primary);
 }
 
-.btn-submit {
-    background: linear-gradient(135deg, #c81d1d 0%, #c81d1d 100%);
-    border: none;
+.alert {
+    padding: 0.85rem 1rem;
     border-radius: 6px;
-    padding: 0.85rem;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
+    margin-bottom: 1rem;
+    font-size: 0.9rem;
+}
+
+.alert-success {
+    background: rgba(76, 175, 80, 0.12);
+    border: 1px solid rgba(76, 175, 80, 0.35);
+    color: #6fcf73;
+}
+
+.alert-error {
+    background: var(--color-accent-muted);
+    border: 1px solid var(--color-accent);
+    color: var(--color-text-primary);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Botones
+   ────────────────────────────────────────────────────────────── */
+
+.btn-submit {
+    background: var(--color-accent);
+    border: none;
+    border-radius: 9999px;
+    padding: 0.85rem 1.5rem;
+    font-family: var(--font-body);
     font-size: 1rem;
-    font-weight: 600;
+    font-weight: 700;
+    letter-spacing: 0.02em;
     color: #fff;
     cursor: pointer;
-    transition: all 0.3s ease;
-    margin-top: 1rem;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    margin-top: 0.5rem;
 }
 
 .btn-submit:hover {
+    background: var(--color-accent-hover);
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgb(200 29 29);
+    box-shadow: 0 8px 24px rgba(232, 33, 46, 0.35);
 }
 
 .btn-submit:active {
     transform: translateY(0);
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Footer y enlaces
+   ────────────────────────────────────────────────────────────── */
+
 .auth-footer {
-    margin-top: 1.5rem;
+    margin-top: 1.75rem;
     text-align: center;
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-secondary);
 }
 
 .auth-link {
-    color: #c81d1d;
+    color: var(--color-accent);
     text-decoration: none;
     font-weight: 600;
-    transition: color 0.3s ease;
+    transition: color 0.2s ease;
 }
 
 .auth-link:hover {
-    color: #764ba2;
+    color: var(--color-accent-hover);
 }
 
-.alert {
-    padding: 1rem;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
-    margin-bottom: 1rem;
-}
-
-.alert-success {
-    background: rgba(76, 175, 80, 0.1);
-    border: 1px solid rgba(76, 175, 80, 0.3);
-    color: #4caf50;
-}
-
-.alert-error {
-    background: rgba(255, 107, 107, 0.1);
-    border: 1px solid rgba(255, 107, 107, 0.3);
-    color: #ff6b6b;
-}
+/* ──────────────────────────────────────────────────────────────
+   Selector de tipo de cuenta (register_type)
+   ────────────────────────────────────────────────────────────── */
 
 .register-type-options {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
-    margin-bottom: 2rem;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
 }
 
 .register-option {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 1rem;
-    padding: 2rem;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 0.85rem;
+    padding: 1.75rem 1.25rem;
+    background: var(--color-bg);
+    border: 1px solid var(--color-surface-03);
     border-radius: 12px;
     text-align: center;
     text-decoration: none;
-    color: #fff;
-    transition: all 0.3s ease;
+    color: var(--color-text-primary);
+    transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 .register-option:hover {
-    background: rgba(255, 255, 255, 0.1);
-    border-color: rgba(255, 255, 255, 0.2);
+    border-color: var(--color-accent);
+    background: rgba(232, 33, 46, 0.05);
     transform: translateY(-2px);
-    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .register-option h3 {
-    font-family: 'DM Sans', sans-serif;
-    font-size: 1.25rem;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    font-weight: 400;
+    letter-spacing: 1.5px;
     margin: 0;
 }
 
 .register-option p {
-    font-family: 'DM Sans', sans-serif;
+    font-family: var(--font-body);
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--color-text-secondary);
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.45;
 }
 
 .option-icon {
-    width: 60px;
-    height: 60px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--color-accent-muted);
+    border: 1px solid var(--color-accent);
     display: flex;
     align-items: center;
     justify-content: center;
 }
 
+/* ──────────────────────────────────────────────────────────────
+   Cropper modal
+   ────────────────────────────────────────────────────────────── */
+
 .crop-modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -284,9 +391,10 @@ body, html {
 }
 
 .crop-modal-content {
-    background: #fff;
+    background: var(--color-surface-02);
+    border: 1px solid var(--color-surface-03);
     border-radius: 12px;
-    padding: 1rem;
+    padding: 1.25rem;
     max-width: 90vw;
     max-height: 90vh;
     display: flex;
@@ -302,34 +410,149 @@ body, html {
 
 .crop-buttons {
     display: flex;
-    gap: 1rem;
+    gap: 0.75rem;
     justify-content: flex-end;
 }
 
 .crop-buttons button {
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1.2rem;
     border: none;
-    border-radius: 6px;
-    font-family: 'DM Sans', sans-serif;
+    border-radius: 9999px;
+    font-family: var(--font-body);
     font-size: 0.9rem;
+    font-weight: 600;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: background 0.2s ease, transform 0.15s ease;
 }
 
 #crop-cancel, #crop-cancel-avatar, #crop-cancel-banner {
-    background: #666;
-    color: #fff;
+    background: var(--color-surface-03);
+    color: var(--color-text-primary);
 }
 
 #crop-cancel:hover, #crop-cancel-avatar:hover, #crop-cancel-banner:hover {
-    background: #555;
+    background: #3a3a3a;
 }
 
 #crop-confirm, #crop-confirm-avatar, #crop-confirm-banner {
-    background: #667eea;
+    background: var(--color-accent);
     color: #fff;
 }
 
 #crop-confirm:hover, #crop-confirm-avatar:hover, #crop-confirm-banner:hover {
-    background: #5a6fd8;
+    background: var(--color-accent-hover);
+    transform: translateY(-1px);
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Tags / checkboxes (creación de canciones/álbumes)
+   ────────────────────────────────────────────────────────────── */
+
+.tag-checkboxes,
+.collaborator-checkboxes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.tag-checkboxes li,
+.collaborator-checkboxes li {
+    margin: 0;
+}
+
+.tag-checkboxes input[type="checkbox"],
+.collaborator-checkboxes input[type="checkbox"] {
+    display: none;
+}
+
+.tag-checkboxes label,
+.collaborator-checkboxes label {
+    display: inline-block;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--color-surface-03);
+    background: var(--color-bg);
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.tag-checkboxes label:hover,
+.collaborator-checkboxes label:hover {
+    border-color: var(--color-accent);
+    color: var(--color-text-primary);
+}
+
+.tag-checkboxes input[type="checkbox"]:checked + label,
+.collaborator-checkboxes input[type="checkbox"]:checked + label {
+    background: var(--color-accent);
+    border-color: var(--color-accent);
+    color: #fff;
+}
+
+/* Checkbox simple (is_public, etc.) */
+.form-check {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.form-check input[type="checkbox"] {
+    width: 1.05rem;
+    height: 1.05rem;
+    accent-color: var(--color-accent);
+    cursor: pointer;
+}
+
+.form-check-label {
+    color: var(--color-text-primary);
+    font-size: 0.95rem;
+    cursor: pointer;
+}
+
+/* Help text bajo un campo */
+.help-text {
+    font-size: 0.8rem;
+    color: var(--color-text-muted);
+    margin-top: -0.15rem;
+}
+
+/* Estado del file-input-label cuando hay audio seleccionado */
+.file-input-label--has-audio {
+    border-color: var(--color-accent);
+    color: var(--color-text-primary);
+    background: rgba(232, 33, 46, 0.05);
+}
+
+/* Grupo de acciones (cancelar/guardar) */
+.btn-group {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 0.5rem;
+}
+
+.btn-group .btn-submit {
+    flex: 1;
+    margin-top: 0;
+}
+
+.btn-secondary {
+    background: var(--color-surface-03);
+    color: var(--color-text-primary);
+    border: none;
+    border-radius: 9999px;
+    padding: 0.85rem 1.5rem;
+    font-family: var(--font-body);
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.btn-secondary:hover {
+    background: #3a3a3a;
 }

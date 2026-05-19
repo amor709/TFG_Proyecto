@@ -1,4 +1,5 @@
 from django.db import models
+from django.templatetags.static import static
 
 
 class Playlist(models.Model):
@@ -32,6 +33,15 @@ class Playlist(models.Model):
         if self.is_liked_playlist and self.liked_playlist_cover:
             return self.liked_playlist_cover
         return self.cover
+
+    @property
+    def cover_url(self):
+        """URL del cover. Usa el cover personalizado de Mis Joyas, el normal, o el default."""
+        if self.is_liked_playlist and self.liked_playlist_cover:
+            return self.liked_playlist_cover.url
+        if self.cover:
+            return self.cover.url
+        return static('img/playlist_cover_default.png')
 
     def __str__(self):
         return f"{self.name} - {self.user.username}"

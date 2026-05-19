@@ -24,7 +24,7 @@
 
     <!-- ── FONDO DIFUMINADO (avatar del usuario) ── -->
     <div class="profile-page__backdrop"
-         style="background-image: url('{% if profile_user.listener_profile.avatar %}{{ profile_user.listener_profile.avatar.url }}{% else %}{% static "img/avatar-default.png" %}{% endif %}');"
+         style="background-image: url('{{ profile_user.listener_profile.avatar_url }}');"
          aria-hidden="true"></div>
     <div class="profile-page__overlay" aria-hidden="true"></div>
 
@@ -37,21 +37,15 @@
 
             <!-- Avatar circular -->
             <div class="profile-hero__avatar-wrap">
-                {% if profile_user.listener_profile.avatar %}
-                    <img src="{{ profile_user.listener_profile.avatar.url }}"
-                         alt="Avatar de {{ profile_user.username }}"
-                         class="profile-hero__avatar">
-                {% else %}
-                    <img src="{% static 'img/avatar-default.png' %}"
-                         alt="Avatar de {{ profile_user.username }}"
-                         class="profile-hero__avatar">
-                {% endif %}
+                <img src="{{ profile_user.listener_profile.avatar_url }}"
+                     alt="Avatar de {{ profile_user.username }}"
+                     class="profile-hero__avatar">
             </div>
 
             <!-- Nombre, estadísticas y botón de edición -->
             <div class="profile-hero__content">
                 <div class="profile-hero__meta">
-                    <h1 class="profile-hero__username">{% if profile_user.nickname %}{{ profile_user.nickname }}{% else %}{{ profile_user.username }}{% endif %}</h1>
+                    <h1 class="profile-hero__username">{{ profile_user.username }}</h1>
                     <p class="profile-hero__stats">
                         <span>{{ profile_user.listener_profile.playlist_count }} Playlist{{ profile_user.listener_profile.playlist_count|pluralize:"s" }}</span>
                         <span class="profile-hero__dot">•</span>
@@ -121,7 +115,7 @@
                 <article class="artist-card">
                     <a href="{% url 'music:artist_detail_public' artist.id %}" class="artist-card__link">
                         <div class="artist-card__photo-wrap">
-                            <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-default.png' %}{% endif %}"
+                            <img src="{{ artist.photo_url }}"
                                  alt="{{ artist.user.username }}"
                                  class="artist-card__photo"
                                  loading="lazy">
@@ -163,7 +157,7 @@
                 <article class="track-card">
                     <a href="{% url 'playlists:detail' pl.pk %}" class="track-card__link">
                         <div class="track-card__cover-wrap">
-                            <img src="{% if pl.cover %}{{ pl.cover.url }}{% else %}{% static 'img/playlist-default.png' %}{% endif %}"
+                            <img src="{% if pl.cover %}{{ pl.cover.url }}{% else %}{% static 'img/playlist_cover_default.png' %}{% endif %}"
                                  alt="{{ pl.name }}"
                                  class="track-card__cover"
                                  loading="lazy">
@@ -203,7 +197,7 @@
                 <article class="artist-card">
                     <a href="{% url 'music:artist_detail_public' artist.id %}" class="artist-card__link">
                         <div class="artist-card__photo-wrap">
-                            <img src="{% if artist.photo %}{{ artist.photo.url }}{% else %}{% static 'img/artist-default.png' %}{% endif %}"
+                            <img src="{{ artist.photo_url }}"
                                  alt="{{ artist.user.username }}"
                                  class="artist-card__photo"
                                  loading="lazy">

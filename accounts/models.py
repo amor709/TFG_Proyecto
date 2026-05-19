@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.core.validators import RegexValidator
+from django.templatetags.static import static
 
 
 # Validador personalizado que permite espacios
@@ -23,7 +24,6 @@ class User(AbstractUser):
         help_text='150 caracteres como máximo. Letras, dígitos, espacios y @/./+/-/_',
     )
     email = models.EmailField(unique=True)
-    nickname = models.CharField(max_length=50, blank=True, null=True)
     is_artist = models.BooleanField(default=False)
     is_premium = models.BooleanField(default=False)
     language = models.CharField(max_length=10, default='es')
@@ -49,6 +49,18 @@ class ArtistProfile(models.Model):
     @property
     def name(self):
         return self.user.username
+
+    @property
+    def photo_url(self):
+        if self.photo:
+            return self.photo.url
+        return static('img/pfp_default.jpg')
+
+    @property
+    def banner_url(self):
+        if self.banner:
+            return self.banner.url
+        return static('img/banner_default.png')
 
     @property
     def primary_genre(self):
@@ -84,7 +96,13 @@ class ListenerProfile(models.Model):
 
     def __str__(self):
         return f"Oyente: {self.user.username}"
-    
+
+    @property
+    def avatar_url(self):
+        if self.avatar:
+            return self.avatar.url
+        return static('img/pfp_default.jpg')
+
     @property
     def playlist_count(self):
         """Retorna el número de playlists públicas del usuario"""

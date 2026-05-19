@@ -514,19 +514,24 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .btn-hero {
    display: inline-flex;
    align-items: center;
-   gap: var(--space-2);
-   width: auto;           /* Que se ajuste al texto */
-   max-width: 250px;      /* Que nunca pase de 250px */
    justify-content: center;
-   padding: var(--space-2) var(--space-4);
+   align-self: flex-start;
+   gap: var(--space-2);
+   padding: 0.5rem 1rem;
    background: var(--color-accent);
    color: #fff;
+   text-decoration: none;
    font-size: var(--text-sm);
    font-weight: 700;
+   line-height: 1;
    border-radius: var(--radius-full);
    border: none;
    cursor: pointer;
    transition: background var(--duration-fast), transform var(--duration-fast);
+}
+
+.btn-hero .icon--xs {
+   display: block;
 }
 
 .btn-hero:hover {
@@ -719,7 +724,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 }
 
 /* Info de pista */
-.right-panel__track-info { padding: 0 var(--space-2); }
+.right-panel__track-info { padding: 0 var(--space-2); margin-top: var(--space-4); }
 
 .track-info__title {
   font-size: var(--text-lg);
@@ -740,7 +745,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 }
 
 /* Artista relacionado */
-.right-panel__related { padding: 0 var(--space-2); }
+.right-panel__related { padding: 0 var(--space-2); margin-top: var(--space-4); }
 
 .related__heading {
   font-size: var(--text-base);
@@ -1201,32 +1206,6 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   line-height: 1.0;
   letter-spacing: -0.025em;
   margin: 0 0 var(--space-4) 0;
-}
-
-.btn-hero {
-   display: inline-flex;
-   align-items: center;
-   gap: var(--space-2);
-   width: auto;           /* Que se ajuste al texto */
-   max-width: 250px;      /* Que nunca pase de 250px */
-   padding: var(--space-2) var(--space-4);
-   background: var(--color-accent);
-   color: #fff;
-   font-size: var(--text-sm);
-   font-weight: 700;
-   border-radius: var(--radius-full);
-   border: none;
-   cursor: pointer;
-   transition: background var(--duration-fast), transform var(--duration-fast);
-}
-
-.btn-hero:hover {
-  background: var(--color-accent-hover);
-  transform: translateY(-1px);
-}
-
-.btn-hero:active {
-  transform: scale(0.97);
 }
 
 /* Content sections */

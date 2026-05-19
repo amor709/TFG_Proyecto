@@ -20,7 +20,7 @@
 
     <!-- ── FONDO DIFUMINADO (capa absoluta detrás de todo) ── -->
     <div class="album-detail__backdrop"
-         style="background-image: url('{{ album.cover.url }}');"
+         style="background-image: url('{% if album.cover %}{{ album.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}');"
          aria-hidden="true">
     </div>
     <!-- Overlay de degradado sobre el fondo -->
@@ -36,7 +36,7 @@
 
             <!-- Carátula -->
             <div class="album-header__cover-wrap">
-                <img src="{{ album.cover.url }}"
+                <img src="{% if album.cover %}{{ album.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
                      alt="Portada de {{ album.title }}"
                      class="album-header__cover">
             </div>
@@ -128,6 +128,7 @@
 
                     <!-- Acciones -->
                     <span class="tracklist__col tracklist__col--actions">
+                        {% if not request.user.is_artist %}
                         <!-- Botón "Me gusta" -->
                         <button class="track-action-btn track-like-btn"
                                 data-track-id="{{ song.pk }}"
@@ -138,6 +139,7 @@
                                 <img src="{% static 'img/diamond-white.png' %}" alt="Me gusta" class="icon--sm">
                             {% endif %}
                         </button>
+                        {% endif %}
 
                         <!-- Botón "Más opciones" -->
                         <button class="track-action-btn track-more-btn"

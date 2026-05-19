@@ -63,13 +63,13 @@
                 {{ form.last_name }}
             </div>
 
-            <!-- Nickname -->
+            <!-- Username -->
             <div class="form-group">
-                <label for="{{ form.nickname.id_for_label }}" class="form-label">Nombre de usuario *</label>
-                {% if form.nickname.errors %}
-                    <span class="form-error">{{ form.nickname.errors.0 }}</span>
+                <label for="{{ form.username.id_for_label }}" class="form-label">Nombre de usuario *</label>
+                {% if form.username.errors %}
+                    <span class="form-error">{{ form.username.errors.0 }}</span>
                 {% endif %}
-                {{ form.nickname }}
+                {{ form.username }}
             </div>
 
             <!-- Email -->

@@ -272,17 +272,16 @@ function updateRightPanel(trackData) {
     // Construir HTML seguro para la sección superior
     let html = `
         <div class="right-panel__album-cover">
-            <img src="${escapeHtml(trackData.cover || '/static/img/logo.png')}" 
-                 alt="${escapeHtml(trackData.title)}" 
+            <img src="${escapeHtml(trackData.cover || '/static/img/logo.png')}"
+                 alt="${escapeHtml(trackData.title)}"
                  class="album-cover__img"
                  loading="lazy">
-            <p class="album-cover__title">${escapeHtml(trackData.title)}</p>
         </div>
         
         <div class="right-panel__track-info">
             <h3 class="track-info__title">${escapeHtml(trackData.title)}</h3>
             <div class="track-info__meta">
-                <img src="/static/img/diamond-white.png" alt="" class="icon--xs" id="artist-badge-info">
+                ${window.CURRENT_USER_IS_ARTIST ? '' : '<img src="/static/img/diamond-white.png" alt="" class="icon--xs" id="artist-badge-info">'}
                 <span class="track-info__artist">${escapeHtml(trackData.artist)}</span>
             </div>
         </div>

@@ -20,7 +20,7 @@
 
     <!-- ── FONDO DIFUMINADO (portada de la playlist) ── -->
     <div class="playlist-detail__backdrop"
-         style="background-image: url('{{ playlist.cover.url }}');"
+         style="background-image: url('{{ playlist.cover_url }}');"
          aria-hidden="true"></div>
     <div class="playlist-detail__overlay" aria-hidden="true"></div>
 
@@ -34,7 +34,7 @@
 
             <!-- Portada -->
             <div class="pl-header__cover-wrap">
-                <img src="{{ playlist.cover.url }}"
+                <img src="{{ playlist.cover_url }}"
                      alt="Portada de {{ playlist.title }}"
                      class="pl-header__cover">
             </div>

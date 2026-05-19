@@ -53,6 +53,23 @@ def create_playlist(request):
 
 
 @login_required
+def edit_playlist(request, pk):
+    playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
+    if playlist.is_liked_playlist:
+        return redirect('playlists:detail', pk=playlist.pk)
+
+    if request.method == 'POST':
+        form = PlaylistForm(request.POST, request.FILES, instance=playlist)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Playlist actualizada correctamente.")
+            return redirect('playlists:detail', pk=playlist.pk)
+    else:
+        form = PlaylistForm(instance=playlist)
+    return render(request, 'playlists/edit_playlist.html', {'form': form, 'playlist': playlist})
+
+
+@login_required
 def add_song_to_playlist(request, playlist_id, song_id):
     playlist = get_object_or_404(Playlist, pk=playlist_id, user=request.user)
     song = get_object_or_404(Song, pk=song_id)

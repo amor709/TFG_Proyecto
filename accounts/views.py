@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.views.generic import TemplateView, CreateView
@@ -8,7 +9,7 @@ from django.urls import reverse_lazy
 from music.models import Song, Album
 from accounts.models import ArtistProfile, User, ListenerProfile, ListeningHistory, UserTag
 from django import forms
-from accounts.forms import ArtistProfileForm, ListenerProfileForm, ListenerProfileEditForm
+from accounts.forms import ArtistProfileForm, ListenerProfileForm, ListenerProfileEditForm, UserEditForm
 from accounts.stats_utils import (
     get_top_songs_this_month, get_top_artists_this_month,
     get_all_top_songs_this_month, get_all_top_artists_this_month
@@ -16,6 +17,7 @@ from accounts.stats_utils import (
 from playlists.models import Playlist
 from django.utils import timezone
 from datetime import timedelta
+from django.db import transaction
 from django.db.models import Count, Q
 
 def index_view(request):
@@ -32,12 +34,15 @@ class ListenerRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'nickname', 'email', 'password']
+        fields = ['first_name', 'last_name', 'username', 'email', 'password']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Primer nombre'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Segundo nombre'}),
-            'nickname': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
+        }
+        labels = {
+            'username': 'Nombre de usuario',
         }
 
     def clean(self):
@@ -48,25 +53,25 @@ class ListenerRegistrationForm(forms.ModelForm):
         if password and password_confirm and password != password_confirm:
             raise forms.ValidationError("Las contraseñas no coinciden.")
 
-        # Validar email único
-        email = cleaned_data.get('email')
+        return cleaned_data
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
         if email and User.objects.filter(email=email).exists():
             raise forms.ValidationError("Este correo electrónico ya está en uso.")
-
-        return cleaned_data
+        return email
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = self.cleaned_data.get('email')  # Usar email como username
         user.set_password(self.cleaned_data.get('password'))
         if commit:
-            user.save()
-            # Crear perfil de oyente automáticamente con avatar
-            avatar = self.cleaned_data.get('avatar')
-            listener_profile = ListenerProfile.objects.create(user=user)
-            if avatar:
-                listener_profile.avatar = avatar
-                listener_profile.save()
+            with transaction.atomic():
+                user.save()
+                avatar = self.cleaned_data.get('avatar')
+                listener_profile, _ = ListenerProfile.objects.get_or_create(user=user)
+                if avatar:
+                    listener_profile.avatar = avatar
+                    listener_profile.save()
         return user
 
 
@@ -78,12 +83,15 @@ class ArtistRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ['first_name', 'last_name', 'nickname', 'email', 'password']
+        fields = ['first_name', 'last_name', 'username', 'email', 'password']
         widgets = {
             'first_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Primer nombre'}),
             'last_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Segundo nombre'}),
-            'nickname': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre de usuario'}),
+            'username': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Nombre del artista'}),
             'email': forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Correo electrónico'}),
+        }
+        labels = {
+            'username': 'Nombre del artista',
         }
 
     def clean(self):
@@ -94,31 +102,30 @@ class ArtistRegistrationForm(forms.ModelForm):
         if password and password_confirm and password != password_confirm:
             raise forms.ValidationError("Las contraseñas no coinciden.")
 
-        # Validar email único
-        email = cleaned_data.get('email')
+        return cleaned_data
+
+    def clean_email(self):
+        email = self.cleaned_data.get('email')
         if email and User.objects.filter(email=email).exists():
             raise forms.ValidationError("Este correo electrónico ya está en uso.")
-
-        return cleaned_data
+        return email
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.username = self.cleaned_data.get('email')  # Usar email como username
-        user.is_artist = True  # Marcar como artista
+        user.is_artist = True
         user.set_password(self.cleaned_data.get('password'))
         if commit:
-            user.save()
-            # Crear perfil de artista automáticamente con photo y banner
-            photo = self.cleaned_data.get('photo')
-            banner = self.cleaned_data.get('banner')
-            artist_profile = ArtistProfile.objects.filter(user=user).first()
-            if not artist_profile:
-                artist_profile = ArtistProfile.objects.create(user=user)
-            if photo:
-                artist_profile.photo = photo
-            if banner:
-                artist_profile.banner = banner
-            artist_profile.save()
+            with transaction.atomic():
+                user.save()
+                photo = self.cleaned_data.get('photo')
+                banner = self.cleaned_data.get('banner')
+                artist_profile, _ = ArtistProfile.objects.get_or_create(user=user)
+                if photo:
+                    artist_profile.photo = photo
+                if banner:
+                    artist_profile.banner = banner
+                if photo or banner:
+                    artist_profile.save()
         return user
 
 
@@ -216,7 +223,7 @@ class RegisterTypeView(TemplateView):
 class ListenerRegisterView(CreateView):
     form_class = ListenerRegistrationForm
     template_name = 'accounts/register_listener.html'
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('login')
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -224,15 +231,15 @@ class ListenerRegisterView(CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
-        return super().form_valid(form)
+        self.object = form.save()
+        messages.success(self.request, "Cuenta creada correctamente. Inicia sesión para entrar.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class ArtistRegisterView(CreateView):
     form_class = ArtistRegistrationForm
     template_name = 'accounts/register_artist.html'
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('login')
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -240,15 +247,15 @@ class ArtistRegisterView(CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
-        return super().form_valid(form)
+        self.object = form.save()
+        messages.success(self.request, "Cuenta de artista creada correctamente. Inicia sesión para entrar.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 class RegisterView(CreateView):
     form_class = ListenerRegistrationForm
     template_name = 'accounts/register.html'
-    success_url = reverse_lazy('home')
+    success_url = reverse_lazy('login')
 
     def dispatch(self, request, *args, **kwargs):
         if request.user.is_authenticated:
@@ -256,9 +263,9 @@ class RegisterView(CreateView):
         return super().dispatch(request, *args, **kwargs)
 
     def form_valid(self, form):
-        user = form.save()
-        login(self.request, user)
-        return super().form_valid(form)
+        self.object = form.save()
+        messages.success(self.request, "Cuenta creada correctamente. Inicia sesión para entrar.")
+        return HttpResponseRedirect(self.get_success_url())
 
 
 @require_http_methods(["GET", "POST"])
@@ -295,14 +302,22 @@ def edit_artist_profile(request):
     artist_profile = request.user.artist_profile
 
     if request.method == 'POST':
-        form = ArtistProfileForm(request.POST, request.FILES, instance=artist_profile)
-        if form.is_valid():
-            form.save()
+        profile_form = ArtistProfileForm(request.POST, request.FILES, instance=artist_profile)
+        user_form = UserEditForm(request.POST, instance=request.user)
+        if profile_form.is_valid() and user_form.is_valid():
+            profile_form.save()
+            user_form.save()
+            messages.success(request, "Perfil actualizado correctamente.")
             return redirect('music:artist_detail_public', artist_id=artist_profile.pk)
     else:
-        form = ArtistProfileForm(instance=artist_profile)
+        profile_form = ArtistProfileForm(instance=artist_profile)
+        user_form = UserEditForm(instance=request.user)
 
-    return render(request, 'accounts/edit_artist_profile.html', {'form': form})
+    context = {
+        'profile_form': profile_form,
+        'user_form': user_form,
+    }
+    return render(request, 'accounts/edit_artist_profile.html', context)
 
 
 def not_found_view(request, exception=None):
@@ -384,22 +399,27 @@ def listener_profile_following_view(request, user_id):
 
 @login_required(login_url='login')
 def edit_listener_profile(request):
-    """Vista para editar el perfil del oyente"""
+    """Vista para editar el perfil del oyente (avatar + datos de usuario)."""
     if request.user.is_artist:
         return redirect('home')
 
     listener_profile = request.user.listener_profile
 
     if request.method == 'POST':
-        form = ListenerProfileEditForm(request.POST, request.FILES, instance=listener_profile)
-        if form.is_valid():
-            form.save()
+        avatar_form = ListenerProfileForm(request.POST, request.FILES, instance=listener_profile)
+        user_form = UserEditForm(request.POST, instance=request.user)
+        if avatar_form.is_valid() and user_form.is_valid():
+            avatar_form.save()
+            user_form.save()
+            messages.success(request, "Perfil actualizado correctamente.")
             return redirect('listener_profile', user_id=request.user.id)
     else:
-        form = ListenerProfileEditForm(instance=listener_profile)
+        avatar_form = ListenerProfileForm(instance=listener_profile)
+        user_form = UserEditForm(instance=request.user)
 
     context = {
-        'form': form,
+        'avatar_form': avatar_form,
+        'user_form': user_form,
         'user': request.user,
     }
 

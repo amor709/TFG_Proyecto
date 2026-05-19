@@ -12,7 +12,7 @@
     <!-- Encabezado del Álbum -->
     <div class="album-header">
         <div class="album-cover">
-            <img src="{{ album.cover.url }}" alt="{{ album.title }}">
+            <img src="{% if album.cover %}{{ album.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}" alt="{{ album.title }}">
         </div>
         <div class="album-info">
             <span class="phase-badge">Gestión de Tracks</span>
