@@ -22,7 +22,7 @@ class CustomUserAdmin(UserAdmin):
 
 @admin.register(ArtistProfile)
 class ArtistProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'website', 'total_plays')
+    list_display = ('id', 'user', 'total_plays')
     list_filter = ('total_plays',)
     search_fields = ('user__username', 'user__email', 'bio')
     ordering = ('-total_plays',)

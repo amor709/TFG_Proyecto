@@ -82,7 +82,7 @@ def get_track_data(request, track_id):
         }
         return JsonResponse(data)
     except Song.DoesNotExist:
-        return JsonResponse({'error': 'Canción no encontrada'}, status=404)
+        return JsonResponse({}, status=404)
 
 
 @artist_required
@@ -105,7 +105,6 @@ def create_single(request):
             song.save()
             form.save_m2m()  # Guardar relaciones ManyToMany
 
-            messages.success(request, f"¡Sencillo '{song.title}' creado exitosamente!")
             return redirect('music:song_list')
     else:
         form = SingleForm()
@@ -131,7 +130,6 @@ def album_phase_a(request):
             nulo_tag, created = Tag.objects.get_or_create(name="Nulo")
             album.tags.add(nulo_tag)
 
-            messages.success(request, f"¡Álbum '{album.title}' creado! Ahora agrega tus canciones.")
             return redirect('music:album_phase_b', album_id=album.pk)
     else:
         form = AlbumPhaseAForm()
@@ -170,7 +168,6 @@ def album_phase_b(request, album_id):
             # Actualizar tags del álbum basado en las canciones
             update_album_tags(album)
 
-            messages.success(request, f"¡Canción '{song.title}' agregada al álbum!")
             return redirect('music:album_phase_b', album_id=album.pk)
     else:
         form = AlbumPhaseBForm(artist=request.user.artist_profile)
@@ -194,7 +191,6 @@ def publish_album(request, album_id):
         return redirect('music:album_phase_b', album_id=album.pk)
 
     album.mark_completed()
-    messages.success(request, f"¡Álbum '{album.title}' publicado exitosamente!")
     return redirect('music:song_list')
 
 
@@ -214,16 +210,15 @@ def delete_song(request, song_id):
         song.delete()
         # Actualizar tags del álbum
         update_album_tags(album)
-        return JsonResponse({'success': True, 'message': 'Canción eliminada exitosamente'})
+        return JsonResponse({'success': True})
     else:
-        return JsonResponse({'success': False, 'message': 'Esta canción no pertenece a ningún álbum'}, status=400)
+        return JsonResponse({'success': False}, status=400)
 
 
 def artist_detail(request, artist_id=None):
     # Si no se pasa artist_id, usar el propio si es artista
     if artist_id is None:
         if not request.user.is_authenticated or not request.user.is_artist:
-            messages.error(request, "No tienes acceso a esta página.")
             return redirect('music:song_list')
         artist = request.user.artist_profile
     else:
@@ -269,10 +264,10 @@ def album_detail(request, album_id):
     # Obtener todas las canciones del álbum ordenadas por ID (orden de creación)
     songs = album.songs.all().order_by('id')
 
-    # Obtener recomendaciones: otras canciones del mismo artista de otros álbumes
+    # Recomendaciones aleatorias: 5 canciones del mismo artista excluyendo el álbum actual
     recommended = Song.objects.filter(
         artist=album.artist
-    ).exclude(album=album).select_related('album')[:10]
+    ).exclude(album=album).select_related('album').order_by('?')[:5]
 
     context = {
         'album': album,

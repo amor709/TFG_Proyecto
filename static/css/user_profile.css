@@ -233,19 +233,16 @@
   grid-template-columns: repeat(5, 1fr);
 }
 
-/* Playlists del usuario – mismas proporciones que las cards de home
-   Arranca con solo las que tenga (no fuerza 5) */
+/* Playlists del usuario – mismo grid 5 columnas que el resto del proyecto.
+   Si hay menos de 5 items, las columnas restantes quedan vacías y los
+   items mantienen su tamaño estándar. */
 .profile-cards-grid--playlists {
-  /* auto-fill con mínimo igual al de las demás secciones */
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  max-width: calc(5 * 140px + 4 * var(--space-5)); /* nunca más de 5 columnas */
+  grid-template-columns: repeat(5, 1fr);
 }
 
-/* Artistas seguidos – igual que artistas más escuchados pero
-   puede haber menos de 5: auto-fill para que no queden huecos */
+/* Artistas seguidos – mismo grid 5 columnas. */
 .profile-cards-grid--following {
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-  max-width: calc(5 * 140px + 4 * var(--space-5));
+  grid-template-columns: repeat(5, 1fr);
 }
 
 /*

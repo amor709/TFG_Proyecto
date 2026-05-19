@@ -274,7 +274,6 @@ def login_view(request):
 
         if user is not None:
             login(request, user)
-            messages.success(request, f"¡Bienvenido {user.first_name or user.username}!")
             return redirect('home')
         else:
             messages.error(request, "Usuario o contraseña incorrectos.")
@@ -285,14 +284,12 @@ def login_view(request):
 @login_required(login_url='login')
 def logout_view(request):
     logout(request)
-    messages.success(request, "Has cerrado sesión exitosamente.")
     return redirect('register')
 
 
 @login_required(login_url='login')
 def edit_artist_profile(request):
     if not request.user.is_artist:
-        messages.error(request, "No tienes permisos para editar un perfil de artista.")
         return redirect('home')
 
     artist_profile = request.user.artist_profile
@@ -301,8 +298,7 @@ def edit_artist_profile(request):
         form = ArtistProfileForm(request.POST, request.FILES, instance=artist_profile)
         if form.is_valid():
             form.save()
-            messages.success(request, "Perfil actualizado exitosamente.")
-            return redirect('music:artist_detail_public', pk=artist_profile.pk)
+            return redirect('music:artist_detail_public', artist_id=artist_profile.pk)
     else:
         form = ArtistProfileForm(instance=artist_profile)
 
@@ -390,7 +386,6 @@ def listener_profile_following_view(request, user_id):
 def edit_listener_profile(request):
     """Vista para editar el perfil del oyente"""
     if request.user.is_artist:
-        messages.error(request, "Esta página es solo para oyentes.")
         return redirect('home')
 
     listener_profile = request.user.listener_profile
@@ -399,7 +394,6 @@ def edit_listener_profile(request):
         form = ListenerProfileEditForm(request.POST, request.FILES, instance=listener_profile)
         if form.is_valid():
             form.save()
-            messages.success(request, "Perfil actualizado correctamente.")
             return redirect('listener_profile', user_id=request.user.id)
     else:
         form = ListenerProfileEditForm(instance=listener_profile)

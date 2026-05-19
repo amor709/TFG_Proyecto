@@ -74,6 +74,7 @@ class SongOptionsMenu {
     updateMenu(menu, button) {
         const trackId = button.dataset.trackId;
         const albumId = button.dataset.albumId;
+        const removeFromPlaylistId = button.dataset.removeFromPlaylist;
 
         // Obtener datos de la canción
         const trackRow = button.closest('.tracklist__row') || button.closest('li');
@@ -133,6 +134,16 @@ class SongOptionsMenu {
                     <span>Añadir a playlist</span>
                 </button>`;
 
+        // Quitar de esta playlist (solo si el botón viene con data-remove-from-playlist)
+        if (removeFromPlaylistId) {
+            html += '<div class="song-options-divider"></div>';
+            html += `<button class="song-options-item remove-from-playlist-btn"
+                            data-song-id="${trackId}"
+                            data-playlist-id="${removeFromPlaylistId}">
+                        <span>Quitar de esta playlist</span>
+                    </button>`;
+        }
+
         const content = menu.querySelector('.song-options-menu-content');
         content.innerHTML = html;
 
@@ -145,6 +156,23 @@ class SongOptionsMenu {
         content.querySelector('.playlist-trigger-btn')?.addEventListener('click', (e) => {
             e.stopPropagation();
             this.showPlaylistSubmenu(trackId, menu);
+        });
+
+        content.querySelector('.remove-from-playlist-btn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const songId = e.currentTarget.dataset.songId;
+            const playlistId = e.currentTarget.dataset.playlistId;
+            if (confirm('¿Quitar esta canción de la playlist?')) {
+                fetch(`/playlists/${playlistId}/remove/${songId}/`, { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            location.reload();
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+            this.closeAllMenus();
         });
     }
 

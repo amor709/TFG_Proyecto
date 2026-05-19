@@ -1,143 +1,124 @@
 /**
  * follow-system.js - Sistema de seguimiento de artistas
+ *
+ * Comportamiento:
+ *  - Lee data-artist-id del botón #artist-follow-btn al cargar.
+ *  - Consulta el estado real al servidor y refleja "+ Seguir" / "Siguiendo".
+ *  - Al click, hace optimistic update (cambia botón al instante) y envía POST.
+ *  - Si la petición falla, revierte.
+ *  - Cuando cambia la canción (evento "trackChanged"), re-evalúa con el nuevo artista.
  */
 
 class FollowSystem {
     constructor() {
         this.currentArtistId = null;
+        this.pendingRequest = false;
+        this.handleClick = this.onFollowClick.bind(this);
         this.init();
     }
 
     init() {
-        console.log('🔗 Inicializando FollowSystem');
-        // Agregar event listener al botón (si existe) y escuchar cambios en el reproductor
-        this.attachFollowButtonListener();
+        this.refreshFromDom();
 
-        // Escuchar cambios en el reproductor para actualizar el botón
         document.addEventListener('trackChanged', (e) => {
-            console.log('🎵 TrackChanged en FollowSystem:', e.detail);
-            this.onTrackChanged(e.detail);
+            if (e.detail && e.detail.artist_id) {
+                this.currentArtistId = e.detail.artist_id;
+            }
+            setTimeout(() => this.refreshFromDom(), 50);
         });
     }
 
-    /**
-     * Buscar y agregar event listener al botón de follow
-     */
-    attachFollowButtonListener() {
-        const followBtn = document.getElementById('artist-follow-btn');
-        console.log('🔍 Buscando botón follow:', followBtn ? '✅ Encontrado' : '❌ No encontrado');
+    /** Toma el artist-id del botón actual, engancha listener y consulta estado. */
+    refreshFromDom() {
+        const btn = document.getElementById('artist-follow-btn');
+        if (!btn) return;
 
-        if (followBtn) {
-            // Remover event listeners anteriores si existen
-            followBtn.removeEventListener('click', (e) => this.onFollowClick(e));
-            // Agregar nuevo event listener
-            followBtn.addEventListener('click', (e) => this.onFollowClick(e));
+        const domId = parseInt(btn.dataset.artistId, 10);
+        if (!isNaN(domId)) {
+            this.currentArtistId = domId;
+        }
+
+        btn.removeEventListener('click', this.handleClick);
+        btn.addEventListener('click', this.handleClick);
+
+        if (this.currentArtistId) {
+            this.fetchFollowState();
         }
     }
 
-    onTrackChanged(trackData) {
-        console.log('🎵 onTrackChanged llamado con:', trackData);
-
-        if (trackData && trackData.artist_id) {
-            this.currentArtistId = trackData.artist_id;
-            console.log(`✅ Artist ID actualizado a: ${this.currentArtistId}`);
-
-            // Re-agregar event listener al botón nuevo
-            setTimeout(() => {
-                this.attachFollowButtonListener();
-                this.updateFollowButtonState();
-            }, 50);
-        }
-    }
-
-    updateFollowButtonState() {
-        const followBtn = document.getElementById('artist-follow-btn');
-
-        if (!followBtn || !this.currentArtistId) {
-            console.log('⚠️  No se puede actualizar estado del botón:', {
-                hasBtn: !!followBtn,
-                hasArtistId: !!this.currentArtistId
-            });
-            return;
-        }
-
-        const url = `/accounts/api/check-following/${this.currentArtistId}/`;
-        console.log(`🔍 Verificando estado de seguimiento para artista ${this.currentArtistId}`);
-
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                console.log('📲 Respuesta check-following:', data);
-                this.setFollowButtonState(data.is_following);
-            })
-            .catch(error => console.error('❌ Error al verificar seguimiento:', error));
+    fetchFollowState() {
+        if (!this.currentArtistId) return;
+        fetch(`/accounts/api/check-following/${this.currentArtistId}/`)
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
+            .then(data => this.setFollowButtonState(data.is_following))
+            .catch(() => { /* silencioso: si no hay listener_profile, no hay estado */ });
     }
 
     setFollowButtonState(isFollowing) {
-        const followBtn = document.getElementById('artist-follow-btn');
-
-        if (!followBtn) {
-            console.warn('❌ Botón de follow no encontrado en el DOM');
-            return;
-        }
-
-        console.log(`🔘 Actualizando estado del botón: ${isFollowing ? 'Seguido' : 'No seguido'}`);
+        const btn = document.getElementById('artist-follow-btn');
+        if (!btn) return;
 
         if (isFollowing) {
-            followBtn.textContent = '✓ Seguido';
-            followBtn.classList.add('btn--following');
-            followBtn.classList.remove('btn--not-following');
+            btn.textContent = 'Siguiendo';
+            btn.classList.add('btn--following');
+            btn.classList.remove('btn--not-following');
+            btn.dataset.following = 'true';
         } else {
-            followBtn.textContent = '+ Seguir';
-            followBtn.classList.remove('btn--following');
-            followBtn.classList.add('btn--not-following');
+            btn.textContent = '+ Seguir';
+            btn.classList.add('btn--not-following');
+            btn.classList.remove('btn--following');
+            btn.dataset.following = 'false';
         }
     }
 
     onFollowClick(e) {
         e.preventDefault();
+        if (!this.currentArtistId || this.pendingRequest) return;
 
-        if (!this.currentArtistId) {
-            console.error('No hay artista seleccionado');
-            return;
-        }
+        const btn = document.getElementById('artist-follow-btn');
+        if (!btn) return;
 
-        const url = `/accounts/api/follow-artist/${this.currentArtistId}/`;
+        const wasFollowing = btn.dataset.following === 'true';
+        this.setFollowButtonState(!wasFollowing);
+        this.pendingRequest = true;
 
-        fetch(url, { method: 'POST' })
-            .then(response => response.json())
+        fetch(`/accounts/api/follow-artist/${this.currentArtistId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': this.getCsrfToken() },
+        })
+            .then(r => r.ok ? r.json() : Promise.reject(r.status))
             .then(data => {
                 if (data.status === 'success') {
                     this.setFollowButtonState(data.is_following);
-
-                    // Recargar sidebar si existe manager
+                    document.dispatchEvent(new CustomEvent('followingChanged', {
+                        detail: { artist_id: this.currentArtistId, is_following: data.is_following }
+                    }));
                     if (typeof sidebarManager !== 'undefined') {
                         sidebarManager.loadSidebarSection(sidebarManager.currentSection);
                     }
-
-                    // Disparar evento de seguimiento cambiado
-                    document.dispatchEvent(new CustomEvent('followingChanged', {
-                        detail: {
-                            artist_id: this.currentArtistId,
-                            is_following: data.is_following
-                        }
-                    }));
-
-                    console.log(`✅ ${data.action === 'followed' ? 'Siguiendo' : 'No siguiendo'} artista`);
+                } else {
+                    this.setFollowButtonState(wasFollowing);
                 }
             })
-            .catch(error => console.error('Error al cambiar seguimiento:', error));
+            .catch(() => {
+                this.setFollowButtonState(wasFollowing);
+            })
+            .finally(() => {
+                this.pendingRequest = false;
+            });
+    }
+
+    getCsrfToken() {
+        const input = document.querySelector('[name=csrfmiddlewaretoken]');
+        if (input) return input.value;
+        for (const cookie of document.cookie.split('; ')) {
+            if (cookie.startsWith('csrftoken=')) return cookie.split('=')[1];
+        }
+        return '';
     }
 }
 
-// Instanciar cuando el DOM esté listo
 let followSystem;
 document.addEventListener('DOMContentLoaded', function() {
     followSystem = new FollowSystem();
 });
-
-
-
-
-
-

@@ -211,9 +211,11 @@
                              class="related__artist-photo">
                          <div class="related__artist-info">
                              <span class="related__artist-name">{{ related_artist.user.username }}</span>
-                             <button id="artist-follow-btn" class="btn-follow btn--not-following" data-artist-id="{{ related_artist.pk }}" aria-label="Seguir a {{ related_artist.user.username }}">
+                             {% if request.user.is_authenticated and not request.user.is_artist %}
+                             <button id="artist-follow-btn" class="btn-follow btn--not-following" data-artist-id="{{ related_artist.pk }}" data-following="false" aria-label="Seguir a {{ related_artist.user.username }}">
                                  + Seguir
                              </button>
+                             {% endif %}
                          </div>
                     </div>
                 </div>
@@ -683,6 +685,9 @@ document.addEventListener('click', function(event) {
       });
 </script>
 
+<script>
+    window.CURRENT_USER_ID = {% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %};
+</script>
 <script src="{% static 'js/script.js' %}" defer></script>
 <script src="{% static 'js/queue-system.js' %}" defer></script>
 <script src="{% static 'js/playback-state.js' %}" defer></script>
@@ -693,7 +698,7 @@ document.addEventListener('click', function(event) {
 <script src="{% static 'js/register-recent.js' %}" defer></script>
 <script src="{% static 'js/liked-songs.js' %}" defer></script>
 <script src="{% static 'js/song-options-menu.js' %}" defer></script>
-<script src="{% static 'js/follow-system.js' %}" defer></script>
+<script src="{% static 'js/follow-system.js' %}?v=2" defer></script>
 
 <!-- Queue panel actualización dinámica -->
 <script>

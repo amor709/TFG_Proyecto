@@ -12,12 +12,10 @@ def playlist_detail(request, pk):
     
     # "Mis Joyas" solo es accesible para el dueño
     if playlist.is_liked_playlist and playlist.user != request.user:
-        messages.error(request, "No tienes acceso a esta playlist.")
         return redirect('home')
-    
+
     # Check privacy: if private and not owner, deny access
     if not playlist.is_public and playlist.user != request.user:
-        messages.error(request, "Esta playlist es privada.")
         return redirect('home')
     # Obtener las canciones ordenadas
     if playlist.is_liked_playlist:
@@ -48,7 +46,6 @@ def create_playlist(request):
             playlist.save()
             # Automatically save to user's saved playlists
             request.user.saved_playlists.add(playlist)
-            messages.success(request, f'Playlist "{playlist.name}" creada exitosamente.')
             return redirect('playlists:detail', pk=playlist.pk)
     else:
         form = PlaylistForm()
@@ -64,7 +61,7 @@ def add_song_to_playlist(request, playlist_id, song_id):
         next_order = playlist.playlistsong_set.count() + 1
         PlaylistSong.objects.create(playlist=playlist, song=song, order=next_order)
         return JsonResponse({'success': True})
-    return JsonResponse({'success': False, 'message': 'Canción ya en playlist'})
+    return JsonResponse({'success': False})
 
 
 @login_required
@@ -86,7 +83,7 @@ def save_playlist(request, pk):
     if playlist.is_public or playlist.user == request.user:
         request.user.saved_playlists.add(playlist)
         return JsonResponse({'success': True, 'saved': True})
-    return JsonResponse({'success': False, 'message': 'No puedes guardar esta playlist'})
+    return JsonResponse({'success': False})
 
 
 @login_required
@@ -95,7 +92,7 @@ def unsave_playlist(request, pk):
     if playlist.user != request.user:  # Can't unsave own playlists
         request.user.saved_playlists.remove(playlist)
         return JsonResponse({'success': True, 'saved': False})
-    return JsonResponse({'success': False, 'message': 'No puedes quitar tu propia playlist'})
+    return JsonResponse({'success': False})
 
 @login_required
 def user_playlists(request):

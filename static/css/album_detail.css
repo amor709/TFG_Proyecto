@@ -272,10 +272,16 @@
 /* Duración */
 .tracklist__col--duration {
   justify-content: flex-end;
+  padding-right: var(--space-2);
+}
+
+/* Solo las filas: el valor numérico de la duración usa tipo base y secondary.
+   En la cabecera, la palabra "Duración" hereda los estilos del header
+   (text-xs, uppercase, color-text-muted) y queda coherente con el resto. */
+.tracklist__row .tracklist__col--duration {
   font-size: var(--text-base);
   color: var(--color-text-secondary);
   font-variant-numeric: tabular-nums;
-  padding-right: var(--space-2);
 }
 
 /* Acciones (corazón + tres puntos) */

@@ -43,7 +43,6 @@ class ArtistProfile(models.Model):
 
     photo = models.FileField(upload_to='profiles/', max_length=255, blank=True, null=True)
     banner = models.FileField(upload_to='profiles/', max_length=255, blank=True, null=True)
-    website = models.URLField(blank=True)
     total_plays = models.PositiveIntegerField(default=0)
     slug = models.SlugField(unique=True, null=True, blank=True)
 
@@ -133,8 +132,9 @@ class PlaybackSession(models.Model):
         related_name='playback_sessions'
     )
 
-    # Identificador único de la sesión (generado por el cliente)
-    session_id = models.CharField(max_length=255, unique=True)
+    # Identificador único de la sesión (generado por el cliente).
+    # Único por usuario (no global): distintos usuarios pueden reutilizar el mismo id de cliente.
+    session_id = models.CharField(max_length=255)
 
     # Track actual en reproducción
     track_id = models.IntegerField(null=True, blank=True)
@@ -163,6 +163,12 @@ class PlaybackSession(models.Model):
         ordering = ['-last_activity']
         verbose_name = 'Sesión de reproducción'
         verbose_name_plural = 'Sesiones de reproducción'
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'session_id'],
+                name='unique_user_session_id',
+            ),
+        ]
 
     def __str__(self):
         return f"Sesión de {self.user.username} - {self.session_id[:10]}"

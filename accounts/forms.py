@@ -38,31 +38,26 @@ class ArtistProfileForm(forms.ModelForm):
 
     class Meta:
         model = ArtistProfile
-        fields = ['bio', 'photo', 'banner', 'website']
+        fields = ['bio', 'photo', 'banner']
         widgets = {
             'bio': forms.Textarea(attrs={
                 'class': 'form-control',
                 'placeholder': 'Cuéntanos sobre ti...',
-                'rows': 4
+                'rows': 8
             }),
             'photo': forms.FileInput(attrs={
-                'class': 'form-control',
+                'class': 'form-control file-input',
                 'accept': 'image/*'
             }),
             'banner': forms.FileInput(attrs={
-                'class': 'form-control',
+                'class': 'form-control file-input',
                 'accept': 'image/*'
             }),
-            'website': forms.URLInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'https://tu-sitio-web.com'
-            })
         }
         labels = {
             'bio': 'Biografía',
             'photo': 'Foto de perfil',
             'banner': 'Banner de perfil',
-            'website': 'Sitio web'
         }
 
 
@@ -79,7 +74,7 @@ class ArtistRegistrationForm(forms.ModelForm):
 
     class Meta:
         model = ArtistProfile
-        fields = ['bio', 'photo', 'banner', 'website', 'password', 'password_confirm']
+        fields = ['bio', 'photo', 'banner', 'password', 'password_confirm']
         widgets = {
             'bio': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -94,10 +89,6 @@ class ArtistRegistrationForm(forms.ModelForm):
                 'class': 'form-control',
                 'accept': 'image/*'
             }),
-            'website': forms.URLInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'https://tu-sitio-web.com'
-            }),
             'password': forms.PasswordInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Elige una contraseña segura'
@@ -111,7 +102,6 @@ class ArtistRegistrationForm(forms.ModelForm):
             'bio': 'Biografía',
             'photo': 'Foto de perfil',
             'banner': 'Banner de perfil',
-            'website': 'Sitio web',
             'password': 'Contraseña',
             'password_confirm': 'Confirmar contraseña'
         }

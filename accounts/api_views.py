@@ -342,9 +342,7 @@ def add_to_listening_history(request):
         try:
             song = Song.objects.get(pk=song_id)
         except Song.DoesNotExist:
-            return JsonResponse({
-                'error': 'Canción no encontrada'
-            }, status=404)
+            return JsonResponse({}, status=404)
 
         # Crear entrada en el historial
         history_entry, created = ListeningHistory.objects.get_or_create(

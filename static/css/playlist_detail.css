@@ -158,9 +158,41 @@
 
 
 /* ───────────────────────────────────────────────────────────────────
+   2.5. CABECERA DEL BLOQUE DE CANCIONES (h2 + select)
+   ─────────────────────────────────────────────────────────────────── */
+
+.playlist-detail__section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.playlist-detail__section-title {
+  font-size: var(--text-xl);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+
+/* ───────────────────────────────────────────────────────────────────
    3. TABLA DE CANCIONES  –  PLAYLIST (heredado de album_detail.css)
       Grid: [40px] [1.4fr] [1fr] [64px] [80px]
    ─────────────────────────────────────────────────────────────────── */
+
+.pl-tracklist__header {
+  display: grid;
+  align-items: center;
+  padding: 0 var(--space-4);
+  height: 36px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
 
 /* Sobreescribimo el grid de columnas para playlist */
 .pl-tracklist__header,

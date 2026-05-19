@@ -10,6 +10,7 @@ class PlaybackStateManager {
     constructor() {
         this.STORAGE_KEY = 'soundmusik_playback_state';
         this.SESSION_ID_KEY = 'soundmusik_session_id';
+        this.SESSION_USER_KEY = 'soundmusik_session_user_id';
         this.LAST_ACTIVITY_KEY = 'soundmusik_last_activity';
         this.SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutos
 
@@ -21,14 +22,21 @@ class PlaybackStateManager {
     }
 
     /**
-     * Obtener o crear ID de sesión único para esta pestaña
+     * Obtener o crear ID de sesión único para esta pestaña.
+     * Si el usuario actual no coincide con el dueño de la sesión guardada,
+     * se regenera (evita reutilizar session_id entre logins distintos).
      */
     getOrCreateSessionId() {
+        const currentUserId = window.CURRENT_USER_ID ?? null;
+        const storedUserId = sessionStorage.getItem(this.SESSION_USER_KEY);
         let sessionId = sessionStorage.getItem(this.SESSION_ID_KEY);
-        if (!sessionId) {
+
+        const userChanged = storedUserId !== null && String(storedUserId) !== String(currentUserId);
+        if (!sessionId || userChanged) {
             sessionId = `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             sessionStorage.setItem(this.SESSION_ID_KEY, sessionId);
         }
+        sessionStorage.setItem(this.SESSION_USER_KEY, String(currentUserId));
         return sessionId;
     }
 

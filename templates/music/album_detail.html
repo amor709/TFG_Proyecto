@@ -4,7 +4,7 @@
 {% block title %} – {{ album.title }}{% endblock %}
 
 {% block extra_head %}
-<link rel="stylesheet" href="{% static 'css/album_detail.css' %}">
+<link rel="stylesheet" href="{% static 'css/album_detail.css' %}?v=3">
 {% endblock %}
 
 {% block content %}
@@ -165,21 +165,27 @@
 
             <div class="recommendations__grid">
                 {% for item in recommended %}
-                <article class="rec-card">
-                    <a href="{% if item.album %}{% url 'music:album_detail' item.album.pk %}{% else %}#{% endif %}" class="rec-card__link">
+                <article class="rec-card" data-track-id="{{ item.pk }}" onclick="playStandalone({{ item.pk }}); return false;" style="cursor: pointer;">
+                    <div class="rec-card__link">
                         <div class="rec-card__cover-wrap">
-                            <img src="{% if item.album %}{{ item.album.cover.url }}{% else %}{{ item.cover.url }}{% endif %}"
-                                 alt="{% if item.album %}{{ item.album.title }}{% else %}{{ item.title }}{% endif %}"
+                            {% if item.cover %}
+                            <img src="{{ item.cover.url }}"
+                                 alt="{{ item.title }}"
                                  class="rec-card__cover"
                                  loading="lazy">
-                            <!-- Overlay play en hover -->
+                            {% else %}
+                            <img src="{% static 'img/logo.png' %}"
+                                 alt="{{ item.title }}"
+                                 class="rec-card__cover"
+                                 loading="lazy">
+                            {% endif %}
                             <div class="rec-card__play-overlay" aria-hidden="true">
                                 <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
                             </div>
                         </div>
-                        <h3 class="rec-card__title">{% if item.album %}{{ item.album.title }}{% else %}{{ item.title }}{% endif %}</h3>
+                        <h3 class="rec-card__title">{{ item.title }}</h3>
                         <p class="rec-card__artist">{{ item.artist.user.username }}</p>
-                    </a>
+                    </div>
                 </article>
                 {% empty %}
                 <p class="recommendations__empty">No hay más recomendaciones por ahora.</p>

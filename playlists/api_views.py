@@ -40,7 +40,7 @@ def toggle_liked_song(request, song_id):
     try:
         song = Song.objects.get(pk=song_id)
     except Song.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Canción no encontrada'}, status=404)
+        return JsonResponse({'success': False}, status=404)
 
     # Obtener la playlist "Mis joyas" del usuario
     try:
@@ -95,7 +95,7 @@ def check_if_liked(request, song_id):
     try:
         song = Song.objects.get(pk=song_id)
     except Song.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Canción no encontrada'}, status=404)
+        return JsonResponse({'success': False}, status=404)
 
     try:
         liked_playlist = Playlist.objects.get(user=request.user, is_liked_playlist=True)
