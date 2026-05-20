@@ -1,0 +1,32 @@
+# Control de versiones
+.git/
+.gitignore
+
+# Entornos virtuales
+.venv/
+venv/
+
+# Cachés de Python
+__pycache__/
+*.py[cod]
+
+# IDE
+.idea/
+.vscode/
+
+# Base de datos local y estáticos generados (staticfiles es la carpeta ANTIGUA)
+db.sqlite3
+staticfiles/
+
+# Media: se monta como volumen, no va dentro de la imagen
+media/
+
+# Notas y documentación (no hacen falta en la imagen)
+notas/
+notas.md
+despliegue/DOCUMENTACION_TECNICA.md
+despliegue/MODELO_DATOS.md
+despliegue/DESPLIEGUE.md
+
+# Secretos
+.env

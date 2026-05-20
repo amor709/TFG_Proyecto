@@ -31,6 +31,9 @@ SECRET_KEY = os.environ['SECRET_KEY']
 DEBUG = os.environ.get('DEBUG', 'False') == 'True'
 ALLOWED_HOSTS = [h.strip() for h in os.environ.get('ALLOWED_HOSTS', '').split(',') if h.strip()]
 
+# Orígenes de confianza para CSRF (necesario al servir por HTTPS detrás de Caddy)
+CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',') if o.strip()]
+
 
 # Application definition
 
@@ -56,13 +59,14 @@ AUTHENTICATION_BACKENDS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    # WhiteNoise justo después de SecurityMiddleware (posición recomendada)
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware'
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -150,11 +154,29 @@ STATIC_ROOT = BASE_DIR / "staticfiles"
 
 
 if not DEBUG:
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # WhiteNoise: estáticos comprimidos y con hash en el nombre (cacheo agresivo).
+    # En Django 6.0 se configura con STORAGES (STATICFILES_STORAGE se eliminó en 5.1).
+    STORAGES = {
+        "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+        "staticfiles": {"BACKEND": "whitenoise.storage.CompressedStaticFilesStorage"},
+    }
 
 # Configuración para Media (Canciones)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# === Seguridad en producción (la app va detrás de Caddy, que termina el TLS) ===
+# Caddy reenvía a la app por HTTP con esta cabecera indicando que el origen era HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Endurecimiento HTTPS. Activar con SECURE_SSL=True en producción; dejar False en local.
+if os.environ.get('SECURE_SSL', 'False') == 'True':
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 # Error handlers
 handler403 = 'accounts.views.forbidden_view'

@@ -1,0 +1,15 @@
+# Caddy obtiene y renueva el certificado HTTPS (Let's Encrypt) automáticamente
+# para el dominio indicado en la variable DOMAIN.
+{$DOMAIN} {
+	encode zstd gzip
+
+	# Audios y portadas (media): los sirve Caddy directamente desde el volumen,
+	# sin pasar por Django/gunicorn. Mejora el rendimiento del streaming de MP3.
+	handle_path /media/* {
+		root * /srv/media
+		file_server
+	}
+
+	# Todo lo demás (incluido /static, servido por WhiteNoise) va a la app.
+	reverse_proxy web:8000
+}

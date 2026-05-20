@@ -16,3 +16,4 @@ notas/
 staticfiles/
 db.sqlite3
 music/management/commands/populate_data.py
+/despliegue

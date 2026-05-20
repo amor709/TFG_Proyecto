@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 {% load static %}
-<html lang="es" data-static-url="{% static '' %}">
+<html lang="es" data-static-url="{% get_static_prefix %}">
 <head>
     {% csrf_token %}
     <meta charset="UTF-8">
