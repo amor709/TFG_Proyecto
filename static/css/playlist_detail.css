@@ -442,6 +442,23 @@
   opacity: 0.8;
 }
 
+/* Botón de guardar (diamante) independiente, estilo icono como en el perfil de artista */
+.pl-save-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: opacity var(--duration-fast), background var(--duration-fast), transform var(--duration-fast);
+}
+.pl-save-btn:hover { opacity: 1; background: rgba(255, 255, 255, 0.08); }
+.pl-save-btn:active { transform: scale(0.93); }
+
 
 
 

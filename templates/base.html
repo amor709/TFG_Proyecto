@@ -80,7 +80,6 @@
                     {% else %}
                     <a href="{% url 'listener_profile' request.user.id %}" class="dropdown-item">Mi perfil</a>
                     {% endif %}
-                    <a href="#" class="dropdown-item">Idioma</a>
                     <a href="{% url 'logout' %}" class="dropdown-item">Cerrar sesión</a>
                 </div>
                 {% endif %}
@@ -181,10 +180,9 @@
              ──────────────────────────────────────── -->
         <aside class="right-panel" aria-label="Canción actual y artista">
 
-            {% if current_track %}
-
             <!-- ══ SECCIÓN SUPERIOR: Info de la canción ══ -->
             <div class="right-panel__top">
+                {% if current_track %}
                 <!-- Álbum / portada grande -->
                 <div class="right-panel__album-cover">
                     <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
@@ -224,6 +222,9 @@
                     </div>
                 </div>
                 {% endif %}
+                {% else %}
+                <p class="right-panel__empty">No estás escuchando nada</p>
+                {% endif %}
             </div>
 
             <!-- ══ SECCIÓN INFERIOR: Cola de reproducción ══ -->
@@ -245,10 +246,6 @@
                 </ol>
             </div>
 
-            {% else %}
-            <p class="right-panel__empty">Reproduce algo para empezar </p>
-            {% endif %}
-
         </aside>
 
     </div>
@@ -259,22 +256,15 @@
 
             <!-- Info de la canción actual -->
             <div class="player__track">
-                {% if current_track %}
-                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb" id="track-art" onclick="goToCurrentAlbum()" title="Ir al álbum">
+                <img src="{% if current_track and current_track.cover %}{{ current_track.cover.url }}{% elif current_track %}{% static 'img/logo.png' %}{% else %}{% static 'img/banner_default.png' %}{% endif %}" alt="" class="player__thumb" id="track-art" onclick="goToCurrentAlbum()" title="Ir al álbum">
                 <div class="player__meta">
-                    <span class="player__song-title" id="track-title" onclick="goToCurrentAlbum()" title="Ir al álbum">{{ current_track.title }}</span>
-                    <span class="player__song-artist" id="track-artist"><a href="{% url 'music:artist_detail_public' current_track.artist.pk %}" class="player__artist-link">{{ current_track.artist.user.username }}</a>{% for collab in current_track.collaborators.all %},&nbsp;<a href="{% url 'music:artist_detail_public' collab.pk %}" class="player__artist-link">{{ collab.user.username }}</a>{% endfor %}</span>
+                    <span class="player__song-title" id="track-title" onclick="goToCurrentAlbum()" title="Ir al álbum">{% if current_track %}{{ current_track.title }}{% else %}No estás escuchando nada{% endif %}</span>
+                    <span class="player__song-artist" id="track-artist">{% if current_track %}<a href="{% url 'music:artist_detail_public' current_track.artist.pk %}" class="player__artist-link">{{ current_track.artist.user.username }}</a>{% for collab in current_track.collaborators.all %},&nbsp;<a href="{% url 'music:artist_detail_public' collab.pk %}" class="player__artist-link">{{ collab.user.username }}</a>{% endfor %}{% endif %}</span>
                 </div>
-                {% if not request.user.is_artist %}
+                {% if not request.user.is_artist and current_track %}
                 <button class="player__like-btn like-btn {% if current_track.pk in liked_song_ids %}liked{% else %}not-liked{% endif %}" id="player-like-btn" data-song-id="{{ current_track.id }}" aria-label="{% if current_track.pk in liked_song_ids %}Quitar de Mis joyas{% else %}Añadir a Mis joyas{% endif %}">
                     <img src="{% if current_track.pk in liked_song_ids %}{% static 'img/diamond-red.png' %}{% else %}{% static 'img/diamond-white.png' %}{% endif %}" alt="" class="icon--sm" id="player-like-icon">
                 </button>
-                {% endif %}
-                {% else %}
-                <div class="player__meta">
-                    <span class="player__song-title">No hay canción</span>
-                    <span class="player__song-artist">Selecciona una para reproducir</span>
-                </div>
                 {% endif %}
             </div>
 
@@ -377,14 +367,11 @@ document.addEventListener('click', function(event) {
      });
 
     function initializePlayer() {
-        console.log(' Inicializando reproductor...');
         if (!audio) {
-            console.error('❌ Elemento de audio no encontrado');
             return;
         }
 
         if (volumeSlider) {
-            console.log('✅ Volumen slider encontrado');
 
             const savedVolume = localStorage.getItem('soundmusik_volume');
             if (savedVolume !== null) {
@@ -399,33 +386,26 @@ document.addEventListener('click', function(event) {
                 audio.volume = newVolume;
                 document.documentElement.style.setProperty('--volume', this.value + '%');
                 localStorage.setItem('soundmusik_volume', this.value);
-                console.log('Volumen actualizado a:', (newVolume * 100).toFixed(1) + '%');
             });
 
             // Evento change para cambios finales
             volumeSlider.addEventListener('change', function(e) {
-                console.log('Volumen fijado a:', (this.value / 100 * 100).toFixed(1) + '%');
             });
         } else {
-            console.warn('⚠Volumen slider NO encontrado');
         }
 
         // Configurar barra de progreso / seek
         if (seekSlider) {
-            console.log('Seek slider encontrado');
             seekSlider.addEventListener('input', function(e) {
                 if (audio.duration) {
                     const newTime = (this.value * audio.duration) / 100;
                     audio.currentTime = newTime;
-                    console.log(' Saltando a:', newTime.toFixed(2) + 's');
                 }
             });
 
             seekSlider.addEventListener('change', function(e) {
-                console.log(' Posición establecida');
             });
         } else {
-            console.warn('⚠️ Seek slider NO encontrado');
         }
 
         // Event listener para clic en la barra de progreso
@@ -438,7 +418,6 @@ document.addEventListener('click', function(event) {
                 const percentage = clickX / width;
                 audio.currentTime = percentage * audio.duration;
                 updateProgressBar(percentage * 100);
-                console.log('Clic en barra de progreso:', (percentage * 100).toFixed(1) + '%');
             });
         }
 
@@ -454,7 +433,6 @@ document.addEventListener('click', function(event) {
 
         // Actualizar duración cuando se carga el metadata
         audio.addEventListener('loadedmetadata', function() {
-            console.log(' Duración de la canción:', formatTime(audio.duration));
             updateTimeDisplay(audio.currentTime, audio.duration);
         });
 
@@ -467,26 +445,21 @@ document.addEventListener('click', function(event) {
          // Inicializar el icono con el estado actual
          updatePlayIcon();
 
-         console.log('Reproductor inicializado');
      }
 
      function loadSong(index) {
          if (playlist.length === 0) {
-             console.error(' La playlist está vacía');
              return;
          }
          trackIndex = index % playlist.length;
          const song = playlist[trackIndex];
-         console.log('Cargando canción:', song.title);
          audio.src = song.url;
          document.getElementById('track-title').innerText = song.title;
          document.getElementById('track-art').src = song.cover;
          document.getElementById('track-artist').innerText = song.artist;
 
          audio.play().catch(err => {
-             console.error('Error al reproducir:', err);
          });
-         console.log('▶ Reproduciendo:', song.title);
          updatePlayIcon();
 
          // Actualizar el botón de like del footer INMEDIATAMENTE
@@ -524,17 +497,13 @@ document.addEventListener('click', function(event) {
 
     function playPause() {
          if (!audio) {
-             console.error(' Audio no disponible');
              return;
          }
 
-         console.log('PlayPause llamado. Estado actual:', audio.paused ? 'pausado' : 'reproduciéndose');
 
          if (audio.paused) {
              audio.play().catch(err => {
-                 console.error(' Error al reproducir:', err);
              });
-             console.log('▶️ Reproduciendo...');
              updatePlayIcon();
          } else {
              audio.pause();
@@ -572,7 +541,6 @@ document.addEventListener('click', function(event) {
     }
 
     function prevSong() {
-        console.log('⏮️ Botón anterior clickeado');
 
         if (typeof queueSystem !== 'undefined' && queueSystem) {
             const history = queueSystem.history;
@@ -604,7 +572,6 @@ document.addEventListener('click', function(event) {
         // Fallback a la antigua playlist
         if (playlist.length > 0) {
             trackIndex = (trackIndex - 1 + playlist.length) % playlist.length;
-            console.log('Canción anterior:', trackIndex);
             loadSong(trackIndex);
         }
     }
@@ -709,7 +676,6 @@ document.addEventListener('click', function(event) {
 <script src="{% static 'js/queue-system.js' %}" defer></script>
 <script src="{% static 'js/playback-state.js' %}" defer></script>
 <script src="{% static 'js/audio-player-sync.js' %}" defer></script>
-<!-- <script src="{% static 'js/update-player-panels.js' %}"></script> --> <!-- Desactivado para evitar conflictos con ajax-player.js -->
 <script src="{% static 'js/ajax-player.js' %}" defer></script>
 <script src="{% static 'js/sidebar.js' %}" defer></script>
 <script src="{% static 'js/register-recent.js' %}" defer></script>

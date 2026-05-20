@@ -31,7 +31,7 @@ class Command(BaseCommand):
             if liked_playlist.exists():
                 already_exists_count += 1
                 self.stdout.write(
-                    self.style.WARNING(f'  ⚪ {user.username} ya tiene Mis joyas')
+                    self.style.WARNING(f'  {user.username} ya tiene Mis joyas')
                 )
             else:
                 # Crear la playlist
@@ -49,22 +49,22 @@ class Command(BaseCommand):
                         with open(mis_joyas_img_path, 'rb') as img_file:
                             playlist.cover.save('mis-joyas.png', ContentFile(img_file.read()), save=True)
                         self.stdout.write(
-                            self.style.SUCCESS(f'  ✅ Creada Mis joyas para {user.username} (con imagen)')
+                            self.style.SUCCESS(f'  Creada Mis joyas para {user.username} (con imagen)')
                         )
                     except Exception as e:
                         self.stdout.write(
-                            self.style.WARNING(f'  ⚠️  Creada Mis joyas para {user.username} (sin imagen: {str(e)})')
+                            self.style.WARNING(f'  Creada Mis joyas para {user.username} (sin imagen: {str(e)})')
                         )
                 else:
                     self.stdout.write(
-                        self.style.WARNING(f'  ⚠️  Creada Mis joyas para {user.username} (imagen no encontrada)')
+                        self.style.WARNING(f'  Creada Mis joyas para {user.username} (imagen no encontrada)')
                     )
 
                 created_count += 1
 
         self.stdout.write(
             self.style.SUCCESS(
-                f'\n✅ Completado!\n'
+                f'\nCompletado!\n'
                 f'   - Creadas: {created_count}\n'
                 f'   - Ya existían: {already_exists_count}\n'
             )

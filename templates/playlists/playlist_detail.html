@@ -44,12 +44,8 @@
                     {% if user == playlist.user %}
                     <a href="{% url 'playlists:edit' playlist.pk %}" class="btn btn--primary">Editar</a>
                     {% else %}
-                    <button class="btn btn--secondary save-btn" data-playlist-id="{{ playlist.pk }}" data-saved="{{ is_saved|yesno:'true,false' }}">
-                        {% if is_saved %}
-                        <img src="{% static 'img/icon-saved.png' %}" alt="Guardada">
-                        {% else %}
-                        <img src="{% static 'img/icon-save.png' %}" alt="Guardar">
-                        {% endif %}
+                    <button class="pl-save-btn save-btn" data-playlist-id="{{ playlist.pk }}" data-saved="{{ is_saved|yesno:'true,false' }}" aria-label="{% if is_saved %}Quitar de guardadas{% else %}Guardar playlist{% endif %}">
+                        <img src="{% if is_saved %}{% static 'img/diamond-red.png' %}{% else %}{% static 'img/diamond-black.png' %}{% endif %}" alt="{% if is_saved %}Guardada{% else %}Guardar{% endif %}" class="icon--md">
                     </button>
                     {% endif %}
                 </div>
@@ -147,7 +143,7 @@ function changeLikedPlaylistOrder(orderBy) {
                 location.reload();
             }
         })
-        .catch(error => console.error('Error:', error));
+        .catch(() => {});
 }
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -169,20 +165,38 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const saveBtn = document.querySelector('.save-btn');
     if (saveBtn) {
+        const DIAMOND_RED = '{% static "img/diamond-red.png" %}';
+        const DIAMOND_BLACK = '{% static "img/diamond-black.png" %}';
+        const setSavedState = (saved) => {
+            saveBtn.dataset.saved = saved ? 'true' : 'false';
+            const img = saveBtn.querySelector('img');
+            img.src = saved ? DIAMOND_RED : DIAMOND_BLACK;
+            img.alt = saved ? 'Guardada' : 'Guardar';
+            saveBtn.setAttribute('aria-label', saved ? 'Quitar de guardadas' : 'Guardar playlist');
+        };
+        let savePending = false;
         saveBtn.addEventListener('click', function() {
+            if (savePending) return;
             const playlistId = this.dataset.playlistId;
-            const isSaved = this.dataset.saved === 'true';
-            const url = isSaved ? `/playlists/${playlistId}/unsave/` : `/playlists/${playlistId}/save/`;
-            fetch(url, { method: 'POST' })
+            const wasSaved = this.dataset.saved === 'true';
+            setSavedState(!wasSaved);   // toggle inmediato (dinámica como los demás diamantes)
+            savePending = true;
+            const url = wasSaved ? `/playlists/${playlistId}/unsave/` : `/playlists/${playlistId}/save/`;
+            fetch(url, { method: 'POST', headers: { 'X-CSRFToken': '{{ csrf_token }}' } })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success) {
-                        this.dataset.saved = data.saved ? 'true' : 'false';
-                        const img = this.querySelector('img');
-                        img.src = data.saved ? '{% static "img/icon-saved.png" %}' : '{% static "img/icon-save.png" %}';
-                        img.alt = data.saved ? 'Guardada' : 'Guardar';
+                        setSavedState(data.saved);
+                        // Refrescar el sidebar "Guardados" al instante
+                        if (typeof sidebarManager !== 'undefined' && sidebarManager) {
+                            sidebarManager.loadSidebarSection(sidebarManager.currentSection);
+                        }
+                    } else {
+                        setSavedState(wasSaved);   // revertir si falla
                     }
-                });
+                })
+                .catch(() => setSavedState(wasSaved))
+                .finally(() => { savePending = false; });
         });
     }
 

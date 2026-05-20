@@ -74,12 +74,8 @@ def player_context(request):
             context['current_track'] = last_played.song
             current_track = last_played.song
 
-    # Si aún no hay canción, usar la primera disponible
-    if not current_track:
-        first_song = Song.objects.first()
-        if first_song:
-            context['current_track'] = first_song
-            current_track = first_song
+    # Si no hay sesión ni historial (cuenta nueva), NO inventar una canción:
+    # current_track queda None → el reproductor muestra "No estás escuchando nada".
 
     # Artista relacionado - usar solo si hay una canción actual
     if current_track:

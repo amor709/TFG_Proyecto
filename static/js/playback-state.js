@@ -74,7 +74,6 @@ class PlaybackStateManager {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(state));
         sessionStorage.setItem(this.LAST_ACTIVITY_KEY, Date.now().toString());
 
-        console.log('🎵 Estado de reproducción guardado:', state);
     }
 
     /**
@@ -90,7 +89,6 @@ class PlaybackStateManager {
      */
     clearPlaybackState() {
         localStorage.removeItem(this.STORAGE_KEY);
-        console.log('🗑️  Estado de reproducción borrado');
     }
 
     /**
@@ -110,7 +108,6 @@ class PlaybackStateManager {
         const timeSinceActivity = Date.now() - lastActivity;
 
         if (timeSinceActivity > this.SESSION_TIMEOUT) {
-            console.log('⏱️  Sesión anterior expirada, esta sesión es ahora activa');
             return true;
         }
 
@@ -122,7 +119,6 @@ class PlaybackStateManager {
      */
     handleStorageChange(event) {
         if (event.key === this.STORAGE_KEY) {
-            console.log('📡 Estado de reproducción actualizado desde otra pestaña');
 
             // Disparar evento personalizado
             const customEvent = new CustomEvent('playbackStateUpdated', {
@@ -137,7 +133,6 @@ class PlaybackStateManager {
      */
     handleVisibilityChange() {
         if (document.visibilityState === 'visible') {
-            console.log('👁️  Página visible');
 
             // Restaurar estado al volver a la pestaña
             const customEvent = new CustomEvent('pageVisible', {
@@ -145,7 +140,6 @@ class PlaybackStateManager {
             });
             document.dispatchEvent(customEvent);
         } else {
-            console.log('🚫 Página oculta');
         }
     }
 
@@ -162,7 +156,6 @@ class PlaybackStateManager {
     syncWithLocalStorage() {
         const state = this.getPlaybackState();
         if (state) {
-            console.log('🔄 Sincronizando con localStorage:', state);
         }
     }
 }

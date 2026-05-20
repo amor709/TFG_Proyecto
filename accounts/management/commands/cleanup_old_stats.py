@@ -35,17 +35,17 @@ class Command(BaseCommand):
                 cleanup_old_monthly_stats(user, days)
                 self.stdout.write(
                     self.style.SUCCESS(
-                        f'✓ Estadísticas más antiguas de {days} días eliminadas para usuario: {user.username}'
+                        f'Estadísticas más antiguas de {days} días eliminadas para usuario: {user.username}'
                     )
                 )
             except User.DoesNotExist:
                 self.stdout.write(
-                    self.style.ERROR(f'✗ Usuario con ID {user_id} no encontrado')
+                    self.style.ERROR(f'Usuario con ID {user_id} no encontrado')
                 )
         else:
             cleanup_old_monthly_stats(None, days)
             self.stdout.write(
                 self.style.SUCCESS(
-                    f'✓ Estadísticas más antiguas de {days} días eliminadas para todos los usuarios'
+                    f'Estadísticas más antiguas de {days} días eliminadas para todos los usuarios'
                 )
             )

@@ -30,7 +30,6 @@ class SongOptionsMenu {
             }
         });
 
-        console.log('✅ SongOptionsMenu inicializado');
     }
 
     /**
@@ -79,10 +78,7 @@ class SongOptionsMenu {
         // Obtener datos de la canción
         const trackRow = button.closest('.tracklist__row') || button.closest('li');
         const artistLink = trackRow?.querySelector('.track-artist-link') || trackRow?.querySelector('a[href*="artist"]');
-        const albumLink = albumId ? `/music/albums/${albumId}/` : (trackRow?.querySelector('a[href*="album"]') || trackRow?.querySelector('.pl-album-link'));
-
-        // Determinar si el usuario es dueño
-        const isOwner = this.isTrackOwner(trackId);
+        const albumLink = albumId ? `/music/album/${albumId}/` : (trackRow?.querySelector('a[href*="album"]') || trackRow?.querySelector('.pl-album-link'));
 
         let html = '';
 
@@ -110,7 +106,7 @@ class SongOptionsMenu {
         }
 
         // Añadir a la cola
-        html += `<button class="song-options-item">
+        html += `<button class="song-options-item add-to-queue-btn" data-song-id="${trackId}">
                     <span>Añadir a la cola</span>
                 </button>`;
 
@@ -118,13 +114,6 @@ class SongOptionsMenu {
         html += `<button class="song-options-item add-to-liked-btn" data-song-id="${trackId}">
                     <span>Añadir a Mis Joyas</span>
                 </button>`;
-
-        // Estadísticas (solo si es dueño)
-        if (isOwner) {
-            html += `<button class="song-options-item">
-                        <span>Estadísticas</span>
-                    </button>`;
-        }
 
         // Divisor antes de playlist
         html += '<div class="song-options-divider"></div>';
@@ -148,6 +137,14 @@ class SongOptionsMenu {
         content.innerHTML = html;
 
         // Agregar listeners
+        content.querySelector('.add-to-queue-btn')?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (typeof queueSystem !== 'undefined' && queueSystem) {
+                queueSystem.addNext(trackId);   // suena a continuación + refresca la cola
+            }
+            this.closeAllMenus();
+        });
+
         content.querySelector('.add-to-liked-btn')?.addEventListener('click', (e) => {
             e.stopPropagation();
             this.addToLiked(trackId);
@@ -177,7 +174,7 @@ class SongOptionsMenu {
                             }
                         }
                     })
-                    .catch(error => console.error('Error:', error));
+                    .catch(() => {});
             }
             this.closeAllMenus();
         });
@@ -257,7 +254,6 @@ class SongOptionsMenu {
                 });
 
             } catch (error) {
-                console.error('Error al cargar playlists:', error);
                 submenu.innerHTML = '<div class="error-msg">Error al cargar playlists</div>';
             }
         }
@@ -297,11 +293,9 @@ class SongOptionsMenu {
 
             const data = await response.json();
             if (data.success) {
-                console.log('✅ Canción añadida/removida de Mis Joyas');
                 this.closeAllMenus();
             }
         } catch (error) {
-            console.error('Error:', error);
         }
     }
 
@@ -320,13 +314,11 @@ class SongOptionsMenu {
 
             const data = await response.json();
             if (data.success) {
-                console.log('✅ Canción añadida a playlist');
                 this.closeAllMenus();
             } else {
                 alert(data.message || 'Error al añadir a playlist');
             }
         } catch (error) {
-            console.error('Error:', error);
             alert('Error al añadir a playlist');
         }
     }
@@ -344,16 +336,6 @@ class SongOptionsMenu {
         submenus.forEach(submenu => {
             submenu.classList.remove('visible');
         });
-    }
-
-    /**
-     * Verificar si el usuario es dueño de la canción
-     */
-    isTrackOwner(trackId) {
-        // Se puede obtener del atributo data del botón o del contexto de Django
-        // Por ahora retornaremos false, pero se puede mejorar
-        const trackRow = document.querySelector(`[data-track-id="${trackId}"]`);
-        return trackRow?.dataset.isOwner === 'true';
     }
 
     /**

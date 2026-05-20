@@ -25,11 +25,9 @@ class AudioPlayerSync {
     init(audioElement) {
         this.audio = audioElement;
         if (!this.audio) {
-            console.error('❌ Elemento de audio no encontrado');
             return;
         }
 
-        console.log('🎧 Inicializando Audio Player Sync...');
 
         // Listeners del reproductor
         this.audio.addEventListener('play', () => this.handlePlay());
@@ -57,7 +55,6 @@ class AudioPlayerSync {
      * Manejar evento de reproducción
      */
     handlePlay() {
-        console.log('▶️ Reproducción iniciada');
         this.updatePlaybackState(true);
         // Disparar evento para actualizar paneles
         document.dispatchEvent(new CustomEvent('playbackStateChanged'));
@@ -67,7 +64,6 @@ class AudioPlayerSync {
      * Manejar evento de pausa
      */
     handlePause() {
-        console.log('⏸️  Reproducción pausada');
         this.updatePlaybackState(false);
         // Disparar evento para actualizar paneles
         document.dispatchEvent(new CustomEvent('playbackStateChanged'));
@@ -77,7 +73,6 @@ class AudioPlayerSync {
      * Manejar fin de canción
      */
     handleEnded() {
-        console.log('✅ Canción terminada');
         this.stateManager.clearPlaybackState();
         this.saveToBackend(false);
     }
@@ -137,7 +132,6 @@ class AudioPlayerSync {
      * Registrar la reproducción en el backend (historial + estadísticas).
      */
     recordPlayCount(trackId) {
-        console.log('📝 Canción contada como reproducida (5 s de audio real):', trackId);
         fetch(`${this.apiBaseUrl}/api/add-to-history/`, {
             method: 'POST',
             headers: {
@@ -146,8 +140,8 @@ class AudioPlayerSync {
             },
             body: JSON.stringify({ song_id: trackId })
         })
-        .then(r => { if (!r.ok) console.error('Error al contar reproducción:', r.status); })
-        .catch(err => console.error('Error al contar reproducción:', err));
+        .then(() => {})
+        .catch(() => {});
     }
 
     /**
@@ -157,7 +151,6 @@ class AudioPlayerSync {
         const newState = event.detail;
 
         if (!newState) {
-            console.log('📭 Sin estado de reproducción');
             return;
         }
 
@@ -168,11 +161,9 @@ class AudioPlayerSync {
 
         // Si no es sesión activa, ignorar
         if (!this.stateManager.isSessionActive()) {
-            console.log('🚫 Esta no es la sesión activa, ignorando actualización');
             return;
         }
 
-        console.log('🔄 Restaurando estado desde otra pestaña:', newState);
         this.restorePlaybackStateFromObject(newState);
     }
 
@@ -183,37 +174,6 @@ class AudioPlayerSync {
         // No re-restauramos desde backend al volver a la pestaña: la canción ya está
         // cargada en esta pestaña y recargarla revertía los paneles a la sesión guardada
         // (mostraba "info de la sesión anterior").
-    }
-
-    /**
-     * Verificar sesiones concurrentes
-     */
-    checkConcurrentSessions() {
-        fetch(`${this.apiBaseUrl}/api/playback/check-concurrent/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': this.getCsrfToken()
-            },
-            body: JSON.stringify({
-                session_id: this.stateManager.sessionId
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.has_concurrent) {
-                console.warn(
-                    '⚠️  Reproducción concurrente detectada en: ' +
-                    data.other_session.device_info
-                );
-                // Pausar reproducción en esta sesión
-                if (this.audio && !this.audio.paused) {
-                    this.audio.pause();
-                    console.log('🛑 Reproducción pausada (sesión concurrente)');
-                }
-            }
-        })
-        .catch(err => console.error('Error verificando sesiones concurrentes:', err));
     }
 
     /**
@@ -282,7 +242,7 @@ class AudioPlayerSync {
                 device_info: this.getDeviceInfo()
             })
         })
-        .catch(err => console.error('Error guardando estado en backend:', err));
+        .catch(() => {});
     }
 
     /**
@@ -294,10 +254,8 @@ class AudioPlayerSync {
         const apply = () => {
             this.audio.currentTime = resumeAt;
             if (isPlaying) {
-                console.log('▶️ Continuando reproducción desde:', resumeAt + 's');
-                this.audio.play().catch(err => console.error('❌ Error al reproducir:', err));
+                this.audio.play().catch(() => {});
             } else {
-                console.log('⏸️  Posición restaurada:', resumeAt + 's');
             }
         };
         if (this.audio.readyState >= 1) {
@@ -391,11 +349,10 @@ class AudioPlayerSync {
         .then(response => response.json())
         .then(data => {
             if (data.session && data.session.track_id) {
-                console.log('📂 Restaurando estado desde backend:', data.session);
                 this.restoreFromBackendSession(data.session);
             }
         })
-        .catch(err => console.error('Error restaurando desde backend:', err));
+        .catch(() => {});
     }
 
     /**
@@ -430,7 +387,6 @@ class AudioPlayerSync {
             this.seekAndMaybePlay(session.current_time || 0, session.is_playing);
         })
         .catch(err => {
-            console.error('Error obteniendo datos de la canción:', err);
             // Fallback: intentar usar datos de localStorage
             const savedState = this.stateManager.getPlaybackState();
             if (savedState && savedState.trackData) {
@@ -479,7 +435,6 @@ class AudioPlayerSync {
             }
         }, this.saveInterval);
 
-        console.log('💾 Guardado periódico de estado iniciado (cada ' + this.saveInterval + 'ms)');
     }
 
     /**
@@ -489,7 +444,6 @@ class AudioPlayerSync {
         if (this.saveIntervalId) {
             clearInterval(this.saveIntervalId);
             this.saveIntervalId = null;
-            console.log('⏹️  Guardado periódico detenido');
         }
     }
 

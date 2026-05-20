@@ -391,7 +391,7 @@ function loadSongByData(songData) {
     document.getElementById('track-title').innerText = songData.title;
     document.getElementById('track-art').src = songData.cover;
     document.getElementById('track-artist').innerText = songData.artist;
-    audio.play().catch(err => console.error('Error al reproducir:', err));
+    audio.play().catch(() => {});
 }
 
 // Shuffle button
@@ -410,12 +410,11 @@ document.getElementById('btn-artist-shuffle').addEventListener('click', async ()
                 playFromArtist(randomTrackId, artistId);
             }
         } catch (error) {
-            console.error('Error al obtener canciones del artista:', error);
         }
     }
 });
 
-// Botón de seguir (diamante) del hero: dinámico en tiempo real (diamond-white ↔ diamond-red)
+// Botón de seguir (diamante) del hero: dinámico en tiempo real (diamond-white / diamond-red)
 const artistLikeBtn = document.getElementById('btn-artist-like');
 if (artistLikeBtn) {
     const staticUrl = document.documentElement.getAttribute('data-static-url') || '/static/';

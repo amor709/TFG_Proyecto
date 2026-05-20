@@ -28,6 +28,15 @@ class QueueSystem {
             this.updateQueueDisplay();
         }
     }
+    /** Añade una canción para que suene A CONTINUACIÓN (primera de la cola). */
+    addNext(trackId) {
+        const id = typeof trackId === 'number' ? trackId : parseInt(trackId, 10);
+        if (isNaN(id)) return;
+        this.queue = this.queue.filter(x => x !== id);  // evitar duplicado
+        this.queue.unshift(id);                          // ponerla la primera
+        this.saveQueueToStorage();
+        this.updateQueueDisplay();                       // refrescar la cola
+    }
     addMultipleToQueue(trackIds) {
         trackIds.forEach(id => {
             if (!this.queue.includes(id)) {
@@ -143,7 +152,6 @@ class QueueSystem {
                 queueList.innerHTML = data.html;
             }
         } catch (error) {
-            console.error('Error al cargar queue HTML:', error);
         }
     }
 
@@ -152,7 +160,6 @@ class QueueSystem {
          if (this.queue.length > 0) {
              const nextTrackId = this.queue.shift();
              this.saveQueueToStorage();
-             console.log('🎵 Reproduciendo siguiente de la cola:', nextTrackId);
 
              // Marcar que estamos reproduciendo desde la cola
              if (typeof window !== 'undefined') {
@@ -176,7 +183,6 @@ class QueueSystem {
      */
     async playTrackWithAlbum(trackId, albumId) {
          try {
-             console.log(` Reproduciendo canción ${trackId} del álbum ${albumId}`);
              // Primero, limpiar la cola actual
              this.clearQueue();
              this.setFromAlbum(albumId);
@@ -190,7 +196,6 @@ class QueueSystem {
              // Añadir las canciones restantes a la cola
              if (albumTracks.length > 0) {
                  this.addMultipleToQueue(albumTracks);
-                 console.log(`Cola del álbum llena con ${albumTracks.length} canciones`);
              }
 
              // Sugerencias por tags del ÁLBUM, no de la canción.
@@ -202,14 +207,12 @@ class QueueSystem {
                      const suggestedTracks = sugData.suggested_ids || [];
                      if (suggestedTracks.length > 0) {
                          this.addMultipleToQueue(suggestedTracks);
-                         console.log(`Cola: ${suggestedTracks.length} sugerencias por tags del álbum`);
                      }
                  }
              } catch (sugError) {
-                 console.warn('No se pudieron cargar sugerencias del álbum:', sugError);
              }
 
-             // ⭐ MARCAR COMO REPRODUCCIÓN DESDE ÁLBUM (antes de reproducir)
+             // MARCAR COMO REPRODUCCIÓN DESDE ÁLBUM (antes de reproducir)
              if (typeof window !== 'undefined') {
                  window.__isPlayingFromQueue = true;
              }
@@ -218,7 +221,6 @@ class QueueSystem {
              playSongA(trackId);
              this.ensureQueueMinimum(trackId);  // garantizar ≥10 en la cola
          } catch (error) {
-             console.error('Error al reproducir canción del álbum:', error);
              // Si hay error, reproducir solo la canción
              if (typeof window !== 'undefined') {
                  window.__isPlayingFromQueue = false;
@@ -228,11 +230,10 @@ class QueueSystem {
      }
 
     playTrackStandalone(trackId) {
-         console.log(`Reproduciendo track standalone: ${trackId}`);
          this.clearQueue();
          this.clearFromAlbumData();
 
-         // ⭐ MARCAR COMO REPRODUCCIÓN MANUAL (NO desde cola)
+         // MARCAR COMO REPRODUCCIÓN MANUAL (NO desde cola)
          if (typeof window !== 'undefined') {
              window.__isPlayingFromQueue = false;
          }
@@ -243,7 +244,6 @@ class QueueSystem {
 
      async playTrackFromArtist(trackId, artistId) {
          try {
-             console.log(`🎵 Reproduciendo canción ${trackId} del artista ${artistId}`);
              this.clearQueue();
              this.clearFromAlbumData();
 
@@ -257,7 +257,6 @@ class QueueSystem {
              if (artistTracks.length > 0) {
                  const shuffled = artistTracks.sort(() => 0.5 - Math.random());
                  this.addMultipleToQueue(shuffled);
-                 console.log(`✅ Cola del artista: ${shuffled.length} canciones`);
              }
 
              if (typeof window !== 'undefined') {
@@ -268,7 +267,6 @@ class QueueSystem {
              playSongA(trackId);
              this.ensureQueueMinimum(trackId);  // garantizar ≥10 en la cola
          } catch (error) {
-             console.error('Error al reproducir canción del artista:', error);
              if (typeof window !== 'undefined') {
                  window.__isPlayingFromQueue = false;
                  window.__isPlayingFromArtist = false;
@@ -278,24 +276,20 @@ class QueueSystem {
      }
     performAutoPlay() {
          if (this.history.length === 0) {
-             console.log('⚠️ No hay historial, no se puede activar autoplay');
              return;
          }
          const lastTrackId = this.history[this.history.length - 1];
-         console.log('🔄 Ejecutando autoplay con última canción:', lastTrackId);
 
          this.fetchSuggestedTracks(lastTrackId);
      }
      async fetchSuggestedTracks(trackId) {
          try {
-             console.log('🔍 Buscando sugerencias para:', trackId);
              const response = await fetch(`/music/api/suggested-tracks/${trackId}/`);
              if (!response.ok) {
                  throw new Error('Error obteniendo canciones sugeridas');
              }
              const data = await response.json();
              if (data.suggested_ids && data.suggested_ids.length > 0) {
-                 console.log('✅ Añadiendo', data.suggested_ids.length, 'canciones sugeridas a la cola');
                  this.addMultipleToQueue(data.suggested_ids);
 
                  // Reproducir la primera canción sugerida
@@ -311,10 +305,8 @@ class QueueSystem {
                      playSongA(nextTrackId);
                  }
              } else {
-                 console.log('⚠️ No hay canciones sugeridas disponibles');
              }
          } catch (error) {
-             console.error('Error en autoplay:', error);
          }
      }
 
@@ -332,7 +324,6 @@ class QueueSystem {
             const data = await response.json();
             return data.suggested_ids || [];
         } catch (e) {
-            console.error('Error obteniendo sugerencias:', e);
             return [];
         }
     }
@@ -421,7 +412,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Repeat ON → reproducir de nuevo la misma canción (la cola se mantiene)
             if (queueSystem.repeat) {
                 audio.currentTime = 0;
-                audio.play().catch(e => console.error('Error al repetir:', e));
+                audio.play().catch(() => {});
             } else {
                 queueSystem.onTrackFinished();
             }
@@ -434,7 +425,6 @@ function playFromAlbum(trackId, albumId) {
      if (typeof queueSystem !== 'undefined') {
          queueSystem.playTrackWithAlbum(trackId, albumId);
      } else {
-         console.warn('Queue system no cargado');
          playSongA(trackId);
      }
  }
@@ -443,7 +433,6 @@ function playFromAlbum(trackId, albumId) {
      if (typeof queueSystem !== 'undefined') {
          queueSystem.playTrackFromArtist(trackId, artistId);
      } else {
-         console.warn('Queue system no cargado');
          playSongA(trackId);
      }
  }
@@ -452,7 +441,6 @@ function playFromAlbum(trackId, albumId) {
      if (typeof queueSystem !== 'undefined') {
          queueSystem.playTrackStandalone(trackId);
      } else {
-         console.warn('Queue system no cargado');
          playSongA(trackId);
      }
  }
@@ -463,7 +451,6 @@ function playFromAlbum(trackId, albumId) {
 function addToQueueFromUI(trackId) {
     if (typeof queueSystem !== 'undefined') {
         queueSystem.addToQueue(trackId);
-        console.log(`✅ Canción agregada a la cola: ${trackId}`);
     }
 }
 /**

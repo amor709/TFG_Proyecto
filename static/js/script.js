@@ -15,7 +15,6 @@ function initHeaderSearch() {
     const searchInput = document.querySelector('.search-bar__input');
 
     if (!searchInput) {
-        console.warn('⚠️ Search input del header no encontrado');
         return;
     }
 
@@ -26,7 +25,6 @@ function initHeaderSearch() {
             const query = this.value.trim();
 
             if (query.length < 1) {
-                console.warn('⚠️ Búsqueda vacía');
                 return;
             }
 
@@ -36,5 +34,4 @@ function initHeaderSearch() {
         }
     });
 
-    console.log('✅ Header search inicializado');
 }

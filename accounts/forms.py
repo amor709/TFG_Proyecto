@@ -61,52 +61,6 @@ class ArtistProfileForm(forms.ModelForm):
         }
 
 
-class ArtistRegistrationForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
-    password_confirm = forms.CharField(widget=forms.PasswordInput, label="Confirmar contraseña")
-    photo = forms.FileField(required=False, label="Foto de perfil")
-    banner = forms.FileField(
-        required=False,
-        label="Banner de perfil",
-        validators=[BannerAspectRatioValidator()],
-        help_text="La imagen debe tener una relación de aspecto 11:3 (ej: 1100x300 píxeles)"
-    )
-
-    class Meta:
-        model = ArtistProfile
-        fields = ['bio', 'photo', 'banner', 'password', 'password_confirm']
-        widgets = {
-            'bio': forms.Textarea(attrs={
-                'class': 'form-control',
-                'placeholder': 'Cuéntanos sobre ti...',
-                'rows': 4
-            }),
-            'photo': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
-            'banner': forms.FileInput(attrs={
-                'class': 'form-control',
-                'accept': 'image/*'
-            }),
-            'password': forms.PasswordInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Elige una contraseña segura'
-            }),
-            'password_confirm': forms.PasswordInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Confirma tu contraseña'
-            })
-        }
-        labels = {
-            'bio': 'Biografía',
-            'photo': 'Foto de perfil',
-            'banner': 'Banner de perfil',
-            'password': 'Contraseña',
-            'password_confirm': 'Confirmar contraseña'
-        }
-
-
 class ListenerProfileForm(forms.ModelForm):
     """Formulario para editar el perfil del oyente (avatar)"""
     class Meta:

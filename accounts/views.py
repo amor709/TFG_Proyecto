@@ -262,22 +262,6 @@ class ArtistRegisterView(CreateView):
         return HttpResponseRedirect(self.get_success_url())
 
 
-class RegisterView(CreateView):
-    form_class = ListenerRegistrationForm
-    template_name = 'accounts/register.html'
-    success_url = reverse_lazy('login')
-
-    def dispatch(self, request, *args, **kwargs):
-        if request.user.is_authenticated:
-            return redirect('home')
-        return super().dispatch(request, *args, **kwargs)
-
-    def form_valid(self, form):
-        self.object = form.save()
-        messages.success(self.request, "Cuenta creada correctamente. Inicia sesión para entrar.")
-        return HttpResponseRedirect(self.get_success_url())
-
-
 @require_http_methods(["GET", "POST"])
 def login_view(request):
     if request.user.is_authenticated:

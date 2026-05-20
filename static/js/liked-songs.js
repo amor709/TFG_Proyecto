@@ -38,7 +38,6 @@ class LikedSongsManager {
             this.likedSongs = new Set(data.songs.map(song => song.id));
             this.refreshAllButtons();
         } catch (error) {
-            console.error('Error al cargar estado de Mis joyas:', error);
             // Mantenemos el estado del SSR sembrado en init()
         }
     }
@@ -93,7 +92,6 @@ class LikedSongsManager {
                 this.applyState(songId, data.liked);
             }
         } catch (error) {
-            console.error('Error al togglear like:', error);
             // Revertir
             if (wasLiked) {
                 this.likedSongs.add(songId);

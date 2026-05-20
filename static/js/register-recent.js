@@ -6,7 +6,6 @@
 
 function registerRecentItem(contentType, objectId) {
     if (!contentType || !objectId) {
-        console.warn('❌ registerRecentItem: contentType o objectId faltante');
         return;
     }
     
@@ -21,16 +20,14 @@ function registerRecentItem(contentType, objectId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            console.log(`✅ Registrado en recientes: ${contentType} ${objectId}`);
             // Recargar sidebar si existe
             if (typeof sidebarManager !== 'undefined' && sidebarManager) {
                 sidebarManager.reloadCurrentSection();
             }
         } else {
-            console.error('❌ Error al registrar:', data.error);
         }
     })
-    .catch(error => console.error('Error en registerRecentItem:', error));
+    .catch(() => {});
 }
 
 function getCookie(name) {

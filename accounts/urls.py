@@ -20,8 +20,6 @@ urlpatterns = [
     # API endpoints para sincronización de reproducción
     path('api/playback/state/', api_views.save_playback_state, name='api_save_playback_state'),
     path('api/playback/get/', api_views.get_playback_state, name='api_get_playback_state'),
-    path('api/playback/check-concurrent/', api_views.check_concurrent_session, name='api_check_concurrent'),
-    path('api/playback/stop/', api_views.stop_playback_session, name='api_stop_playback_session'),
     path('api/add-to-history/', api_views.add_to_listening_history, name='api_add_to_history'),
 
     # API endpoints para seguimiento de artistas

@@ -104,57 +104,6 @@ def get_playback_state(request):
 
 
 @login_required
-@require_http_methods(["POST"])
-def check_concurrent_session(request):
-    """
-    Verificar si hay sesiones concurrentes activas
-    POST /api/playback/check-concurrent/
-    """
-    # Detección de reproducción concurrente DESACTIVADA a petición del usuario:
-    # un mismo usuario puede reproducir en varias pestañas/dispositivos sin bloqueo.
-    return JsonResponse({
-        'has_concurrent': False,
-        'other_session': None
-    })
-
-
-@login_required
-@require_http_methods(["POST"])
-def stop_playback_session(request):
-    """
-    Detener sesión de reproducción
-    POST /api/playback/stop/
-    """
-    try:
-        data = json.loads(request.body)
-        session_id = data.get('session_id')
-
-        session = PlaybackSession.objects.filter(
-            user=request.user,
-            session_id=session_id
-        ).first()
-
-        if session:
-            session.is_playing = False
-            session.save()
-            logger.info(f'Sesión de reproducción detenida para {request.user.username}: {session_id}')
-
-        return JsonResponse({
-            'status': 'success'
-        })
-
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'error': 'JSON inválido'
-        }, status=400)
-    except Exception as e:
-        logger.error(f'Error al detener sesión de reproducción: {str(e)}')
-        return JsonResponse({
-            'error': str(e)
-        }, status=500)
-
-
-@login_required
 @require_http_methods(["GET"])
 def get_player_info(request):
     """

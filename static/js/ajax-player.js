@@ -1,25 +1,20 @@
 async function playSongA(trackId) {
     try {
-        console.log('🎵 Intentando reproducir canción ID:', trackId);
         const url = `/music/api/track/${trackId}/`;
-        console.log('URL de fetch:', url);
 
         const response = await fetch(url);
-        console.log('ℹRespuesta status:', response.status);
 
         if (!response.ok) {
             throw new Error(`Error HTTP ${response.status}: No se pudo cargar la canción`);
         }
 
         const trackData = await response.json();
-        console.log(' Datos de la canción recibidos:', trackData);
 
         // Validar que los datos sean completos
         if (!trackData.audio_url) {
             throw new Error('La canción no tiene archivo de audio');
         }
 
-        console.log('🔊 URL del audio:', trackData.audio_url);
 
         // Actualizar interfaz del reproductor y panel derecho
         updatePlayer(trackData);
@@ -36,7 +31,6 @@ async function playSongA(trackId) {
         // Esperar a que el audio esté listo antes de reproducir
         audio.oncanplay = function() {
             audio.play().catch(err => {
-                console.error(' Error al reproducir audio:', err);
                 alert('No se pudo reproducir el audio. Intenta de nuevo.');
             });
         };
@@ -78,10 +72,9 @@ async function playSongA(trackId) {
              });
          }
 
-         // ⭐ Agregar a historial del sistema de cola (para autoplay)
+         // Agregar a historial del sistema de cola (para autoplay)
          if (typeof queueSystem !== 'undefined' && queueSystem) {
              queueSystem.addToHistory(trackId);
-             console.log('📝 Canción agregada al historial del queue system:', trackId);
          }
 
          // (Ya no guardamos la canción en localStorage('currentTrack'): era por navegador
@@ -125,7 +118,6 @@ async function playSongA(trackId) {
          }, 50);
 
     } catch (error) {
-        console.error('❌ Error en playSongA:', error.message);
         alert('Error: ' + error.message);
     }
 }
@@ -137,48 +129,36 @@ async function playSongA(trackId) {
  */
 async function loadSuggestedTracksToQueue(trackId, isManualPlay = true) {
     try {
-        console.log('🔍 Buscando canciones sugeridas para:', trackId);
         const response = await fetch(`/music/api/suggested-tracks/${trackId}/`);
         
-        console.log('📡 Respuesta del endpoint suggested-tracks:', response.status, response.statusText);
 
         if (!response.ok) {
-            console.warn(`Error en endpoint: HTTP ${response.status}`);
             return;
         }
 
         const data = await response.json();
-        console.log('Respuesta JSON:', data);
         
         const suggestedIds = data.suggested_ids || [];
 
         if (suggestedIds.length > 0) {
-            console.log('Canciones sugeridas cargadas:', suggestedIds);
             // Agregar las sugerencias a la cola
             if (typeof queueSystem !== 'undefined' && queueSystem) {
-                console.log('➕ Agregando', suggestedIds.length, 'canciones a la cola');
                 queueSystem.addMultipleToQueue(suggestedIds);
-                console.log('✅ Canciones agregadas. Cola actual:', queueSystem.queue);
                 
                 // Forzar actualización inmediata de la cola en el DOM
-                console.log('🎨 Forzando renderizado de la cola...');
                 // Pequeño delay para asegurar que addMultipleToQueue completó
                 await new Promise(resolve => setTimeout(resolve, 50));
                 if (typeof queueSystem !== 'undefined' && queueSystem.loadQueueHTML) {
                     await queueSystem.loadQueueHTML();
-                    console.log('✅ Cola renderizada en el DOM');
                 }
             } else {
-                console.warn('⚠️ queueSystem no disponible para agregar sugerencias');
             }
         } else {
-            console.log(' No hay canciones sugeridas disponibles');
             // Si no hay sugerencias Y es reproducción manual, mostrar "vacía"
             if (isManualPlay) {
                 const queueList = document.getElementById('queue-list');
                 if (queueList) {
                     queueList.innerHTML = '<li class="queue-empty">La cola está vacía.</li>';
-                    console.log('Cola vacía: sin sugerencias disponibles');
                 }
             }
         }
@@ -188,7 +168,6 @@ async function loadSuggestedTracksToQueue(trackId, isManualPlay = true) {
             await queueSystem.ensureQueueMinimum(trackId);
         }
     } catch (error) {
-        console.error('❌ Error al cargar canciones sugeridas:', error);
         // Si hay error, continuaré sin sugerencias (no es crítico)
     }
 }
@@ -197,7 +176,6 @@ async function loadSuggestedTracksToQueue(trackId, isManualPlay = true) {
 function updatePlayer(trackData) {
     // Validar que trackData exista y tenga las propiedades necesarias
     if (!trackData || !trackData.title || !trackData.artist) {
-        console.warn('trackData incompleto para actualizar player');
         return;
     }
 
@@ -222,7 +200,6 @@ function updatePlayer(trackData) {
     // Álbum actual (para que la carátula/título del footer lleven a su álbum; null si es single)
     window.currentTrackAlbumId = trackData.album_id || null;
 
-    console.log(`Player actualizado: ${trackData.title} - ${trackData.artist}`);
 }
 
 // Aqui se cambia el panel derecho (SOLO la sección superior)
@@ -233,13 +210,11 @@ function updateRightPanel(trackData) {
     const topPanel = document.querySelector('.right-panel__top');
 
     if (!topPanel) {
-        console.warn('❌ .right-panel__top no encontrado en el DOM');
         return;
     }
 
     // Validar que trackData y sus propiedades principales existan
     if (!trackData || !trackData.title || !trackData.artist) {
-        console.warn('⚠️ trackData incompleto para actualizar panel derecho', trackData);
         return;
     }
 
@@ -289,11 +264,6 @@ function updateRightPanel(trackData) {
 
     // Actualizar SOLO el contenido de .right-panel__top (NO afecta .right-panel__bottom que contiene la cola)
     topPanel.innerHTML = html;
-    console.log('✅ Sección superior del panel derecho actualizada:', {
-        title: trackData.title,
-        artist: trackData.artist,
-        hasRelatedArtist: !!trackData.related_artist
-    });
 }
 
 // Función auxiliar para escapar HTML y prevenir inyecciones
@@ -323,54 +293,4 @@ function getCsrfToken() {
         }
     }
     return cookieValue;
-}
-
-// Función para guardar la información de la canción actual en localStorage
-function saveCurrentTrackToStorage(trackData) {
-    if (!trackData) return;
-
-    const trackInfo = {
-        id: trackData.id,
-        title: trackData.title,
-        artist: trackData.artist,
-        cover: trackData.cover,
-        related_artist: trackData.related_artist,
-        timestamp: Date.now()
-    };
-
-    localStorage.setItem('currentTrack', JSON.stringify(trackInfo));
-    console.log('Información de canción guardada en localStorage:', trackInfo);
-}
-
-// Función para recuperar la información de la canción actual del localStorage
-function getCurrentTrackFromStorage() {
-    try {
-        const stored = localStorage.getItem('currentTrack');
-        if (!stored) return null;
-
-        const trackInfo = JSON.parse(stored);
-
-        // Verificar que no sea demasiado antigua (más de 24 horas)
-        const age = Date.now() - trackInfo.timestamp;
-        if (age > 24 * 60 * 60 * 1000) { // 24 horas en milisegundos
-            localStorage.removeItem('currentTrack');
-            return null;
-        }
-
-        return trackInfo;
-    } catch (error) {
-        console.error('Error al recuperar canción del localStorage:', error);
-        return null;
-    }
-}
-
-// Función para restaurar el panel derecho con la información guardada
-function restoreRightPanelFromStorage() {
-    const trackData = getCurrentTrackFromStorage();
-    if (trackData) {
-
-        updateRightPanel(trackData);
-    } else {
-        console.log(' No hay canción guardada para restaurar');
-    }
 }

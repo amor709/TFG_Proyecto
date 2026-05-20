@@ -54,10 +54,8 @@ class SidebarManager {
       * Actualizar UI de los chips de filtro
       */
      updateFilterChipUI(section) {
-         console.log('🎨 Actualizando UI de chips para sección:', section);
          this.filterChips.forEach(chip => {
              const chipSection = chip.dataset.section;
-             console.log('Evaluando chip con data-section:', chipSection, '| Match:', chipSection === section);
 
              if (chipSection === section) {
                  chip.classList.add('filter-chip--active');
@@ -124,13 +122,11 @@ class SidebarManager {
      */
     loadSidebarSection(section) {
         this.setLoading(true);
-        console.log('📥 Cargando sección:', section);
 
         const url = section === 'recent'
             ? '/accounts/sidebar/recent/'
             : '/accounts/sidebar/saved/';
 
-        console.log('URL:', url);
 
         fetch(url)
             .then(response => {
@@ -138,12 +134,10 @@ class SidebarManager {
                 return response.json();
             })
             .then(data => {
-                console.log('Items recibidos:', data.items?.length || 0);
                 this.renderSidebarItems(data.items);
                 this.setLoading(false);
             })
             .catch(error => {
-                console.error('Error al cargar sidebar:', error);
                 this.setLoading(false);
                 this.showError('Error al cargar items');
             });
@@ -169,7 +163,6 @@ class SidebarManager {
                  }
              })
              .catch(error => {
-                 console.error('❌ Error en búsqueda:', error);
                  this.setLoading(false);
                  this.showError('Error en la búsqueda');
              });
@@ -261,12 +254,10 @@ class SidebarManager {
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    console.log(`✅ Añadido a recientes: ${contentType} ${objectId}`);
                 } else {
-                    console.error('❌ Error al añadir a recientes:', data.error);
                 }
             })
-            .catch(error => console.error('Error:', error));
+            .catch(() => {});
     }
 
     /**

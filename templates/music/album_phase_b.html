@@ -160,7 +160,7 @@
                 <div class="track-actions">
                     <form method="post" action="#" style="display:inline;">
                         {% csrf_token %}
-                        <button type="button" class="btn-small btn-delete" onclick="deleteSong({{ song.id }})">🗑️ Eliminar</button>
+                        <button type="button" class="btn-small btn-delete" onclick="deleteSong({{ song.id }})">Eliminar</button>
                     </form>
                 </div>
             </li>
@@ -181,7 +181,7 @@
 
         {% else %}
         <div class="empty-state">
-            <div class="empty-state-icon">🎵</div>
+            <div class="empty-state-icon"></div>
             <p>Aún no hay canciones. Agrega tu primera canción para comenzar.</p>
         </div>
         {% endif %}
@@ -256,7 +256,6 @@
             }
         })
         .catch(error => {
-            console.error('Error:', error);
             alert('Error al eliminar la canción');
         });
     }
