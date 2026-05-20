@@ -32,6 +32,62 @@
 </section><!-- /hero -->
 {% endif %}
 
+<!-- ── SECCIÓN: Últimos lanzamientos (de artistas que sigues) ── -->
+{% if latest_releases %}
+<section class="content-section" aria-labelledby="latest-releases-heading">
+    <h2 class="section-title" id="latest-releases-heading">Últimos lanzamientos</h2>
+    <div class="carousel" id="carousel-latest-releases">
+        <div class="carousel__track">
+            {% for item in latest_releases %}
+            <article class="track-card carousel__item">
+                {% if item.is_single %}
+                <div class="track-card__link" onclick="playStandalone({{ item.pk }}); return false;" style="cursor: pointer;">
+                    <div class="track-card__cover-wrap">
+                        <img src="{% if item.cover %}{{ item.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
+                             alt="{{ item.title }}"
+                             class="track-card__cover"
+                             loading="lazy">
+                        <div class="track-card__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                        </div>
+                    </div>
+                    <h3 class="track-card__title">{{ item.title }}</h3>
+                    <p class="track-card__sub">Single · {{ item.release_date|date:"Y" }}</p>
+                </div>
+                {% else %}
+                <a href="{% url 'music:album_detail' item.pk %}" class="track-card__link">
+                    <div class="track-card__cover-wrap">
+                        <img src="{% if item.cover %}{{ item.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
+                             alt="{{ item.title }}"
+                             class="track-card__cover"
+                             loading="lazy">
+                        <div class="track-card__play-overlay" aria-hidden="true">
+                            <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                        </div>
+                    </div>
+                    <h3 class="track-card__title">{{ item.title }}</h3>
+                    <p class="track-card__sub">{{ item.get_type_display }} · {{ item.release_date|date:"Y" }}</p>
+                </a>
+                {% endif %}
+            </article>
+            {% endfor %}
+        </div>
+    </div>
+    {% if latest_releases|length > 5 %}
+    <div class="section-header__nav">
+        <button class="carousel-nav-btn" data-target="carousel-latest-releases" data-dir="-1"
+                aria-label="Anterior">
+            <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
+        </button>
+        <button class="carousel-nav-btn" data-target="carousel-latest-releases" data-dir="1"
+                aria-label="Siguiente">
+            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
+        </button>
+    </div>
+    {% endif %}
+</section><!-- /latest releases -->
+{% endif %}
+
 <!-- ── SECCIÓN: Escuchadas recientemente ── -->
 <section class="content-section" aria-labelledby="recent-heading">
     <h2 class="section-title" id="recent-heading">Escuchadas recientemente</h2>

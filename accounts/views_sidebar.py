@@ -109,10 +109,16 @@ def get_recent_items(request):
 @login_required
 def get_saved_items(request):
     """Obtiene los elementos guardados del usuario (álbumes, playlists y artistas seguidos) en orden alfabético."""
-    # Obtener elementos guardados ordenados alfabéticamente por título
-    saved_albums = request.user.listener_profile.saved_albums.all().order_by('title')
+    # Obtener elementos guardados ordenados alfabéticamente por título.
+    # Los artistas no tienen listener_profile: álbumes/seguidos quedan vacíos.
+    if hasattr(request.user, 'listener_profile'):
+        listener = request.user.listener_profile
+        saved_albums = listener.saved_albums.all().order_by('title')
+        following_artists = listener.following.all().order_by('user__username')
+    else:
+        saved_albums = []
+        following_artists = []
     saved_playlists = request.user.saved_playlists.all().order_by('name')
-    following_artists = request.user.listener_profile.following.all().order_by('user__username')
 
     items = []
 
@@ -205,9 +211,14 @@ def sidebar_search(request):
                 continue
 
     elif section == 'saved':
-        # Búsqueda solo dentro de "Guardados"
-        saved_albums = request.user.listener_profile.saved_albums.all()
-        following_artists = request.user.listener_profile.following.all()
+        # Búsqueda solo dentro de "Guardados".
+        # Los artistas no tienen listener_profile: álbumes/seguidos quedan vacíos.
+        if hasattr(request.user, 'listener_profile'):
+            saved_albums = request.user.listener_profile.saved_albums.all()
+            following_artists = request.user.listener_profile.following.all()
+        else:
+            saved_albums = []
+            following_artists = []
 
         # Buscar en artistas seguidos
         for artist in following_artists:

@@ -79,6 +79,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'accounts.context_processors.player_context',
+                'accounts.context_processors.liked_songs_context',
             ],
         },
     },

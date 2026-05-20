@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %} – {{ artist.name }} · Singles{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/user_profile.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <!-- ── FONDO DIFUMINADO ── -->
+    <div class="profile-page__backdrop"
+         style="background-image: url('{{ artist.photo_url }}');"
+         aria-hidden="true"></div>
+    <div class="profile-page__overlay" aria-hidden="true"></div>
+
+    <div class="profile-page__inner">
+        <a href="{% url 'music:artist_detail_public' artist.pk %}" class="back-link">
+            ← Volver a {{ artist.name }}
+        </a>
+
+        <section class="profile-section" aria-labelledby="all-singles-heading">
+            <h2 class="profile-section__title" id="all-singles-heading">
+                Singles de {{ artist.name }}
+            </h2>
+
+            <div class="profile-cards-grid profile-cards-grid--songs">
+                {% for single in singles %}
+                <article class="track-card" data-track-id="{{ single.pk }}">
+                    <div class="track-card__link" onclick="playStandalone({{ single.pk }}); return false;" style="cursor: pointer;">
+                        <div class="track-card__cover-wrap">
+                            <img src="{% if single.cover %}{{ single.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}"
+                                 alt="{{ single.title }}"
+                                 class="track-card__cover"
+                                 loading="lazy">
+                        </div>
+                        <h3 class="track-card__title">{{ single.title }}</h3>
+                        <p class="track-card__sub">Single · {{ single.release_date|date:"Y" }}</p>
+                    </div>
+                </article>
+                {% empty %}
+                <p class="profile-empty">Este artista no tiene singles.</p>
+                {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>
+
+<style>
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        color: var(--color-text-secondary);
+        text-decoration: none;
+        font-weight: 500;
+        transition: color var(--duration-fast);
+    }
+    .back-link:hover { color: var(--color-text-primary); }
+</style>
+{% endblock %}

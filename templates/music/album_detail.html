@@ -63,6 +63,13 @@
                     <span class="album-header__dot">•</span>
                     <span>{{ album.release_date|date:"j F Y" }}</span>
                 </p>
+
+                {% if is_owner %}
+                <!-- Acciones del dueño -->
+                <div class="album-header__actions">
+                    <a href="{% url 'music:edit_album' album.pk %}" class="album-edit-btn">Editar álbum</a>
+                </div>
+                {% endif %}
             </div>
         </header><!-- /album-header -->
 
@@ -86,7 +93,7 @@
             <!-- Filas de canciones -->
             <ol class="tracklist__list">
                 {% for song in songs %}
-                <li class="tracklist__row {% if song.is_liked %}tracklist__row--liked{% endif %}"
+                <li class="tracklist__row {% if song.pk in liked_song_ids %}tracklist__row--liked{% endif %}"
                     data-track-id="{{ song.pk }}"
                     role="row">
 
@@ -110,15 +117,11 @@
                         </button>
                     </span>
 
-                    <!-- Artistas colaboradores -->
+                    <!-- Artistas (principal + colaboradores) -->
                     <span class="tracklist__col tracklist__col--artists">
-                        {% for artist in song.featured_artists.all %}
-                            <a href="{% url 'music:artist_detail_public' artist.pk %}"
-                               class="track-artist-link">{{ artist.user.username }}</a>{% if not forloop.last %}, {% endif %}
-                        {% empty %}
-                            <a href="{% url 'music:artist_detail_public' album.artist.pk %}"
-                               class="track-artist-link">{{ album.artist.user.username }}</a>
-                        {% endfor %}
+                        <a href="{% url 'music:artist_detail_public' song.artist.pk %}"
+                           class="track-artist-link">{{ song.artist.user.username }}</a>{% for collab in song.collaborators.all %},&nbsp;<a href="{% url 'music:artist_detail_public' collab.pk %}"
+                           class="track-artist-link">{{ collab.user.username }}</a>{% endfor %}
                     </span>
 
                     <!-- Duración -->
@@ -130,13 +133,13 @@
                     <span class="tracklist__col tracklist__col--actions">
                         {% if not request.user.is_artist %}
                         <!-- Botón "Me gusta" -->
-                        <button class="track-action-btn track-like-btn"
-                                data-track-id="{{ song.pk }}"
-                                aria-label="{% if song.is_liked %}Quitar de Me gusta{% else %}Añadir a Me gusta{% endif %}">
-                            {% if song.is_liked %}
-                                <img src="{% static 'img/diamond-red.png' %}" alt="Me gusta" class="icon--sm icon--liked">
+                        <button class="track-action-btn like-btn {% if song.pk in liked_song_ids %}liked{% else %}not-liked{% endif %}"
+                                data-song-id="{{ song.pk }}"
+                                aria-label="{% if song.pk in liked_song_ids %}Quitar de Mis joyas{% else %}Añadir a Mis joyas{% endif %}">
+                            {% if song.pk in liked_song_ids %}
+                                <img src="{% static 'img/diamond-red.png' %}" alt="Quitar de Mis joyas" class="icon--sm">
                             {% else %}
-                                <img src="{% static 'img/diamond-white.png' %}" alt="Me gusta" class="icon--sm">
+                                <img src="{% static 'img/diamond-white.png' %}" alt="Añadir a Mis joyas" class="icon--sm">
                             {% endif %}
                         </button>
                         {% endif %}
@@ -207,24 +210,13 @@ document.addEventListener('DOMContentLoaded', function() {
     // REPRODUCCIÓN DE CANCIONES
     // ────────────────────────────────────────────────────────
 
-    // Manejar clics en el botón de play (número de pista)
-    document.querySelectorAll('.track-play-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const trackId = this.dataset.trackId;
-            const albumId = {{ album.pk }};
-            if (trackId && typeof playFromAlbum === 'function') {
-                playFromAlbum(trackId, albumId);
+    // Reproducir al pulsar en cualquier parte de la fila (toda la info de la
+    // canción), excepto en los botones de acción o los enlaces de artista.
+    document.querySelectorAll('.tracklist__row').forEach(row => {
+        row.addEventListener('click', function(e) {
+            if (e.target.closest('.track-action-btn, .track-artist-link, .song-options-menu-floating')) {
+                return;
             }
-        });
-    });
-
-    // Manejar clics en el título de la canción
-    document.querySelectorAll('.track-title-btn').forEach(btn => {
-        btn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
             const trackId = this.dataset.trackId;
             const albumId = {{ album.pk }};
             if (trackId && typeof playFromAlbum === 'function') {

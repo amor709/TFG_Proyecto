@@ -2,6 +2,7 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
 from .models import Playlist, PlaylistSong
 from .forms import PlaylistForm
 from music.models import Song
@@ -67,6 +68,19 @@ def edit_playlist(request, pk):
     else:
         form = PlaylistForm(instance=playlist)
     return render(request, 'playlists/edit_playlist.html', {'form': form, 'playlist': playlist})
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_playlist(request, pk):
+    """Borra una playlist propia (no se permite borrar 'Mis joyas')."""
+    playlist = get_object_or_404(Playlist, pk=pk, user=request.user)
+    if playlist.is_liked_playlist:
+        return redirect('playlists:detail', pk=playlist.pk)
+
+    playlist.delete()
+    messages.success(request, "Playlist eliminada correctamente.")
+    return redirect('home')
 
 
 @login_required

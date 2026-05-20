@@ -30,18 +30,6 @@
         <div class="sr-section__header">
             <h2 class="sr-section__title" id="sr-artists-heading">Artistas</h2>
             <div class="sr-section__controls">
-                <div class="sr-nav">
-                    <button class="carousel-nav-btn"
-                            data-target="carousel-artists" data-dir="-1"
-                            aria-label="Anterior artistas">
-                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
-                    </button>
-                    <button class="carousel-nav-btn"
-                            data-target="carousel-artists" data-dir="1"
-                            aria-label="Siguiente artistas">
-                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
-                    </button>
-                </div>
                 <a href="{% url 'search:all' %}?q={{ query }}&type=artists"
                    class="btn-see-all">Ver todo</a>
             </div>
@@ -142,18 +130,6 @@
         <div class="sr-section__header">
             <h2 class="sr-section__title" id="sr-albums-heading">Álbumes</h2>
             <div class="sr-section__controls">
-                <div class="sr-nav">
-                    <button class="carousel-nav-btn"
-                            data-target="carousel-albums" data-dir="-1"
-                            aria-label="Anterior álbumes">
-                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
-                    </button>
-                    <button class="carousel-nav-btn"
-                            data-target="carousel-albums" data-dir="1"
-                            aria-label="Siguiente álbumes">
-                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
-                    </button>
-                </div>
                 <a href="{% url 'search:all' %}?q={{ query }}&type=albums"
                    class="btn-see-all">Ver todo</a>
             </div>
@@ -198,18 +174,6 @@
         <div class="sr-section__header">
             <h2 class="sr-section__title" id="sr-playlists-heading">Playlists</h2>
             <div class="sr-section__controls">
-                <div class="sr-nav">
-                    <button class="carousel-nav-btn"
-                            data-target="carousel-playlists" data-dir="-1"
-                            aria-label="Anterior playlists">
-                        <img src="{% static 'img/icon-chevron-left.png' %}" alt="" class="icon--xs">
-                    </button>
-                    <button class="carousel-nav-btn"
-                            data-target="carousel-playlists" data-dir="1"
-                            aria-label="Siguiente playlists">
-                        <img src="{% static 'img/icon-chevron-right.png' %}" alt="" class="icon--xs">
-                    </button>
-                </div>
                 <a href="{% url 'search:all' %}?q={{ query }}&type=playlists"
                    class="btn-see-all">Ver todo</a>
             </div>

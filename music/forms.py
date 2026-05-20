@@ -136,6 +136,41 @@ class AlbumPhaseAForm(forms.ModelForm):
         }
 
 
+class AlbumEditForm(forms.ModelForm):
+    """Formulario para editar un Álbum ya creado (portada opcional)."""
+
+    cover = forms.FileField(
+        validators=[ImageAspectRatioValidator()],
+        required=False,
+        label="Portada del Álbum (Imagen cuadrada 1:1)",
+        help_text="Sube una imagen cuadrada para cambiarla (opcional)."
+    )
+
+    class Meta:
+        model = Album
+        fields = ['title', 'description', 'release_date', 'cover']
+        widgets = {
+            'title': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Título del Álbum',
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Descripción o Bio del Álbum',
+                'rows': 5
+            }),
+            'release_date': forms.DateInput(
+                attrs={'class': 'form-control', 'type': 'date'},
+                format='%Y-%m-%d'
+            ),
+        }
+        labels = {
+            'title': 'Título del Álbum',
+            'description': 'Descripción/Bio',
+            'release_date': 'Fecha de Lanzamiento'
+        }
+
+
 class AlbumPhaseBForm(forms.ModelForm):
     """Formulario para la Fase B de creación de Álbum (Gestión de Tracks)."""
 

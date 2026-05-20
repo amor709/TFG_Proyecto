@@ -28,34 +28,25 @@ def save_playback_state(request):
                 'error': 'session_id requerido'
             }, status=400)
 
-        # Obtener o crear sesión de reproducción
-        session, created = PlaybackSession.objects.get_or_create(
-            user=request.user,
-            session_id=session_id,
-            defaults={
-                'track_id': data.get('track_id'),
-                'track_title': data.get('track_title', ''),
-                'track_artist': data.get('track_artist', ''),
-                'cover_url': data.get('cover_url', ''),
-                'current_time': data.get('current_time', 0),
-                'is_playing': data.get('is_playing', False),
-                'device_info': data.get('device_info', ''),
-                'user_agent': request.META.get('HTTP_USER_AGENT', '')
-            }
-        )
+        # Una única sesión de reproducción por usuario: reutilizar la existente.
+        session = PlaybackSession.objects.filter(user=request.user).first()
+        if session is None:
+            session = PlaybackSession(user=request.user)
 
-        # Actualizar estado
-        if not created:
-            session.track_id = data.get('track_id', session.track_id)
-            session.track_title = data.get('track_title', session.track_title)
-            session.track_artist = data.get('track_artist', session.track_artist)
-            session.cover_url = data.get('cover_url', session.cover_url)
-            session.current_time = data.get('current_time', session.current_time)
-            session.is_playing = data.get('is_playing', session.is_playing)
-            session.device_info = data.get('device_info', session.device_info)
-            session.user_agent = request.META.get('HTTP_USER_AGENT', '')
-            session.last_activity = timezone.now()
-            session.save()
+        session.session_id = session_id
+        session.track_id = data.get('track_id', session.track_id)
+        session.track_title = data.get('track_title', session.track_title or '')
+        session.track_artist = data.get('track_artist', session.track_artist or '')
+        session.cover_url = data.get('cover_url', session.cover_url or '')
+        session.current_time = data.get('current_time', session.current_time)
+        session.is_playing = data.get('is_playing', session.is_playing)
+        session.device_info = data.get('device_info', session.device_info or '')
+        session.user_agent = request.META.get('HTTP_USER_AGENT', '')
+        session.last_activity = timezone.now()
+        session.save()
+
+        # Eliminar sesiones duplicadas/zombis del mismo usuario (deja solo esta).
+        PlaybackSession.objects.filter(user=request.user).exclude(pk=session.pk).delete()
 
         logger.info(f'Estado de reproducción guardado para {request.user.username}: {session_id}')
 
@@ -119,54 +110,12 @@ def check_concurrent_session(request):
     Verificar si hay sesiones concurrentes activas
     POST /api/playback/check-concurrent/
     """
-    try:
-        data = json.loads(request.body)
-        session_id = data.get('session_id')
-
-        # Obtener todas las sesiones activas para el usuario
-        active_sessions = PlaybackSession.objects.filter(
-            user=request.user,
-            is_playing=True
-        )
-
-        # Filtrar las que están realmente activas
-        active_sessions = [s for s in active_sessions if s.is_active]
-
-        # Buscar si hay otra sesión diferente reproduciéndose
-        other_sessions = [
-            s for s in active_sessions
-            if s.session_id != session_id
-        ]
-
-        if other_sessions:
-            # Hay reproducción concurrente
-            logger.warning(
-                f'Reproducción concurrente detectada para {request.user.username}: '
-                f'{session_id} y {other_sessions[0].session_id}'
-            )
-            return JsonResponse({
-                'has_concurrent': True,
-                'other_session': {
-                    'session_id': other_sessions[0].session_id,
-                    'track_title': other_sessions[0].track_title,
-                    'device_info': other_sessions[0].device_info
-                }
-            })
-        else:
-            return JsonResponse({
-                'has_concurrent': False,
-                'other_session': None
-            })
-
-    except json.JSONDecodeError:
-        return JsonResponse({
-            'error': 'JSON inválido'
-        }, status=400)
-    except Exception as e:
-        logger.error(f'Error al verificar sesiones concurrentes: {str(e)}')
-        return JsonResponse({
-            'error': str(e)
-        }, status=500)
+    # Detección de reproducción concurrente DESACTIVADA a petición del usuario:
+    # un mismo usuario puede reproducir en varias pestañas/dispositivos sin bloqueo.
+    return JsonResponse({
+        'has_concurrent': False,
+        'other_session': None
+    })
 
 
 @login_required

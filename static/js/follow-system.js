@@ -26,6 +26,14 @@ class FollowSystem {
             }
             setTimeout(() => this.refreshFromDom(), 50);
         });
+
+        // Sincronizar con el diamante del perfil de artista (y cualquier otro botón de seguir)
+        document.addEventListener('followingChanged', (e) => {
+            if (e.detail && this.currentArtistId &&
+                String(e.detail.artist_id) === String(this.currentArtistId)) {
+                this.setFollowButtonState(e.detail.is_following);
+            }
+        });
     }
 
     /** Toma el artist-id del botón actual, engancha listener y consulta estado. */

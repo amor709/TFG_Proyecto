@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %} – Editar playlist{% endblock %}
+{% block title %} – Editar álbum{% endblock %}
 
 {% block extra_head %}
 <link rel="stylesheet" href="{% static 'css/auth.css' %}">
@@ -12,6 +12,7 @@
         padding: 2rem 0;
         min-height: auto;
     }
+    .auth-card { max-width: 560px; }
 </style>
 {% endblock %}
 
@@ -20,8 +21,8 @@
     <div class="auth-card">
         <div class="auth-card__header">
             <img src="{% static 'img/logo.png' %}" alt="SoundMusik" class="auth-logo">
-            <h1 class="auth-title">Editar playlist</h1>
-            <p class="auth-subtitle">Actualiza los detalles de tu playlist</p>
+            <h1 class="auth-title">Editar álbum</h1>
+            <p class="auth-subtitle">Actualiza los detalles de «{{ album.title }}»</p>
         </div>
 
         {% if messages %}
@@ -30,13 +31,13 @@
             {% endfor %}
         {% endif %}
 
-        <form method="post" enctype="multipart/form-data" class="auth-form" id="playlist-form" novalidate>
+        <form method="post" enctype="multipart/form-data" class="auth-form" id="album-edit-form" novalidate>
             {% csrf_token %}
 
             <div class="form-group">
-                <label for="id_name" class="form-label">{{ form.name.label }}</label>
-                {% if form.name.errors %}<span class="form-error">{{ form.name.errors.0 }}</span>{% endif %}
-                {{ form.name }}
+                <label for="id_title" class="form-label">{{ form.title.label }}</label>
+                {% if form.title.errors %}<span class="form-error">{{ form.title.errors.0 }}</span>{% endif %}
+                {{ form.title }}
             </div>
 
             <div class="form-group">
@@ -46,17 +47,23 @@
             </div>
 
             <div class="form-group">
+                <label for="id_release_date" class="form-label">{{ form.release_date.label }}</label>
+                {% if form.release_date.errors %}<span class="form-error">{{ form.release_date.errors.0 }}</span>{% endif %}
+                {{ form.release_date }}
+            </div>
+
+            <div class="form-group">
                 <label class="form-label">Portada</label>
-                <p class="help-text">Sube una imagen cuadrada (opcional).</p>
+                <p class="help-text">Sube una imagen cuadrada (1:1) para cambiarla (opcional).</p>
                 {% if form.cover.errors %}<span class="form-error">{{ form.cover.errors.0 }}</span>{% endif %}
                 <div class="file-input-wrapper">
                     <input type="file" name="cover" id="id_cover" accept="image/*" class="file-input">
-                    <label for="id_cover" class="file-input-label {% if playlist.cover %}file-input-label--has-image{% endif %}" id="cover-label">
-                        {% if playlist.cover %}
-                            <img src="{{ playlist.cover.url }}" alt="Portada actual" class="file-input__preview file-input__preview--square">
+                    <label for="id_cover" class="file-input-label {% if album.cover %}file-input-label--has-image{% endif %}" id="cover-label">
+                        {% if album.cover %}
+                            <img src="{{ album.cover.url }}" alt="Portada actual" class="file-input__preview file-input__preview--square">
                         {% else %}
                             <img src="{% static 'img/cover-button.png' %}" alt="" class="icon--md">
-                            <span>Selecciona la portada</span>
+                            <span>Selecciona la portada (1:1)</span>
                         {% endif %}
                     </label>
                 </div>
@@ -71,14 +78,6 @@
                 </div>
             </div>
 
-            <div class="form-group">
-                <div class="form-check">
-                    {{ form.is_public }}
-                    <label for="id_is_public" class="form-check-label">{{ form.is_public.label }}</label>
-                </div>
-                {% if form.is_public.errors %}<span class="form-error">{{ form.is_public.errors.0 }}</span>{% endif %}
-            </div>
-
             {% if form.non_field_errors %}
                 <div class="form-errors">
                     {% for error in form.non_field_errors %}<p class="form-error">{{ error }}</p>{% endfor %}
@@ -86,24 +85,28 @@
             {% endif %}
 
             <div class="btn-group">
-                <a href="{% url 'playlists:detail' playlist.pk %}" class="btn-secondary" style="text-align:center; text-decoration:none; line-height:1.6;">Cancelar</a>
+                <a href="{% url 'music:album_detail' album.pk %}" class="btn-secondary" style="text-align:center; text-decoration:none; line-height:1.6;">Cancelar</a>
                 <button type="submit" class="btn-submit">Guardar cambios</button>
             </div>
         </form>
 
-        <!-- Zona de peligro: borrar playlist -->
+        <div class="auth-footer">
+            <p><a href="{% url 'music:album_phase_b' album.pk %}" class="auth-link">🎵 Gestionar canciones del álbum</a></p>
+        </div>
+
+        <!-- Zona de peligro: borrar álbum -->
         <div class="danger-zone">
             <h2 class="danger-zone__title">Zona de peligro</h2>
-            <p class="danger-zone__text">Borrar la playlist es permanente y no se puede deshacer.</p>
-            <form method="post" action="{% url 'playlists:delete' playlist.pk %}"
-                  onsubmit="return confirm('¿Seguro que quieres borrar «{{ playlist.name|escapejs }}»? Esta acción no se puede deshacer.');">
+            <p class="danger-zone__text">Borrar el álbum eliminará también todas sus canciones de la base de datos. Esta acción no se puede deshacer.</p>
+            <form method="post" action="{% url 'music:delete_album' album.pk %}"
+                  onsubmit="return confirm('¿Seguro que quieres borrar «{{ album.title|escapejs }}» y todas sus canciones? Esta acción no se puede deshacer.');">
                 {% csrf_token %}
-                <button type="submit" class="btn-danger">Borrar playlist</button>
+                <button type="submit" class="btn-danger">Borrar álbum</button>
             </form>
         </div>
 
         <div class="auth-footer">
-            <p><a href="{% url 'playlists:detail' playlist.pk %}" class="auth-link">← Volver a la playlist</a></p>
+            <p><a href="{% url 'music:album_detail' album.pk %}" class="auth-link">← Volver al álbum</a></p>
         </div>
     </div>
 </div>
@@ -150,8 +153,8 @@
 
         confirmBtn.addEventListener('click', function() {
             if (!cropper) return;
-            cropper.getCroppedCanvas({ width: 600, height: 600 }).toBlob(function(blob) {
-                const file = new File([blob], 'playlist_cover.jpg', { type: 'image/jpeg' });
+            cropper.getCroppedCanvas({ width: 800, height: 800 }).toBlob(function(blob) {
+                const file = new File([blob], 'album_cover.jpg', { type: 'image/jpeg' });
                 const dt = new DataTransfer();
                 dt.items.add(file);
                 fileInput.files = dt.files;

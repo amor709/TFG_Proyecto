@@ -38,7 +38,9 @@
         <!-- Barra de búsqueda global -->
         <div class="header__search">
             <div class="search-bar">
-                <img src="{% static 'img/home-icon.png' %}" alt="Inicio" class="search-bar__home-icon icon--md">
+                <a href="{% url 'home' %}" class="search-bar__home-link" aria-label="Ir al inicio">
+                    <img src="{% static 'img/home-icon.png' %}" alt="Inicio" class="search-bar__home-icon icon--md">
+                </a>
                 <input
                     type="text"
                     class="search-bar__input"
@@ -195,9 +197,9 @@
                     <h3 class="track-info__title">{{ current_track.title }}</h3>
                     <div class="track-info__meta">
                         {% if not request.user.is_artist %}
-                        <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--xs artist-badge" id="artist-badge-info">
+                        <img src="{% if current_track.pk in liked_song_ids %}{% static 'img/diamond-red.png' %}{% else %}{% static 'img/diamond-white.png' %}{% endif %}" alt="" class="icon--xs artist-badge" id="artist-badge-info">
                         {% endif %}
-                        <span class="track-info__artist">{{ current_track.artist.user.username }}</span>
+                        <span class="track-info__artist">{{ current_track.authors_display }}</span>
                     </div>
                 </div>
 
@@ -206,9 +208,11 @@
                 <div class="right-panel__related">
                     <h4 class="related__heading">Cancioncita de…</h4>
                     <div class="related__artist-card">
-                        <img src="{{ related_artist.photo_url }}"
-                             alt="{{ related_artist.user.username }}"
-                             class="related__artist-photo">
+                        <a href="{% url 'music:artist_detail_public' related_artist.pk %}" class="related__artist-photo-link" aria-label="Ver perfil de {{ related_artist.user.username }}">
+                            <img src="{{ related_artist.photo_url }}"
+                                 alt="{{ related_artist.user.username }}"
+                                 class="related__artist-photo">
+                        </a>
                          <div class="related__artist-info">
                              <span class="related__artist-name">{{ related_artist.user.username }}</span>
                              {% if request.user.is_authenticated and not request.user.is_artist %}
@@ -256,14 +260,14 @@
             <!-- Info de la canción actual -->
             <div class="player__track">
                 {% if current_track %}
-                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb" id="track-art">
+                <img src="{% if current_track.cover %}{{ current_track.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}" alt="{{ current_track.title }}" class="player__thumb" id="track-art" onclick="goToCurrentAlbum()" title="Ir al álbum">
                 <div class="player__meta">
-                    <span class="player__song-title" id="track-title">{{ current_track.title }}</span>
-                    <span class="player__song-artist" id="track-artist">{{ current_track.artist.user.username }}</span>
+                    <span class="player__song-title" id="track-title" onclick="goToCurrentAlbum()" title="Ir al álbum">{{ current_track.title }}</span>
+                    <span class="player__song-artist" id="track-artist"><a href="{% url 'music:artist_detail_public' current_track.artist.pk %}" class="player__artist-link">{{ current_track.artist.user.username }}</a>{% for collab in current_track.collaborators.all %},&nbsp;<a href="{% url 'music:artist_detail_public' collab.pk %}" class="player__artist-link">{{ collab.user.username }}</a>{% endfor %}</span>
                 </div>
                 {% if not request.user.is_artist %}
-                <button class="player__like-btn like-btn not-liked" id="player-like-btn" data-song-id="{{ current_track.id }}" aria-label="Me gusta">
-                    <img src="{% static 'img/diamond-white.png' %}" alt="" class="icon--sm" id="player-like-icon">
+                <button class="player__like-btn like-btn {% if current_track.pk in liked_song_ids %}liked{% else %}not-liked{% endif %}" id="player-like-btn" data-song-id="{{ current_track.id }}" aria-label="{% if current_track.pk in liked_song_ids %}Quitar de Mis joyas{% else %}Añadir a Mis joyas{% endif %}">
+                    <img src="{% if current_track.pk in liked_song_ids %}{% static 'img/diamond-red.png' %}{% else %}{% static 'img/diamond-white.png' %}{% endif %}" alt="" class="icon--sm" id="player-like-icon">
                 </button>
                 {% endif %}
                 {% else %}
@@ -275,7 +279,7 @@
             </div>
 
             <div class="player__controls">
-                <button class="ctrl-btn" aria-label="Aleatorio">
+                <button class="ctrl-btn" id="btn-shuffle" onclick="toggleShuffle()" aria-label="Aleatorio">
                     <img src="{% static 'img/shuffle.png' %}" alt="" class="icon--sm">
                 </button>
                 <button class="ctrl-btn" onclick="prevSong()" aria-label="Anterior">
@@ -287,7 +291,7 @@
                 <button class="ctrl-btn" onclick="nextSong()" aria-label="Siguiente">
                     <img src="{% static 'img/next2.png' %}" alt="" class="icon--sm">
                 </button>
-                <button class="ctrl-btn" onclick="toggleRepeat()" aria-label="Repetir">
+                <button class="ctrl-btn" id="btn-repeat" onclick="toggleRepeat()" aria-label="Repetir">
                     <img src="{% static 'img/repeat.png' %}" alt="" class="icon--sm">
                 </button>
             </div>
@@ -329,7 +333,7 @@
             title: "{{ song.title }}",
             url: "{{ song.audio_file.url }}",
             cover: "{% if song.cover %}{{ song.cover.url }}{% else %}{% static 'img/logo.png' %}{% endif %}",
-            artist: "{{ song.artist.user.username }}"
+            artist: "{{ song.authors_display|escapejs }}"
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ];
@@ -361,19 +365,15 @@ document.addEventListener('click', function(event) {
     document.addEventListener('DOMContentLoaded', function() {
          initializePlayer();
 
-         // Restaurar información del panel derecho desde localStorage
-         if (typeof restoreRightPanelFromStorage === 'function') {
-             restoreRightPanelFromStorage();
-         }
+         // (NO restauramos el panel derecho desde localStorage: era por navegador, no por
+         //  usuario, y mostraba el track de la sesión/usuario anterior. El panel lo renderiza
+         //  el servidor con current_track y lo restaura audio-player-sync por usuario.)
 
-         // Inicializar icono de like del panel derecho (esperar a que se cargue likedSongsManager)
-         setTimeout(function() {
-             if (playlist.length > 0 && typeof likedSongsManager !== 'undefined' && likedSongsManager) {
-                 const songId = playlist[0].id;
-                 const isLiked = likedSongsManager.likedSongs.has(songId);
-                 likedSongsManager.updateDiamondInfoIcons(songId, isLiked);
-             }
-         }, 500);
+         // Estado inicial de shuffle/repeat (persistido → consistente entre páginas)
+         if (typeof queueSystem !== 'undefined' && queueSystem) {
+             updateShuffleIcon(queueSystem.shuffle);
+             updateRepeatIcon(queueSystem.repeat);
+         }
      });
 
     function initializePlayer() {
@@ -458,15 +458,7 @@ document.addEventListener('click', function(event) {
             updateTimeDisplay(audio.currentTime, audio.duration);
         });
 
-         // Cuando termina la canción
-         audio.addEventListener('ended', function() {
-             if (isRepeating) {
-                 audio.currentTime = 0;
-                 audio.play();
-             } else {
-                 nextSong();
-             }
-         });
+         // (El fin de canción lo gestiona queue-system.js: repeat o siguiente.)
 
          // Escuchar eventos de play y pause
          audio.addEventListener('play', updatePlayIcon);
@@ -498,7 +490,7 @@ document.addEventListener('click', function(event) {
          updatePlayIcon();
 
          // Actualizar el botón de like del footer INMEDIATAMENTE
-         updatePlayerLikeButton(song.id);
+         if (window.likedSongsManager) window.likedSongsManager.syncPlayer(song.id);
 
          // Crear objeto de datos de canción para consistencia
          const trackData = {
@@ -524,10 +516,7 @@ document.addEventListener('click', function(event) {
              });
          }
 
-         // Guardar en localStorage para persistencia entre páginas
-         if (typeof saveCurrentTrackToStorage === 'function') {
-             saveCurrentTrackToStorage(trackData);
-         }
+         // (No guardamos en localStorage('currentTrack'): filtraba info entre usuarios.)
 
          // Disparar evento para actualizar paneles
          document.dispatchEvent(new CustomEvent('trackChanged'));
@@ -621,8 +610,28 @@ document.addEventListener('click', function(event) {
     }
 
     function toggleRepeat() {
-        isRepeating = !isRepeating;
-        console.log('Repetición:', isRepeating ? 'ON' : 'OFF');
+        if (typeof queueSystem === 'undefined' || !queueSystem) return;
+        updateRepeatIcon(queueSystem.toggleRepeat());
+    }
+    function toggleShuffle() {
+        if (typeof queueSystem === 'undefined' || !queueSystem) return;
+        updateShuffleIcon(queueSystem.toggleShuffle());
+    }
+    function updateShuffleIcon(active) {
+        const btn = document.getElementById('btn-shuffle');
+        if (!btn) return;
+        const img = btn.querySelector('img');
+        const staticUrl = document.documentElement.getAttribute('data-static-url') || '/static/';
+        if (img) img.src = staticUrl + (active ? 'img/shuffle-red.png' : 'img/shuffle.png');
+        btn.classList.toggle('ctrl-btn--active', active);
+    }
+    function updateRepeatIcon(active) {
+        const btn = document.getElementById('btn-repeat');
+        if (!btn) return;
+        const img = btn.querySelector('img');
+        const staticUrl = document.documentElement.getAttribute('data-static-url') || '/static/';
+        if (img) img.src = staticUrl + (active ? 'img/repeat-red.png' : 'img/repeat.png');
+        btn.classList.toggle('ctrl-btn--active', active);
     }
 
     function updateProgressBar(progress) {
@@ -651,59 +660,19 @@ document.addEventListener('click', function(event) {
          }
      }
 
-      function updatePlayerLikeButton(songId) {
-          const likeBtn = document.querySelector('#player-like-btn');
-          if (!likeBtn) return;
-
-          likeBtn.dataset.songId = songId;
-
-          if (typeof likedSongsManager !== 'undefined' && likedSongsManager) {
-              const isLiked = likedSongsManager.likedSongs.has(songId);
-              console.log(`🎵 Actualizando botón del player para canción ${songId}: ${isLiked ? 'Liked' : 'Not liked'}`);
-              likedSongsManager.updateLikeButton(likeBtn, isLiked);
-              likedSongsManager.updateDiamondInfoIcons(songId, isLiked);
-          }
-      }
-
-     document.addEventListener('DOMContentLoaded', function() {
-         setTimeout(function() {
-             // Manejador directo para el botón de like del player
-             const playerLikeBtn = document.getElementById('player-like-btn');
-             if (playerLikeBtn) {
-                 playerLikeBtn.addEventListener('click', function(e) {
-                     e.preventDefault();
-                     e.stopPropagation();
-                     const songId = parseInt(this.dataset.songId);
-                     if (songId && typeof likedSongsManager !== 'undefined' && likedSongsManager) {
-                         likedSongsManager.toggleLiked(songId, this);
-                     }
-                 });
-             }
-         }, 100);
-     });
-
       document.addEventListener('trackChanged', function(e) {
-          // Obtener el ID de la canción del evento trackChanged (más confiable)
           let songId = e.detail?.id;
-
-          // Si no viene en el evento, intentar obtener del playlist
           if (!songId && playlist.length > 0 && trackIndex < playlist.length) {
               songId = playlist[trackIndex].id;
           }
+          if (!songId) return;
 
-          if (songId) {
-              console.log(`🔄 trackChanged event - Canción ${songId}`);
-
-              // Usar setTimeout para asegurar que likedSongsManager está listo
-              if (typeof likedSongsManager !== 'undefined' && likedSongsManager) {
-                  updatePlayerLikeButton(songId);
-              } else {
-                  setTimeout(() => {
-                      if (typeof likedSongsManager !== 'undefined' && likedSongsManager) {
-                          updatePlayerLikeButton(songId);
-                      }
-                  }, 100);
-              }
+          if (window.likedSongsManager) {
+              window.likedSongsManager.syncPlayer(songId);
+          } else {
+              setTimeout(() => {
+                  if (window.likedSongsManager) window.likedSongsManager.syncPlayer(songId);
+              }, 100);
           }
       });
 </script>
@@ -711,6 +680,30 @@ document.addEventListener('click', function(event) {
 <script>
     window.CURRENT_USER_ID = {% if request.user.is_authenticated %}{{ request.user.id }}{% else %}null{% endif %};
     window.CURRENT_USER_IS_ARTIST = {% if request.user.is_authenticated and request.user.is_artist %}true{% else %}false{% endif %};
+
+    // Si cambia el usuario en este navegador, limpiar el estado de reproducción guardado
+    // en localStorage (cola, historial, canción, shuffle/repeat). Evita arrastrar la
+    // "info de la sesión anterior" de otro usuario. Corre ANTES que queue-system.js (defer).
+    (function() {
+        var current = String(window.CURRENT_USER_ID);
+        var last = localStorage.getItem('soundmusik_last_user');
+        if (last !== null && last !== current) {
+            ['soundmusik_queue', 'soundmusik_queue_fromAlbum', 'soundmusik_queue_albumId',
+             'soundmusik_unshuffled_queue', 'soundmusik_history', 'soundmusik_playback_state',
+             'soundmusik_shuffle', 'soundmusik_repeat', 'currentTrack'].forEach(function(k) {
+                localStorage.removeItem(k);
+            });
+        }
+        localStorage.setItem('soundmusik_last_user', current);
+    })();
+
+    // Álbum de la canción actual (footer): carátula/título llevan a su álbum; null si es single
+    window.currentTrackAlbumId = {% if current_track and current_track.album_id %}{{ current_track.album_id }}{% else %}null{% endif %};
+    function goToCurrentAlbum() {
+        if (window.currentTrackAlbumId) {
+            window.location.href = '/music/album/' + window.currentTrackAlbumId + '/';
+        }
+    }
 </script>
 <script src="{% static 'js/script.js' %}" defer></script>
 <script src="{% static 'js/queue-system.js' %}" defer></script>
@@ -720,7 +713,8 @@ document.addEventListener('click', function(event) {
 <script src="{% static 'js/ajax-player.js' %}" defer></script>
 <script src="{% static 'js/sidebar.js' %}" defer></script>
 <script src="{% static 'js/register-recent.js' %}" defer></script>
-<script src="{% static 'js/liked-songs.js' %}" defer></script>
+<script src="{% static 'js/liked-songs.js' %}?v=3" defer></script>
+<script src="{% static 'js/carousel.js' %}" defer></script>
 <script src="{% static 'js/song-options-menu.js' %}" defer></script>
 <script src="{% static 'js/follow-system.js' %}?v=2" defer></script>
 

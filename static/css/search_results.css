@@ -90,27 +90,7 @@
 }
 .search-results .carousel-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
 
-/* "Ver todo" – pastilla con borde */
-.btn-see-all {
-  font-family: var(--font-body);
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: 1px solid var(--color-surface-03);
-  border-radius: var(--radius-full);
-  padding: var(--space-2) var(--space-5);
-  white-space: nowrap;
-  transition: color        var(--duration-fast),
-              border-color var(--duration-fast),
-              background   var(--duration-fast);
-}
-.btn-see-all:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-text-muted);
-  background: rgba(255, 255, 255, 0.06);
-}
+/* .btn-see-all movido a soundmusik.css (global) */
 
 
 /* ───────────────────────────────────────────────────────────────────
@@ -248,7 +228,7 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.5);
-  display: flex;
+  display: none; /* overlay de play desactivado (icono faltante) */
   align-items: center;
   justify-content: center;
   opacity: 0;

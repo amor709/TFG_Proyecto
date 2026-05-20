@@ -20,11 +20,11 @@ def search_view(request):
         Q(title__icontains=query) | Q(artist__user__username__icontains=query)
     ).select_related('artist', 'album').order_by('-plays')[:50]
 
-    # Playlists: título coincide
+    # Playlists: título coincide. Excluir "Mis joyas" (playlists de "Me gusta").
     if request.user.is_authenticated and not request.user.is_artist:
         playlists = Playlist.objects.filter(
             Q(name__icontains=query)
-        ).select_related('user').order_by('-created_at')[:50]
+        ).exclude(is_liked_playlist=True).select_related('user').order_by('-created_at')[:50]
     else:
         playlists = []
 
@@ -82,7 +82,7 @@ def search_all_view(request):
         if request.user.is_authenticated and not request.user.is_artist:
             playlists = Playlist.objects.filter(
                 Q(name__icontains=query)
-            ).select_related('user').order_by('-created_at')
+            ).exclude(is_liked_playlist=True).select_related('user').order_by('-created_at')
         else:
             playlists = []
         context = {'query': query, 'playlists': playlists, 'type': 'playlists'}

@@ -16,6 +16,7 @@ class AudioPlayerSync {
         this.currentTrackId = null;
         this.apiBaseUrl = '/accounts';
         this.lastSavedState = null;
+        this._lastCountTime = null; // referencia para el contador de "reproducida"
     }
 
     /**
@@ -40,14 +41,16 @@ class AudioPlayerSync {
         document.addEventListener('playbackStateUpdated', (e) => this.handleStateUpdate(e));
         document.addEventListener('pageVisible', () => this.handlePageVisible());
 
-        // Verificar sesiones concurrentes periódicamente
-        setInterval(() => this.checkConcurrentSessions(), 5000);
+        // (Detección de reproducción concurrente desactivada: sin bloqueo multi-dispositivo.)
 
         // Restaurar estado al cargar la página
         this.restorePlaybackState();
 
         // Iniciar guardado periódico de estado
         this.startPeriodicSave();
+
+        // Volcar el estado exacto justo antes de salir/navegar (posición + play/pausa)
+        window.addEventListener('pagehide', () => this.flushState());
     }
 
     /**
@@ -83,7 +86,68 @@ class AudioPlayerSync {
      * Manejar actualización de tiempo de reproducción
      */
     handleTimeUpdate() {
-        // No hacer nada aquí, se guarda en el intervalo
+        // Cuenta la canción como "reproducida" tras 5 s de audio REAL escuchado.
+        // El acumulador se persiste en sessionStorage para sobrevivir a la navegación
+        // entre páginas (si cambias de página antes de los 5 s, sigue contando).
+        if (!this.audio || !this.currentTrackId || this.audio.paused) return;
+
+        const tid = String(this.currentTrackId);
+
+        // Si la pista cambió respecto a la acumulada, empezar de cero.
+        if (sessionStorage.getItem('soundmusik_count_track') !== tid) {
+            this.resetPlayCount(tid);
+        }
+
+        // Ya contada en esta reproducción: nada que hacer.
+        if (sessionStorage.getItem('soundmusik_count_done') === '1') return;
+
+        // Primer tick (o primera vez tras navegar): fijar referencia y salir.
+        if (this._lastCountTime == null) {
+            this._lastCountTime = this.audio.currentTime;
+            return;
+        }
+
+        let seconds = parseFloat(sessionStorage.getItem('soundmusik_count_seconds') || '0');
+        const delta = this.audio.currentTime - this._lastCountTime;
+        this._lastCountTime = this.audio.currentTime;
+
+        // Solo suma el avance natural de la reproducción (ignora pausa y saltos/seeks).
+        if (delta > 0 && delta < 1) {
+            seconds += delta;
+            sessionStorage.setItem('soundmusik_count_seconds', String(seconds));
+        }
+
+        if (seconds >= 5) {
+            sessionStorage.setItem('soundmusik_count_done', '1');
+            this.recordPlayCount(this.currentTrackId);
+        }
+    }
+
+    /**
+     * Reiniciar el acumulador de "reproducida" para una nueva reproducción.
+     */
+    resetPlayCount(trackId) {
+        this._lastCountTime = null;
+        sessionStorage.setItem('soundmusik_count_track', String(trackId));
+        sessionStorage.setItem('soundmusik_count_seconds', '0');
+        sessionStorage.removeItem('soundmusik_count_done');
+    }
+
+    /**
+     * Registrar la reproducción en el backend (historial + estadísticas).
+     */
+    recordPlayCount(trackId) {
+        console.log('📝 Canción contada como reproducida (5 s de audio real):', trackId);
+        fetch(`${this.apiBaseUrl}/api/add-to-history/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.getCsrfToken()
+            },
+            body: JSON.stringify({ song_id: trackId })
+        })
+        .then(r => { if (!r.ok) console.error('Error al contar reproducción:', r.status); })
+        .catch(err => console.error('Error al contar reproducción:', err));
     }
 
     /**
@@ -116,8 +180,9 @@ class AudioPlayerSync {
      * Manejar cuando la página se vuelve visible
      */
     handlePageVisible() {
-        console.log('👀 Página vuelve a estar visible, restaurando estado...');
-        this.restorePlaybackState();
+        // No re-restauramos desde backend al volver a la pestaña: la canción ya está
+        // cargada en esta pestaña y recargarla revertía los paneles a la sesión guardada
+        // (mostraba "info de la sesión anterior").
     }
 
     /**
@@ -221,6 +286,58 @@ class AudioPlayerSync {
     }
 
     /**
+     * Fijar la posición de reproducción (y reproducir si procede) SOLO cuando el
+     * audio tenga metadata. Si se asigna currentTime antes, el navegador la
+     * reinicia a 0 (causa de que la canción empiece desde el principio).
+     */
+    seekAndMaybePlay(resumeAt, isPlaying) {
+        const apply = () => {
+            this.audio.currentTime = resumeAt;
+            if (isPlaying) {
+                console.log('▶️ Continuando reproducción desde:', resumeAt + 's');
+                this.audio.play().catch(err => console.error('❌ Error al reproducir:', err));
+            } else {
+                console.log('⏸️  Posición restaurada:', resumeAt + 's');
+            }
+        };
+        if (this.audio.readyState >= 1) {
+            apply();
+        } else {
+            this.audio.addEventListener('loadedmetadata', apply, { once: true });
+        }
+    }
+
+    /**
+     * Volcar el estado actual al backend de forma fiable antes de salir/navegar.
+     * fetch con keepalive completa la petición aunque la página se descargue,
+     * así no se pierde la posición ni el estado play/pausa (evita reinicios y
+     * que una canción pausada arranque sola en la página siguiente).
+     */
+    flushState() {
+        if (!this.audio || !this.currentTrackId) return;
+        const data = this.getCurrentTrackData();
+        if (!data) return;
+
+        fetch(`${this.apiBaseUrl}/api/playback/state/`, {
+            method: 'POST',
+            keepalive: true,
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': this.getCsrfToken()
+            },
+            body: JSON.stringify({
+                session_id: this.stateManager.sessionId,
+                track_id: this.currentTrackId,
+                track_title: data.title,
+                track_artist: data.artist,
+                current_time: this.audio.currentTime,
+                is_playing: !this.audio.paused,
+                device_info: this.getDeviceInfo()
+            })
+        }).catch(() => {});
+    }
+
+    /**
      * Obtener información del dispositivo
      */
     getDeviceInfo() {
@@ -255,22 +372,9 @@ class AudioPlayerSync {
      * Restaurar estado de reproducción guardado
      */
     restorePlaybackState() {
-        const state = this.stateManager.getPlaybackState();
-
-        if (!state) {
-            console.log('ℹ️  No hay estado de reproducción guardado');
-            // Intentar recuperar del backend
-            this.restoreFromBackend();
-            return;
-        }
-
-        if (!this.stateManager.isSessionActive()) {
-            console.log('⚠️  No es la sesión activa, no restaurando');
-            return;
-        }
-
-        console.log('📂 Restaurando estado de reproducción:', state);
-        this.restorePlaybackStateFromObject(state);
+        // Reanudar desde el backend (estado único por usuario): al volver a entrar
+        // continúas con el mismo track y posición donde lo dejaste.
+        this.restoreFromBackend();
     }
 
     /**
@@ -316,24 +420,14 @@ class AudioPlayerSync {
         .then(trackData => {
             this.currentTrackId = session.track_id;
 
-            // Actualizar UI
-            document.getElementById('track-title').innerText = trackData.title;
-            document.getElementById('track-artist').innerText = trackData.artist;
-            document.getElementById('track-art').src = trackData.cover;
+            // Actualizar footer y panel derecho con el MISMO render que al reproducir
+            // (mantiene enlaces de artista del footer y deja ambos paneles consistentes).
+            if (typeof updatePlayer === 'function') updatePlayer(trackData);
+            if (typeof updateRightPanel === 'function') updateRightPanel(trackData);
 
-            // Cargar audio
+            // Cargar audio y fijar la posición cuando haya metadata
             this.audio.src = trackData.audio_url;
-            this.audio.currentTime = session.current_time || 0;
-
-            // Reproducir automáticamente si estaba reproduciéndose
-            if (session.is_playing) {
-                console.log('▶️ Continuando reproducción desde:', this.audio.currentTime + 's');
-                this.audio.play().catch(err => {
-                    console.error('❌ Error al reproducir:', err);
-                });
-            } else {
-                console.log('⏸️  Canción cargada en pausa, posición:', this.audio.currentTime + 's');
-            }
+            this.seekAndMaybePlay(session.current_time || 0, session.is_playing);
         })
         .catch(err => {
             console.error('Error obteniendo datos de la canción:', err);
@@ -345,11 +439,7 @@ class AudioPlayerSync {
                 document.getElementById('track-artist').innerText = savedState.trackData.artist;
                 document.getElementById('track-art').src = savedState.trackData.cover;
                 this.audio.src = savedState.trackData.url;
-                this.audio.currentTime = session.current_time || 0;
-
-                if (session.is_playing) {
-                    this.audio.play().catch(err => console.error('❌ Error al reproducir:', err));
-                }
+                this.seekAndMaybePlay(session.current_time || 0, session.is_playing);
             }
         });
     }
@@ -373,17 +463,7 @@ class AudioPlayerSync {
         }
 
         this.audio.src = state.trackData?.url || '';
-        this.audio.currentTime = state.currentTime || 0;
-
-        // Si estaba reproduciéndose, continuar desde donde estaba
-        if (state.isPlaying) {
-            console.log('▶️ Continuando reproducción desde:', this.audio.currentTime + 's');
-            this.audio.play().catch(err => {
-                console.error('❌ Error al reproducir:', err);
-            });
-        } else {
-            console.log('⏸️  Pausa restaurada, posición:', this.audio.currentTime + 's');
-        }
+        this.seekAndMaybePlay(state.currentTime || 0, state.isPlaying);
     }
 
     /**
@@ -418,6 +498,8 @@ class AudioPlayerSync {
      */
     setCurrentTrack(trackId, trackData) {
         this.currentTrackId = trackId;
+        // Reproducción nueva: reiniciar el contador de "reproducida".
+        this.resetPlayCount(trackId);
         this.stateManager.savePlaybackState(
             trackId,
             0,

@@ -1,9 +1,22 @@
 from music.models import Song
 from accounts.models import ArtistProfile, ListeningHistory, PlaybackSession
-from playlists.models import Playlist
+from playlists.models import Playlist, PlaylistSong
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def liked_songs_context(request):
+    """IDs de canciones que el usuario tiene en 'Mis joyas'. Set vacío si anónimo o artista."""
+    if not request.user.is_authenticated or request.user.is_artist:
+        return {'liked_song_ids': set()}
+
+    ids = set(
+        PlaylistSong.objects
+        .filter(playlist__user=request.user, playlist__is_liked_playlist=True)
+        .values_list('song_id', flat=True)
+    )
+    return {'liked_song_ids': ids}
 
 
 def player_context(request):

@@ -101,7 +101,7 @@
             <ol class="tracklist__list">
                 {% for entry in songs %}
                 {% with song=entry.track %}
-                <li class="tracklist__row {% if song.is_liked %}tracklist__row--liked{% endif %}"
+                <li class="tracklist__row {% if song.pk in liked_song_ids %}tracklist__row--liked{% endif %}"
                     data-track-id="{{ song.pk }}"
                     role="row">
 
@@ -164,15 +164,17 @@
 
                     <!-- Acciones -->
                     <span class="tracklist__col tracklist__col--actions">
-                        <button class="track-action-btn track-like-btn"
-                                data-track-id="{{ song.pk }}"
-                                aria-label="{% if song.is_liked %}Quitar Me gusta{% else %}Me gusta{% endif %}">
-                            {% if song.is_liked %}
-                                <img src="{% static 'img/icon-heart-filled.png' %}" alt="" class="icon--sm icon--liked">
+                        {% if not request.user.is_artist %}
+                        <button class="track-action-btn like-btn {% if song.pk in liked_song_ids %}liked{% else %}not-liked{% endif %}"
+                                data-song-id="{{ song.pk }}"
+                                aria-label="{% if song.pk in liked_song_ids %}Quitar de Mis joyas{% else %}Añadir a Mis joyas{% endif %}">
+                            {% if song.pk in liked_song_ids %}
+                                <img src="{% static 'img/diamond-red.png' %}" alt="Quitar de Mis joyas" class="icon--sm">
                             {% else %}
-                                <img src="{% static 'img/icon-heart-outline.png' %}" alt="" class="icon--sm">
+                                <img src="{% static 'img/diamond-white.png' %}" alt="Añadir a Mis joyas" class="icon--sm">
                             {% endif %}
                         </button>
+                        {% endif %}
                         <button class="track-action-btn track-more-btn"
                                 data-track-id="{{ song.pk }}"
                                 aria-label="Más opciones">

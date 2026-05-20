@@ -35,8 +35,8 @@
                 <h1 class="playlist-detail__title">{{ playlist.name }}</h1>
                 <p class="playlist-detail__description">{{ playlist.description }}</p>
                 <div class="playlist-detail__meta">
-                    <span>{{ playlist.track_count }} canción{{ playlist.track_count|pluralize:",es" }}</span>
-                    {% if playlist.owner and not playlist.is_liked_playlist %} · Creada por {{ playlist.owner.username }}{% endif %}
+                    <span><span id="playlist-track-count" data-count="{{ playlist.track_count }}">{{ playlist.track_count }}</span> canción<span id="playlist-track-count-plural">{{ playlist.track_count|pluralize:",es" }}</span></span>
+                    {% if playlist.owner and not playlist.is_liked_playlist %} · Creada por {% if playlist.owner.is_artist %}<a href="{% url 'music:artist_detail_public' playlist.owner.artist_profile.pk %}" class="playlist-author"><img src="{{ playlist.owner.artist_profile.photo_url }}" alt="{{ playlist.owner.username }}" class="playlist-author__avatar"><span>{{ playlist.owner.username }}</span></a>{% else %}<a href="{% url 'listener_profile' playlist.owner.id %}" class="playlist-author"><img src="{{ playlist.owner.listener_profile.avatar_url }}" alt="{{ playlist.owner.username }}" class="playlist-author__avatar"><span>{{ playlist.owner.username }}</span></a>{% endif %}{% endif %}
                     {% if playlist.is_public %} · {{ playlist.save_count }} guardada{{ playlist.save_count|pluralize:",s" }}{% endif %}
                 </div>
                 {% if user.is_authenticated and not playlist.is_liked_playlist %}
@@ -80,7 +80,7 @@
             </div>
             <div class="tracklist__divider"></div>
 
-            <ul class="tracklist__list">
+            <ul class="tracklist__list" data-playlist-id="{{ playlist.pk }}" {% if playlist.is_liked_playlist %}data-liked-playlist="true"{% endif %}>
                 {% for song in songs %}
                 <li class="tracklist__row" data-track-id="{{ song.pk }}">
                     <span class="tracklist__col tracklist__col--num">
@@ -100,7 +100,7 @@
                         </button>
                     </span>
                     <span class="tracklist__col tracklist__col--artists">
-                        <a href="{% url 'music:artist_detail_public' song.artist.pk %}" class="track-artist-link" onclick="event.stopPropagation();">{{ song.artist.name }}</a>
+                        <a href="{% url 'music:artist_detail_public' song.artist.pk %}" class="track-artist-link" onclick="event.stopPropagation();">{{ song.artist.name }}</a>{% for collab in song.collaborators.all %},&nbsp;<a href="{% url 'music:artist_detail_public' collab.pk %}" class="track-artist-link" onclick="event.stopPropagation();">{{ collab.name }}</a>{% endfor %}
                     </span>
                     <span class="tracklist__col tracklist__col--album">
                         {% if song.album %}
@@ -110,13 +110,13 @@
                     <span class="tracklist__col tracklist__col--duration">{{ song.duration_display }}</span>
                     <span class="tracklist__col tracklist__col--actions">
                         {% if not request.user.is_artist %}
-                        <button class="track-action-btn track-like-btn"
-                                data-track-id="{{ song.pk }}"
-                                aria-label="{% if song.is_liked %}Quitar de Me gusta{% else %}Añadir a Me gusta{% endif %}">
-                            {% if song.is_liked %}
-                                <img src="{% static 'img/diamond-red.png' %}" alt="Me gusta" class="icon--sm icon--liked">
+                        <button class="track-action-btn like-btn {% if song.pk in liked_song_ids %}liked{% else %}not-liked{% endif %}"
+                                data-song-id="{{ song.pk }}"
+                                aria-label="{% if song.pk in liked_song_ids %}Quitar de Mis joyas{% else %}Añadir a Mis joyas{% endif %}">
+                            {% if song.pk in liked_song_ids %}
+                                <img src="{% static 'img/diamond-red.png' %}" alt="Quitar de Mis joyas" class="icon--sm">
                             {% else %}
-                                <img src="{% static 'img/diamond-white.png' %}" alt="Me gusta" class="icon--sm">
+                                <img src="{% static 'img/diamond-white.png' %}" alt="Añadir a Mis joyas" class="icon--sm">
                             {% endif %}
                         </button>
                         {% endif %}

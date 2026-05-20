@@ -163,11 +163,18 @@ class SongOptionsMenu {
             const songId = e.currentTarget.dataset.songId;
             const playlistId = e.currentTarget.dataset.playlistId;
             if (confirm('¿Quitar esta canción de la playlist?')) {
-                fetch(`/playlists/${playlistId}/remove/${songId}/`, { method: 'POST' })
+                fetch(`/playlists/${playlistId}/remove/${songId}/`, {
+                    method: 'POST',
+                    headers: { 'X-CSRFToken': this.getCsrfToken() }
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.success) {
-                            location.reload();
+                            const list = document.querySelector(`.tracklist__list[data-playlist-id="${playlistId}"]`);
+                            const row = list && list.querySelector(`.tracklist__row[data-track-id="${songId}"]`);
+                            if (row && typeof window.removeTrackRow === 'function') {
+                                window.removeTrackRow(row);
+                            }
                         }
                     })
                     .catch(error => console.error('Error:', error));

@@ -11,6 +11,9 @@ class QueueSystem {
          this.maxHistorySize = 20;
          this.fromAlbum = false;
          this.currentAlbumId = null;
+         this.shuffle = false;
+         this.repeat = false;
+         this.unshuffledQueue = [];   // orden normal guardado mientras shuffle está activo
          this.init();
      }
     init() {
@@ -89,6 +92,9 @@ class QueueSystem {
         localStorage.setItem('soundmusik_queue', JSON.stringify(this.queue));
         localStorage.setItem('soundmusik_queue_fromAlbum', this.fromAlbum.toString());
         localStorage.setItem('soundmusik_queue_albumId', this.currentAlbumId);
+        localStorage.setItem('soundmusik_shuffle', this.shuffle.toString());
+        localStorage.setItem('soundmusik_repeat', this.repeat.toString());
+        localStorage.setItem('soundmusik_unshuffled_queue', JSON.stringify(this.unshuffledQueue));
     }
     loadQueueFromStorage() {
         const stored = localStorage.getItem('soundmusik_queue');
@@ -97,6 +103,12 @@ class QueueSystem {
         }
         this.fromAlbum = localStorage.getItem('soundmusik_queue_fromAlbum') === 'true';
         this.currentAlbumId = localStorage.getItem('soundmusik_queue_albumId');
+        this.shuffle = localStorage.getItem('soundmusik_shuffle') === 'true';
+        this.repeat = localStorage.getItem('soundmusik_repeat') === 'true';
+        const u = localStorage.getItem('soundmusik_unshuffled_queue');
+        if (u) {
+            this.unshuffledQueue = JSON.parse(u);
+        }
     }
     saveHistoryToStorage() {
         localStorage.setItem('soundmusik_history', JSON.stringify(this.history));
@@ -148,6 +160,7 @@ class QueueSystem {
              }
 
              playSongA(nextTrackId);
+             this.ensureQueueMinimum(nextTrackId);  // mantener la cola en ≥10
          } else if (this.history.length > 0) {
              // Cola vacía pero hay historial → autoplay: pide sugerencias por
              // la última canción reproducida (backend tiene fallback aleatorio).
@@ -203,6 +216,7 @@ class QueueSystem {
 
              // Reproducir la canción actual
              playSongA(trackId);
+             this.ensureQueueMinimum(trackId);  // garantizar ≥10 en la cola
          } catch (error) {
              console.error('Error al reproducir canción del álbum:', error);
              // Si hay error, reproducir solo la canción
@@ -252,6 +266,7 @@ class QueueSystem {
              }
 
              playSongA(trackId);
+             this.ensureQueueMinimum(trackId);  // garantizar ≥10 en la cola
          } catch (error) {
              console.error('Error al reproducir canción del artista:', error);
              if (typeof window !== 'undefined') {
@@ -302,6 +317,52 @@ class QueueSystem {
              console.error('Error en autoplay:', error);
          }
      }
+
+    /**
+     * Pedir IDs de canciones sugeridas por tags de una canción de referencia.
+     */
+    async fetchSuggestionIds(trackId, excludeIds) {
+        try {
+            const exclude = (excludeIds || []).join(',');
+            const url = exclude
+                ? `/music/api/suggested-tracks/${trackId}/?exclude=${exclude}`
+                : `/music/api/suggested-tracks/${trackId}/`;
+            const response = await fetch(url);
+            if (!response.ok) return [];
+            const data = await response.json();
+            return data.suggested_ids || [];
+        } catch (e) {
+            console.error('Error obteniendo sugerencias:', e);
+            return [];
+        }
+    }
+
+    /**
+     * Asegurar que la cola tenga SIEMPRE al menos 10 canciones.
+     * Si faltan, añade sugerencias por tags (nunca encola el álbum).
+     * Referencia: la última de la cola (si hay), si no la canción dada.
+     * Guard anti-bucle: si no se añade nada nuevo (biblioteca pequeña), para.
+     */
+    async ensureQueueMinimum(referenceTrackId) {
+        const MIN = 10;
+        let guard = 0;
+        while (this.queue.length < MIN && guard < 8) {
+            guard++;
+            const refId = this.queue.length > 0 ? this.queue[this.queue.length - 1] : referenceTrackId;
+            if (!refId) break;
+            const before = this.queue.length;
+            // Excluir lo que ya está en la cola (+ la de referencia) para que, al
+            // agotar los tags, el endpoint pase automáticamente a canciones aleatorias.
+            const exclude = this.queue.slice();
+            if (referenceTrackId && !exclude.includes(referenceTrackId)) exclude.push(referenceTrackId);
+            const ids = await this.fetchSuggestionIds(refId, exclude);
+            if (!ids.length) break;
+            this.addMultipleToQueue(ids);   // deduplica internamente
+            if (this.queue.length === before) break;  // toda la BD ya está en la cola
+        }
+        this.loadQueueHTML();
+    }
+
     setFromAlbum(albumId) {
         this.fromAlbum = true;
         this.currentAlbumId = albumId;
@@ -312,6 +373,43 @@ class QueueSystem {
         this.currentAlbumId = null;
         this.saveQueueToStorage();
     }
+
+    _shuffleArray(arr) {
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    /**
+     * Activar/desactivar shuffle. Al activar baraja la cola actual (guardando el
+     * orden normal); al desactivar restaura ese orden (pendientes en su orden +
+     * las añadidas durante el shuffle, al final). Reactivar vuelve a barajar.
+     * Devuelve el nuevo estado.
+     */
+    toggleShuffle() {
+        this.shuffle = !this.shuffle;
+        if (this.shuffle) {
+            this.unshuffledQueue = [...this.queue];
+            this.queue = this._shuffleArray([...this.queue]);
+        } else {
+            const pendingOriginal = this.unshuffledQueue.filter(id => this.queue.includes(id));
+            const newOnes = this.queue.filter(id => !this.unshuffledQueue.includes(id));
+            this.queue = pendingOriginal.concat(newOnes);
+            this.unshuffledQueue = [];
+        }
+        this.saveQueueToStorage();
+        this.updateQueueDisplay();
+        return this.shuffle;
+    }
+
+    /** Activar/desactivar repetición de la canción actual. Devuelve el nuevo estado. */
+    toggleRepeat() {
+        this.repeat = !this.repeat;
+        this.saveQueueToStorage();
+        return this.repeat;
+    }
 }
 // Instancia global
 const queueSystem = new QueueSystem();
@@ -320,7 +418,13 @@ document.addEventListener('DOMContentLoaded', function() {
     const audio = document.getElementById('main-audio');
     if (audio) {
         audio.addEventListener('ended', function() {
-            queueSystem.onTrackFinished();
+            // Repeat ON → reproducir de nuevo la misma canción (la cola se mantiene)
+            if (queueSystem.repeat) {
+                audio.currentTime = 0;
+                audio.play().catch(e => console.error('Error al repetir:', e));
+            } else {
+                queueSystem.onTrackFinished();
+            }
         });
     }
 });

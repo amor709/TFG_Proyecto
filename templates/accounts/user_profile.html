@@ -70,12 +70,14 @@
              ──────────────────────────────────────────────── -->
         {% if top_songs %}
         <section class="profile-section" aria-labelledby="top-songs-heading">
-            <div class="profile-section__header">
+            <div class="section-header">
                 <h2 class="profile-section__title" id="top-songs-heading">
                     Canciones más escuchadas este mes
                 </h2>
-                <a href="{% url 'listener_profile_songs' profile_user.id %}"
-                   class="btn-see-all">Ver más</a>
+                <div class="section-header__right">
+                    <a href="{% url 'listener_profile_songs' profile_user.id %}"
+                       class="btn-see-all">Ver más</a>
+                </div>
             </div>
 
             <div class="profile-cards-grid profile-cards-grid--songs">
@@ -138,38 +140,54 @@
         {% if playlists or is_own_profile %}
         <section class="profile-section" aria-labelledby="playlists-heading">
 
-            <div class="profile-section__header">
+            <div class="section-header">
                 <h2 class="profile-section__title" id="playlists-heading">
                     {% if is_own_profile %}Tus playlists{% else %}Playlists{% endif %}
                 </h2>
-                {% if is_own_profile %}
-                <a href="{% url 'playlists:create' %}"
-                   class="profile-icon-btn"
-                   aria-label="Crear playlist">
-                    <img src="{% static 'img/icon-edit.png' %}" alt="Crear" class="icon--sm">
-                </a>
-                {% endif %}
+                <div class="section-header__right">
+                    {% if is_own_profile %}
+                    <a href="{% url 'playlists:create' %}"
+                       class="profile-icon-btn"
+                       aria-label="Crear playlist">
+                        <img src="{% static 'img/addplaylist.png' %}" alt="Crear" class="icon--sm">
+                    </a>
+                    {% endif %}
+                    {% if playlists %}
+                    <div class="section-header__nav">
+                        <button class="carousel-nav-btn" data-target="carousel-playlists" data-dir="-1"
+                                aria-label="Anterior">
+                            <img src="{% static 'img/play-left.png' %}" alt="" class="icon--xs">
+                        </button>
+                        <button class="carousel-nav-btn" data-target="carousel-playlists" data-dir="1"
+                                aria-label="Siguiente">
+                            <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
 
             {% if playlists %}
-            <div class="profile-cards-grid profile-cards-grid--playlists">
-                {% for pl in playlists %}
-                <article class="track-card">
-                    <a href="{% url 'playlists:detail' pl.pk %}" class="track-card__link">
-                        <div class="track-card__cover-wrap">
-                            <img src="{% if pl.cover %}{{ pl.cover.url }}{% else %}{% static 'img/playlist_cover_default.png' %}{% endif %}"
-                                 alt="{{ pl.name }}"
-                                 class="track-card__cover"
-                                 loading="lazy">
-                            <div class="track-card__play-overlay" aria-hidden="true">
-                                <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+            <div class="carousel" id="carousel-playlists">
+                <div class="carousel__track">
+                    {% for pl in playlists %}
+                    <article class="track-card carousel__item">
+                        <a href="{% url 'playlists:detail' pl.pk %}" class="track-card__link">
+                            <div class="track-card__cover-wrap">
+                                <img src="{% if pl.cover %}{{ pl.cover.url }}{% else %}{% static 'img/playlist_cover_default.png' %}{% endif %}"
+                                     alt="{{ pl.name }}"
+                                     class="track-card__cover"
+                                     loading="lazy">
+                                <div class="track-card__play-overlay" aria-hidden="true">
+                                    <img src="{% static 'img/icon-play-circle.png' %}" alt="" class="icon--lg">
+                                </div>
                             </div>
-                        </div>
-                        <h3 class="track-card__title">{{ pl.name }}</h3>
-                        <p class="track-card__sub">{{ pl.track_count }} canción{{ pl.track_count|pluralize:",es" }}</p>
-                    </a>
-                </article>
-                {% endfor %}
+                            <h3 class="track-card__title">{{ pl.name }}</h3>
+                            <p class="track-card__sub">{{ pl.track_count }} canción{{ pl.track_count|pluralize:",es" }}</p>
+                        </a>
+                    </article>
+                    {% endfor %}
+                </div>
             </div>
             {% else %}
             <p class="profile-empty">Todavía no hay playlists públicas.</p>
@@ -184,12 +202,14 @@
              ──────────────────────────────────────────────── -->
         {% if following %}
         <section class="profile-section" aria-labelledby="following-heading">
-            <div class="profile-section__header">
+            <div class="section-header">
                 <h2 class="profile-section__title" id="following-heading">
                     Siguiendo
                 </h2>
-                <a href="{% url 'listener_profile_following' profile_user.id %}"
-                   class="btn-see-all">Ver más</a>
+                <div class="section-header__right">
+                    <a href="{% url 'listener_profile_following' profile_user.id %}"
+                       class="btn-see-all">Ver más</a>
+                </div>
             </div>
 
             <div class="profile-cards-grid profile-cards-grid--following">

@@ -4,7 +4,7 @@ from django.views.decorators.http import require_GET, require_http_methods
 from django.contrib import messages
 from datetime import timedelta
 from .models import Song, Album, Tag
-from .forms import SingleForm, AlbumPhaseAForm, AlbumPhaseBForm
+from .forms import SingleForm, AlbumPhaseAForm, AlbumPhaseBForm, AlbumEditForm
 from .decorators import artist_required
 from accounts.models import ArtistProfile
 from mutagen.wave import WAVE
@@ -70,8 +70,12 @@ def get_track_data(request, track_id):
         data = {
             'id': track.id,
             'title': track.title,
-            'artist': track.artist.user.username,
+            'artist': track.authors_display,
             'artist_id': track.artist.id,
+            'album_id': track.album_id,  # None si es single
+            'artists': [{'id': track.artist.id, 'name': track.artist.user.username}] + [
+                {'id': c.id, 'name': c.user.username} for c in track.collaborators.all()
+            ],
             'cover': track.cover.url if track.cover else '/static/img/logo.png',
             'audio_url': track.audio_file.url if track.audio_file else '',
             'related_artist': {
@@ -105,7 +109,7 @@ def create_single(request):
             song.save()
             form.save_m2m()  # Guardar relaciones ManyToMany
 
-            return redirect('music:song_list')
+            return redirect('music:artist_detail')
     else:
         form = SingleForm()
 
@@ -191,7 +195,7 @@ def publish_album(request, album_id):
         return redirect('music:album_phase_b', album_id=album.pk)
 
     album.mark_completed()
-    return redirect('music:song_list')
+    return redirect('music:album_detail', album_id=album.pk)
 
 
 def song_list(request):
@@ -219,7 +223,7 @@ def artist_detail(request, artist_id=None):
     # Si no se pasa artist_id, usar el propio si es artista
     if artist_id is None:
         if not request.user.is_authenticated or not request.user.is_artist:
-            return redirect('music:song_list')
+            return redirect('home')
         artist = request.user.artist_profile
     else:
         artist = get_object_or_404(ArtistProfile, pk=artist_id)
@@ -228,6 +232,9 @@ def artist_detail(request, artist_id=None):
     top_songs = artist.songs.all().order_by('-plays')[:6]  # Ordenar por plays
     releases = list(artist.albums.all()) + list(artist.songs.filter(album__isnull=True))  # Combinar para releases
     releases.sort(key=lambda x: x.release_date, reverse=True)  # Ordenar por fecha reciente
+    # Marcar cada lanzamiento: el single (Song suelto) se reproduce; el álbum lleva a su página
+    for item in releases:
+        item.is_single = isinstance(item, Song)
     albums = artist.albums.all()
     singles = artist.songs.filter(album__isnull=True)
     # Features: canciones donde el artista es colaborador
@@ -254,6 +261,20 @@ def artist_detail(request, artist_id=None):
     return render(request, 'music/artist_detail.html', context)
 
 
+def artist_albums(request, artist_id):
+    """Listado completo de álbumes de un artista (botón 'Ver más')."""
+    artist = get_object_or_404(ArtistProfile, pk=artist_id)
+    albums = artist.albums.all().order_by('-release_date')
+    return render(request, 'music/artist_albums.html', {'artist': artist, 'albums': albums})
+
+
+def artist_singles(request, artist_id):
+    """Listado completo de singles (canciones sueltas) de un artista (botón 'Ver más')."""
+    artist = get_object_or_404(ArtistProfile, pk=artist_id)
+    singles = artist.songs.filter(album__isnull=True).order_by('-release_date')
+    return render(request, 'music/artist_singles.html', {'artist': artist, 'singles': singles})
+
+
 def album_detail(request, album_id):
     """
     Vista para mostrar los detalles de un álbum con su lista de canciones
@@ -269,10 +290,51 @@ def album_detail(request, album_id):
         artist=album.artist
     ).exclude(album=album).select_related('album').order_by('?')[:5]
 
+    # ¿Es el usuario actual el dueño del álbum? (para mostrar el botón Editar)
+    is_owner = (
+        request.user.is_authenticated
+        and getattr(request.user, 'is_artist', False)
+        and hasattr(request.user, 'artist_profile')
+        and album.artist_id == request.user.artist_profile.id
+    )
+
     context = {
         'album': album,
         'songs': songs,
         'recommended': recommended,
+        'is_owner': is_owner,
     }
     return render(request, 'music/album_detail.html', context)
+
+
+@artist_required
+@require_http_methods(["GET", "POST"])
+def edit_album(request, album_id):
+    """Editar los datos de un álbum propio (título, descripción, fecha, portada)."""
+    album = get_object_or_404(Album, pk=album_id, artist=request.user.artist_profile)
+
+    if request.method == 'POST':
+        form = AlbumEditForm(request.POST, request.FILES, instance=album)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Álbum actualizado correctamente.")
+            return redirect('music:album_detail', album_id=album.pk)
+    else:
+        form = AlbumEditForm(instance=album)
+
+    return render(request, 'music/edit_album.html', {'form': form, 'album': album})
+
+
+@artist_required
+@require_http_methods(["POST"])
+def delete_album(request, album_id):
+    """Borra un álbum propio y, en cascada, todas sus canciones de la BD."""
+    album = get_object_or_404(Album, pk=album_id, artist=request.user.artist_profile)
+
+    # Song.album usa SET_NULL, así que borramos las canciones explícitamente.
+    album.songs.all().delete()
+    album.delete()
+
+    messages.success(request, "Álbum y sus canciones eliminados correctamente.")
+    return redirect('music:artist_detail')
 

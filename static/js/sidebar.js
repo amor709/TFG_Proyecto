@@ -19,11 +19,16 @@ class SidebarManager {
     }
 
     init() {
-         // Cargar sección guardada en localStorage o por defecto "recent"
+         // Los artistas no tienen sección "Guardados" (biblioteca de oyente):
+         // forzar siempre "Recientes" para evitar errores al iniciar sesión.
+         const isArtist = window.CURRENT_USER_IS_ARTIST === true;
          const savedSection = localStorage.getItem('sidebarActiveSection');
 
+         this.currentSection = isArtist ? 'recent' : (savedSection || 'recent');
 
-         this.currentSection = savedSection || 'recent';
+         if (isArtist) {
+             localStorage.setItem('sidebarActiveSection', 'recent');
+         }
 
 
          // Actualizar UI de chips ANTES de cargar contenido

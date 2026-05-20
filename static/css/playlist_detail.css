@@ -156,6 +156,26 @@
   margin: 0;
 }
 
+/* Autor de la playlist: foto pequeña a la izquierda + enlace al perfil */
+.playlist-author {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+.playlist-author:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+.playlist-author__avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
 
 /* ───────────────────────────────────────────────────────────────────
    2.5. CABECERA DEL BLOQUE DE CANCIONES (h2 + select)

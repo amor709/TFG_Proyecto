@@ -114,8 +114,8 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-2) var(--space-5);
-  /* Fondo cian/teal – idéntico al color de la captura */
-  background: #1db9a4;
+  /* Rojo SoundMusik */
+  background: var(--color-accent);
   color: #fff;
   font-size: var(--text-base);
   font-weight: 700;
@@ -124,8 +124,18 @@
   cursor: pointer;
   transition: background var(--duration-fast), transform var(--duration-fast);
 }
-.btn-shuffle:hover  { background: #25d4bc; transform: translateY(-1px); }
+.btn-shuffle:hover  { background: var(--color-accent-hover); transform: translateY(-1px); }
 .btn-shuffle:active { transform: scale(0.97); }
+
+/* Nº de reproducciones en "Canciones más escuchadas" (a la derecha) */
+.top-song-row__plays {
+  margin-left: auto;
+  flex-shrink: 0;
+  padding-left: var(--space-3);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
 
 .btn-shuffle__icon {
   flex-shrink: 0;
@@ -207,7 +217,7 @@
   position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.5);
-  display: flex;
+  display: none; /* overlay de play desactivado (icono faltante) */
   align-items: center;
   justify-content: center;
   opacity: 0;
@@ -242,75 +252,7 @@
 }
 
 
-/* ───────────────────────────────────────────────────────────────────
-   4. CARRUSELES  (estructura genérica reutilizada en todas las secciones)
-      Las tarjetas usan .track-card de soundmusik.css sin cambios.
-   ─────────────────────────────────────────────────────────────────── */
-
-/* Contenedor del carrusel: oculta lo que desborda */
-.carousel {
-  overflow: hidden;
-  width: 100%;
-}
-
-/* Track deslizable */
-.carousel__track {
-  display: flex;
-  gap: var(--space-4);
-  transition: transform var(--duration-normal) var(--ease-out);
-  will-change: transform;
-}
-
-/* Cada ítem ocupa exactamente 1/5 del ancho visible */
-.carousel__item {
-  flex: 0 0 calc((100% - 4 * var(--space-4)) / 5);
-  min-width: 0;
-}
-
-/* ── Cabecera de sección con navegación ── */
-.section-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-5);
-}
-
-/* Grupo derecho: flechas + "Ver más" juntos */
-.section-header__right {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-/* Solo flechas (sin "Ver más") */
-.section-header__nav {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-}
-
-/* Botones de flecha del carrusel */
-.carousel-nav-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--color-surface-03);
-  background: var(--color-surface-02);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  opacity: 0.7;
-  transition: opacity var(--duration-fast),
-              background var(--duration-fast),
-              border-color var(--duration-fast);
-}
-.carousel-nav-btn:hover {
-  opacity: 1;
-  background: var(--color-surface-03);
-  border-color: var(--color-text-muted);
-}
-.carousel-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+/* Estructura de carruseles + .section-header* movida a soundmusik.css (global) */
 
 
 /* ───────────────────────────────────────────────────────────────────
@@ -397,26 +339,7 @@
 }
 
 
-/* Enlace "Ver más" */
-.btn-see-all {
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--color-text-secondary);
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  border: 1px solid var(--color-surface-03);
-  border-radius: var(--radius-full);
-  padding: var(--space-1) var(--space-4);
-  transition: color var(--duration-fast),
-              border-color var(--duration-fast),
-              background var(--duration-fast);
-  white-space: nowrap;
-}
-.btn-see-all:hover {
-  color: var(--color-text-primary);
-  border-color: var(--color-text-muted);
-  background: rgba(255,255,255,0.06);
-}
+/* .btn-see-all movido a soundmusik.css (global) */
 
 /* Estado vacío */
 .empty-state {

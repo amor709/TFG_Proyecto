@@ -411,7 +411,7 @@
         }
     }
 
-    /* Estilos para botones de tags */
+    /* Estilos para botones de tags (igualados a create_single / auth.css) */
     .tag-checkboxes {
         display: flex;
         flex-wrap: wrap;
@@ -420,26 +420,32 @@
 
     .tag-checkboxes label {
         display: inline-block;
-        background: #2a2a2a;
-        color: #fff;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
+        padding: 0.4rem 0.9rem;
+        border: 1px solid var(--color-surface-03);
+        background: var(--color-bg);
+        border-radius: 9999px;
+        font-size: 0.85rem;
+        color: var(--color-text-secondary);
         cursor: pointer;
-        transition: all 0.2s ease;
-        border: 2px solid transparent;
-        font-size: 0.9rem;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .tag-checkboxes label:hover {
+        border-color: var(--color-accent);
+        color: var(--color-text-primary);
     }
 
     .tag-checkboxes input[type="checkbox"] {
         display: none;
     }
 
-    .tag-checkboxes input[type="checkbox"]:checked + label {
-        background: #e8212e;
-        color: #fff;
+    .tag-checkboxes label:has(input[type="checkbox"]:checked) {
+        background: var(--color-bg);          /* sin relleno */
+        border-color: var(--color-accent);    /* el borde rojo se queda al seleccionar */
+        color: var(--color-accent);           /* texto rojo */
     }
 
-    /* Estilos para colaboradores */
+    /* Estilos para colaboradores (igualados a los tags) */
     .collaborator-checkboxes {
         display: flex;
         flex-wrap: wrap;
@@ -448,23 +454,29 @@
 
     .collaborator-checkboxes label {
         display: inline-block;
-        background: #2a2a2a;
-        color: #fff;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
+        padding: 0.4rem 0.9rem;
+        border: 1px solid var(--color-surface-03);
+        background: var(--color-bg);
+        border-radius: 9999px;
+        font-size: 0.85rem;
+        color: var(--color-text-secondary);
         cursor: pointer;
-        transition: all 0.2s ease;
-        border: 2px solid transparent;
-        font-size: 0.9rem;
+        transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+    }
+
+    .collaborator-checkboxes label:hover {
+        border-color: var(--color-accent);
+        color: var(--color-text-primary);
     }
 
     .collaborator-checkboxes input[type="checkbox"] {
         display: none;
     }
 
-    .collaborator-checkboxes label.selected {
-        background: #e8212e;
-        color: #fff;
+    .collaborator-checkboxes label:has(input[type="checkbox"]:checked) {
+        background: var(--color-bg);          /* sin relleno */
+        border-color: var(--color-accent);    /* el borde rojo se queda al seleccionar */
+        color: var(--color-accent);           /* texto rojo */
     }
 
     /* Barra de búsqueda para colaboradores */

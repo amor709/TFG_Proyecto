@@ -742,6 +742,11 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .track-info__artist {
   font-size: var(--text-base);
   color: var(--color-text-secondary);
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Artista relacionado */
@@ -880,6 +885,36 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 .player__song-artist {
   font-size: var(--text-sm);
   color: var(--color-text-secondary);
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Nombres de artistas del footer: enlaces a sus perfiles */
+.player__artist-link {
+  color: inherit;
+  text-decoration: none;
+}
+.player__artist-link:hover {
+  color: var(--color-text-primary);
+  text-decoration: underline;
+}
+
+/* Carátula y título del footer: clicables (van al álbum) */
+.player__thumb,
+.player__song-title {
+  cursor: pointer;
+}
+.player__song-title:hover {
+  text-decoration: underline;
+}
+
+/* PFP del artista relacionado (panel derecho): clicable */
+.related__artist-photo-link {
+  display: inline-block;
+  cursor: pointer;
 }
 
 .player__like-btn {
@@ -904,6 +939,8 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 }
 .ctrl-btn:hover { opacity: 1; background: var(--color-surface-03); }
 .ctrl-btn:active { transform: scale(0.93); }
+/* Shuffle / Repeat activos: icono rojo a opacidad plena */
+.ctrl-btn--active { opacity: 1; }
 
 /* Botón play resaltado */
 .ctrl-btn--play {
@@ -1495,4 +1532,119 @@ img    { display: block; max-width: 100%; object-fit: cover; }
 
 .error-msg {
   color: var(--color-accent);
+}
+
+/* Botón icono reutilizable: cuadradito 28x28 con borde y hover suave.
+   Usado en cabeceras de sección de perfiles (listener: crear playlist,
+   editar perfil; artista: añadir álbum, añadir single). Misma altura que
+   .carousel-nav-btn y .btn-see-all para alineación horizontal. */
+.profile-icon-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-surface-03);
+  background: var(--color-surface-02);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.7;
+  transition: opacity var(--duration-fast),
+              background var(--duration-fast),
+              border-color var(--duration-fast),
+              transform var(--duration-fast);
+  cursor: pointer;
+}
+.profile-icon-btn:hover {
+  opacity: 1;
+  background: var(--color-surface-03);
+  border-color: var(--color-text-muted);
+  transform: scale(1.05);
+}
+.profile-icon-btn:active {
+  transform: scale(0.95);
+}
+
+/* "Ver más" – pastilla con borde, reutilizada en perfiles, artist_detail y search.
+   Altura fija de 28px para alinear con .profile-icon-btn y .carousel-nav-btn. */
+.btn-see-all {
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  border: 1px solid var(--color-surface-03);
+  border-radius: var(--radius-full);
+  height: 28px;
+  padding: 0 var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  transition: color var(--duration-fast),
+              border-color var(--duration-fast),
+              background var(--duration-fast);
+}
+.btn-see-all:hover {
+  color: var(--color-text-primary);
+  border-color: var(--color-text-muted);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ──────────────── CABECERAS DE SECCIÓN + CARRUSEL ────────────────
+   Estructura reutilizada en artist_detail y user_profile. */
+.section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+.section-header__right {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.section-header__nav {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.carousel-nav-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--color-surface-03);
+  background: var(--color-surface-02);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity var(--duration-fast),
+              background var(--duration-fast),
+              border-color var(--duration-fast);
+}
+.carousel-nav-btn:hover {
+  opacity: 1;
+  background: var(--color-surface-03);
+  border-color: var(--color-text-muted);
+}
+.carousel-nav-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+/* Las PNG play-left/right hacen que las flechas se vean caídas respecto al resto
+   del header. Subimos el botón entero para nivelarlas. */
+.carousel-nav-btn { transform: translateY(-8.5px); }
+
+.carousel {
+  overflow: hidden;
+  width: 100%;
+}
+.carousel__track {
+  display: flex;
+  gap: var(--space-4);
+  transition: transform var(--duration-normal) var(--ease-out);
+  will-change: transform;
+}
+.carousel__item {
+  flex: 0 0 calc((100% - 4 * var(--space-4)) / 5);
+  min-width: 0;
 }

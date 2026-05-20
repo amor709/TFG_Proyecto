@@ -92,12 +92,6 @@ class Song(models.Model):
         return f"{minutes}:{seconds:02d}"
 
     @property
-    def is_liked(self):
-        """Retorna True si la canción tiene like (placeholder para futuro)."""
-        # TODO: Implementar sistema de likes cuando exista el modelo
-        return False
-
-    @property
     def featured_artists(self):
         """Retorna los artistas colaboradores (excluding the main artist)"""
         # Para compatibilidad, retornar los colaboradores
@@ -115,6 +109,13 @@ class Song(models.Model):
             names = [collab.user.username for collab in self.collaborators.all()]
             return f"feat. {', '.join(names)}"
         return ""
+
+    @property
+    def authors_display(self):
+        """Nombre del artista principal + colaboradores (principal primero)."""
+        names = [self.artist.user.username]
+        names += [collab.user.username for collab in self.collaborators.all()]
+        return ", ".join(names)
 
     def __str__(self):
         return f"{self.title} - {self.artist.user.username}"

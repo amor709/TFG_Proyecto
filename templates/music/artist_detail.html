@@ -34,7 +34,7 @@
 
             <!-- Seguidores -->
             <p class="artist-hero__followers">
-                Más de {{ artist.followers_count|floatformat:0 }} seguidores
+                {{ artist.followers_count|floatformat:0 }} seguidores
             </p>
 
             <!-- Controles de acción -->
@@ -57,24 +57,13 @@
                                {% if is_followed %}artist-action-btn--active{% endif %}"
                         id="btn-artist-like"
                         data-artist-id="{{ artist.pk }}"
+                        data-following="{% if is_followed %}true{% else %}false{% endif %}"
                         aria-label="{% if is_followed %}Dejar de seguir{% else %}Seguir a {{ artist.name }}{% endif %}">
-                    {# Reemplaza la siguiente etiqueta <img> con tu icono de corazón #}
-                    <img src="{% if is_followed %}{% static 'img/icon-heart-filled.png' %}{% else %}{% static 'img/diamond-white.png' %}{% endif %}"
+                    <img src="{% if is_followed %}{% static 'img/diamond-red.png' %}{% else %}{% static 'img/diamond-white.png' %}{% endif %}"
                          alt=""
                          class="icon--md">
                 </button>
                 {% endif %}
-
-                <!-- Más opciones -->
-                <button class="artist-action-btn artist-action-btn--more"
-                        id="btn-artist-more"
-                        data-artist-id="{{ artist.pk }}"
-                        aria-label="Más opciones">
-                    {# Reemplaza la siguiente etiqueta <img> con tu icono de tres puntos #}
-                    <img src="{% static 'img/dots.png' %}"
-                         alt="···"
-                         class="icon--md">
-                </button>
 
                {% if is_own_profile %}
                 <!-- Editar perfil -->
@@ -130,6 +119,8 @@
                         </p>
                     </div>
 
+                    <!-- Nº de reproducciones -->
+                    <span class="top-song-row__plays">{{ song.plays }} repros</span>
 
                 </article>
                 {% empty %}
@@ -159,8 +150,8 @@
             <div class="carousel" id="carousel-releases">
                 <div class="carousel__track">
                     {% for item in releases %}
-                    <article class="track-card carousel__item">
-                        <a href="{% if item.album %}{% url 'music:album_detail' item.album.pk %}{% else %}#{% endif %}" class="track-card__link">
+                    <article class="track-card carousel__item"{% if item.is_single %} data-track-id="{{ item.pk }}"{% endif %}>
+                        <a href="{% if item.is_single %}#{% else %}{% url 'music:album_detail' item.pk %}{% endif %}" class="track-card__link">
                             <div class="track-card__cover-wrap">
                                 {% if item.cover %}
                                 <img src="{{ item.cover.url }}" alt="{{ item.title }}"
@@ -175,7 +166,7 @@
                             </div>
                             <h3 class="track-card__title">{{ item.title }}</h3>
                             <p class="track-card__sub">
-                                {{ item.get_type_display }} · {{ item.release_date|date:"Y" }}
+                                {% if item.is_single %}Single{% else %}{{ item.get_type_display }}{% endif %} · {{ item.release_date|date:"Y" }}
                             </p>
                         </a>
                     </article>
@@ -200,7 +191,7 @@
                     <h3 class="section-title" id="albums-heading">Álbumes</h3>
                     <div class="section-header__right">
                         {% if is_own_profile %}
-                        <a href="{% url 'music:album_phase_a' %}" class="btn-add-album" aria-label="Añadir álbum">
+                        <a href="{% url 'music:album_phase_a' %}" class="profile-icon-btn" aria-label="Añadir álbum">
                             <img src="{% static 'img/addplaylist.png' %}" alt="Añadir" class="icon--sm">
                         </a>
                         {% endif %}
@@ -214,7 +205,7 @@
                                 <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
                             </button>
                         </div>
-                        <a href="#"
+                        <a href="{% url 'music:artist_albums' artist.pk %}"
                            class="btn-see-all">Ver más</a>
                     </div>
                 </div>
@@ -251,7 +242,7 @@
                     <h3 class="section-title" id="singles-heading">Singles</h3>
                     <div class="section-header__right">
                         {% if is_own_profile %}
-                        <a href="{% url 'music:create_single' %}" class="btn-add-single" aria-label="Añadir canción">
+                        <a href="{% url 'music:create_single' %}" class="profile-icon-btn" aria-label="Añadir canción">
                             <img src="{% static 'img/addplaylist.png' %}" alt="Añadir" class="icon--sm">
                         </a>
                         {% endif %}
@@ -265,7 +256,7 @@
                                 <img src="{% static 'img/play-right.png' %}" alt="" class="icon--xs">
                             </button>
                         </div>
-                        <a href="#"
+                        <a href="{% url 'music:artist_singles' artist.pk %}"
                            class="btn-see-all">Ver más</a>
                     </div>
                 </div>
@@ -424,6 +415,60 @@ document.getElementById('btn-artist-shuffle').addEventListener('click', async ()
     }
 });
 
+// Botón de seguir (diamante) del hero: dinámico en tiempo real (diamond-white ↔ diamond-red)
+const artistLikeBtn = document.getElementById('btn-artist-like');
+if (artistLikeBtn) {
+    const staticUrl = document.documentElement.getAttribute('data-static-url') || '/static/';
+    const artistLikeImg = artistLikeBtn.querySelector('img');
+    let followPending = false;
+
+    function setArtistFollow(following) {
+        artistLikeBtn.classList.toggle('artist-action-btn--active', following);
+        artistLikeBtn.dataset.following = following ? 'true' : 'false';
+        if (artistLikeImg) {
+            artistLikeImg.src = staticUrl + (following ? 'img/diamond-red.png' : 'img/diamond-white.png');
+        }
+        artistLikeBtn.setAttribute('aria-label', following ? 'Dejar de seguir' : 'Seguir');
+    }
+
+    artistLikeBtn.addEventListener('click', function() {
+        if (followPending) return;
+        const artistId = artistLikeBtn.dataset.artistId;
+        if (!artistId) return;
+        const wasFollowing = artistLikeBtn.dataset.following === 'true';
+        setArtistFollow(!wasFollowing);   // actualización optimista (tiempo real)
+        followPending = true;
+        fetch(`/accounts/api/follow-artist/${artistId}/`, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCsrfToken() }
+        })
+        .then(r => r.ok ? r.json() : Promise.reject(r.status))
+        .then(data => {
+            if (data.status === 'success') {
+                setArtistFollow(data.is_following);
+                // Avisar a otros controles (botón "+ Seguir" del panel derecho) para que se sincronicen
+                document.dispatchEvent(new CustomEvent('followingChanged', {
+                    detail: { artist_id: artistId, is_following: data.is_following }
+                }));
+                if (typeof sidebarManager !== 'undefined') {
+                    sidebarManager.loadSidebarSection(sidebarManager.currentSection);
+                }
+            } else {
+                setArtistFollow(wasFollowing);
+            }
+        })
+        .catch(() => setArtistFollow(wasFollowing))
+        .finally(() => { followPending = false; });
+    });
+
+    // Sincronización inversa: si se sigue/deja de seguir desde otro botón (p. ej. panel derecho)
+    document.addEventListener('followingChanged', function(e) {
+        if (e.detail && String(e.detail.artist_id) === String(artistLikeBtn.dataset.artistId)) {
+            setArtistFollow(e.detail.is_following);
+        }
+    });
+}
+
 // Top songs click
 document.querySelectorAll('.top-song-row').forEach((row, index) => {
     row.addEventListener('click', () => {
@@ -448,20 +493,7 @@ document.querySelectorAll('.track-card__link[href="#"]').forEach(link => {
     });
 });
 
-// Carruseles
-document.querySelectorAll('.carousel-nav-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-        const id = btn.dataset.target;
-        const dir = parseInt(btn.dataset.dir);
-        const track = document.querySelector(`#${id} .carousel__track`);
-        const item = track.querySelector('.carousel__item');
-        const step = item ? item.offsetWidth + 16 : 200; // 16 = var(--space-4)
-        const max = track.scrollWidth - track.parentElement.offsetWidth;
-        let cur = parseInt(track.style.transform?.replace(/[^-\d]/g, '') || 0);
-        cur = Math.min(0, Math.max(-max, cur - dir * step));
-        track.style.transform = `translateX(${cur}px)`;
-    });
-});
+// Navegación de carrusel: gestionada por static/js/carousel.js (global)
 });
 </script>
 {% endblock %}

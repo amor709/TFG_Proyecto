@@ -3,10 +3,11 @@ Utilidades para gestionar estadísticas de reproducción de usuarios.
 """
 from django.utils import timezone
 from datetime import timedelta, datetime
-from django.db.models import Q, Count
+from django.db.models import Q, Count, F
 from .models import (
-    ArtistPlayCount, SongPlayCount, 
-    MonthlyArtistStats, MonthlySongStats
+    ArtistPlayCount, SongPlayCount,
+    MonthlyArtistStats, MonthlySongStats,
+    ArtistProfile, UserTag
 )
 
 
@@ -70,7 +71,27 @@ def record_play(user, song):
     monthly_song.play_count += 1
     monthly_song.last_updated = now
     monthly_song.save()
-    
+
+    # 5. Contadores GLOBALES (no por-usuario), de forma atómica:
+    #    - Song.plays: lo usa "Canciones más escuchadas" del perfil de artista.
+    #    - ArtistProfile.total_plays: total de reproducciones del artista.
+    from music.models import Song
+    Song.objects.filter(pk=song.pk).update(plays=F('plays') + 1)
+    ArtistProfile.objects.filter(pk=song.artist_id).update(total_plays=F('total_plays') + 1)
+
+    # 6. Preferencias de género del usuario (UserTag), para las recomendaciones:
+    #    - Renovar los tags de la canción escuchada (last_listened se actualiza solo).
+    #    - Eliminar los tags que lleven más de 30 días sin reproducirse.
+    for tag in song.tags.all():
+        user_tag, created = UserTag.objects.get_or_create(user=user, tag=tag)
+        if not created:
+            user_tag.listen_count += 1
+            user_tag.save()  # last_listened se actualiza solo (auto_now=True)
+    UserTag.objects.filter(
+        user=user,
+        last_listened__lt=now - timedelta(days=30)
+    ).delete()
+
     return True
 
 

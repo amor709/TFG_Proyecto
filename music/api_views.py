@@ -116,6 +116,10 @@ def suggested_tracks(request, track_id):
         from django.db.models import Q
 
         track = Song.objects.get(id=track_id)
+        # Excluir la propia canción y las que el cliente ya tenga en la cola (?exclude=)
+        exclude_param = request.GET.get('exclude', '')
+        exclude_ids = [int(x) for x in exclude_param.split(',') if x.strip().isdigit()]
+        exclude_ids.append(track.id)
         track_tags = track.tags.all()
         suggested = []
 
@@ -133,22 +137,22 @@ def suggested_tracks(request, track_id):
                         Song.objects.filter(
                             playlists__in=liked_playlists,
                             tags__in=track_tags
-                        ).exclude(id=track.id).distinct().values_list('id', flat=True)[:10]
+                        ).exclude(id__in=exclude_ids).distinct().values_list('id', flat=True)[:10]
                     )
 
         # Intento 2: Si no hay en "Mis Joyas", canciones con tags en común en general
         if not suggested and track_tags.exists():
             suggested = list(Song.objects.filter(
                 tags__in=track_tags
-            ).exclude(id=track.id).distinct().values_list('id', flat=True)[:10])
+            ).exclude(id__in=exclude_ids).distinct().values_list('id', flat=True)[:10])
 
         # Intento 3: Si no hay con tags, canciones aleatorias
         if not suggested:
-            suggested = list(Song.objects.exclude(id=track.id).order_by('?').values_list('id', flat=True)[:10])
+            suggested = list(Song.objects.exclude(id__in=exclude_ids).order_by('?').values_list('id', flat=True)[:10])
 
         # Intento 4: Si aún no hay, obtener CUALQUIER canción
         if not suggested:
-            suggested = list(Song.objects.exclude(id=track.id).values_list('id', flat=True)[:10])
+            suggested = list(Song.objects.exclude(id__in=exclude_ids).values_list('id', flat=True)[:10])
 
         return JsonResponse({'suggested_ids': suggested})
     except Song.DoesNotExist:

@@ -21,12 +21,6 @@ async function playSongA(trackId) {
 
         console.log('🔊 URL del audio:', trackData.audio_url);
 
-        // Cancelar cualquier temporizador de historial anterior
-        if (window.historyTimer) {
-            clearTimeout(window.historyTimer);
-            window.historyTimer = null;
-        }
-
         // Actualizar interfaz del reproductor y panel derecho
         updatePlayer(trackData);
         updateRightPanel(trackData);
@@ -47,36 +41,9 @@ async function playSongA(trackId) {
             });
         };
 
-        // Configurar temporizador para agregar al historial después de 20 segundos de reproducción
-        let timerStarted = false;
+        // (El conteo de "reproducida" se gestiona de forma central en
+        //  audio-player-sync.js, para que sobreviva a la navegación entre páginas.)
         audio.ontimeupdate = function() {
-            if (audio.duration && !timerStarted && audio.currentTime >= 1) { // Empezar timer después de 1 segundo de reproducción
-                timerStarted = true;
-                console.log('Iniciando temporizador de historial (20 segundos)');
-                window.historyTimer = setTimeout(async () => {
-                    try {
-                        console.log('📝 Agregando canción al historial después de 20 segundos de reproducción');
-                        const historyResponse = await fetch('/accounts/api/add-to-history/', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRFToken': getCsrfToken()
-                            },
-                            body: JSON.stringify({ song_id: trackId })
-                        });
-
-                        if (historyResponse.ok) {
-                            const responseData = await historyResponse.json();
-                            console.log('Canción agregada al historial de escucha:', responseData);
-                        } else {
-                            console.error('Error al agregar canción al historial:', historyResponse.status, historyResponse.statusText);
-                        }
-                    } catch (error) {
-                        console.error('Error en temporizador de historial:', error);
-                    }
-                }, 20000); // 20 segundos
-            }
-
             // Actualizar barra de progreso visual
             if (audio.duration) {
                 const progress = (audio.currentTime / audio.duration) * 100;
@@ -117,8 +84,8 @@ async function playSongA(trackId) {
              console.log('📝 Canción agregada al historial del queue system:', trackId);
          }
 
-         // Guardar información de la canción actual en localStorage
-         saveCurrentTrackToStorage(trackData);
+         // (Ya no guardamos la canción en localStorage('currentTrack'): era por navegador
+         //  y filtraba la info entre usuarios en el panel derecho.)
 
         // Gestión de la cola tras reproducir una canción.
         // - Si viene de la cola/álbum/artista: la cola ya está preparada por
@@ -150,21 +117,10 @@ async function playSongA(trackId) {
              }
          }));
 
-         // Actualizar inmediatamente el icono del diamond y botón del player
+         // Sincronizar botón del player y badge del panel derecho con el nuevo track
          setTimeout(() => {
-             if (typeof likedSongsManager !== 'undefined' && likedSongsManager && trackData.id) {
-                 const isLiked = likedSongsManager.likedSongs.has(trackData.id);
-                 console.log(`🎵 Actualizando iconos para la canción ${trackData.id}: ${isLiked ? 'Liked' : 'Not liked'}`);
-
-                 // Actualizar el icono del diamond del panel derecho
-                 likedSongsManager.updateDiamondInfoIcons(trackData.id, isLiked);
-
-                 // Actualizar el botón del player
-                 const playerLikeBtn = document.querySelector('#player-like-btn');
-                 if (playerLikeBtn) {
-                     playerLikeBtn.dataset.songId = trackData.id;
-                     likedSongsManager.updateLikeButton(playerLikeBtn, isLiked);
-                 }
+             if (window.likedSongsManager && trackData.id) {
+                 window.likedSongsManager.syncPlayer(trackData.id);
              }
          }, 50);
 
@@ -226,6 +182,11 @@ async function loadSuggestedTracksToQueue(trackId, isManualPlay = true) {
                 }
             }
         }
+
+        // Garantizar que la cola arranque con al menos 10 canciones (por tags)
+        if (typeof queueSystem !== 'undefined' && queueSystem) {
+            await queueSystem.ensureQueueMinimum(trackId);
+        }
     } catch (error) {
         console.error('❌ Error al cargar canciones sugeridas:', error);
         // Si hay error, continuaré sin sugerencias (no es crítico)
@@ -246,7 +207,20 @@ function updatePlayer(trackData) {
 
     if (trackArtImg) trackArtImg.src = trackData.cover || '/static/img/logo.png';
     if (trackTitle) trackTitle.textContent = trackData.title;
-    if (trackArtist) trackArtist.textContent = trackData.artist;
+
+    // Nombres de artistas como enlaces a sus perfiles (principal + colaboradores)
+    if (trackArtist) {
+        if (Array.isArray(trackData.artists) && trackData.artists.length) {
+            trackArtist.innerHTML = trackData.artists.map(a =>
+                `<a href="/music/artist/${a.id}/" class="player__artist-link">${escapeHtml(a.name)}</a>`
+            ).join(',&nbsp;');
+        } else {
+            trackArtist.textContent = trackData.artist;
+        }
+    }
+
+    // Álbum actual (para que la carátula/título del footer lleven a su álbum; null si es single)
+    window.currentTrackAlbumId = trackData.album_id || null;
 
     console.log(`Player actualizado: ${trackData.title} - ${trackData.artist}`);
 }
@@ -293,18 +267,20 @@ function updateRightPanel(trackData) {
             <div class="right-panel__related">
                 <h4 class="related__heading">Cancioncita de…</h4>
                 <div class="related__artist-card">
-                    <img src="${escapeHtml(trackData.related_artist.photo || '/static/img/artist-placeholder.png')}" 
-                         alt="${escapeHtml(trackData.related_artist.name)}" 
-                         class="related__artist-photo"
-                         loading="lazy">
+                    <a href="/music/artist/${trackData.related_artist.id}/" class="related__artist-photo-link" aria-label="Ver perfil de ${escapeHtml(trackData.related_artist.name)}">
+                        <img src="${escapeHtml(trackData.related_artist.photo || '/static/img/userdefault.png')}"
+                             alt="${escapeHtml(trackData.related_artist.name)}"
+                             class="related__artist-photo"
+                             loading="lazy">
+                    </a>
                     <div class="related__artist-info">
                          <span class="related__artist-name">${escapeHtml(trackData.related_artist.name)}</span>
-                         <button id="artist-follow-btn" 
-                                 class="btn-follow btn--not-following" 
-                                 data-artist-id="${trackData.related_artist.id}" 
+                         ${window.CURRENT_USER_IS_ARTIST ? '' : `<button id="artist-follow-btn"
+                                 class="btn-follow btn--not-following"
+                                 data-artist-id="${trackData.related_artist.id}"
                                  aria-label="Seguir a ${escapeHtml(trackData.related_artist.name)}">
                              + Seguir
-                         </button>
+                         </button>`}
                      </div>
                 </div>
             </div>

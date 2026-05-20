@@ -233,8 +233,8 @@
 .track-play-btn:hover { opacity: 1; transform: scale(1.1); }
 
 /* Al hover de la fila: ocultar número, mostrar play */
-.tracklist__row:hover .track-num        { opacity: 0; }
-.tracklist__row:hover .track-play-btn   { display: flex; }
+.tracklist__row:hover .track-num        { opacity: 1; }
+.tracklist__row:hover .track-play-btn   { display: none; } /* play de fila desactivado (icono faltante); se reproduce desde el título */
 
 /* Título de la canción */
 .tracklist__col--title { overflow: hidden; }
@@ -288,8 +288,8 @@
 .tracklist__col--actions {
   justify-content: flex-end;
   gap: var(--space-1);
-  /* Ocultas por defecto, se muestran al hover */
-  opacity: 0;
+  /* Siempre visibles (diamante + 3 puntos), no solo al hover */
+  opacity: 1;
   transition: opacity var(--duration-fast);
 }
 .tracklist__row:hover .tracklist__col--actions { opacity: 1; }
@@ -350,13 +350,16 @@
 }
 
 /* ── Tarjeta de recomendación ── */
-.rec-card { position: relative; }
+/* min-width:0 permite que el item del grid se encoja por debajo del contenido,
+   para que el título largo se corte con "…" en vez de ensanchar su columna. */
+.rec-card { position: relative; min-width: 0; }
 
 .rec-card__link {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   text-decoration: none;
+  min-width: 0;
 }
 
 .rec-card__cover-wrap {
@@ -387,7 +390,7 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
-  display: flex;
+  display: none; /* overlay de play desactivado (icono faltante) */
   align-items: center;
   justify-content: center;
   opacity: 0;
@@ -441,4 +444,27 @@
     flex-direction: column;
     align-items: flex-start;
   }
+}
+
+/* ──────────────────────────────────────────────────────────────
+   Acciones del dueño del álbum (botón Editar)
+   ────────────────────────────────────────────────────────────── */
+.album-header__actions {
+  margin-top: 1rem;
+}
+
+.album-edit-btn {
+  display: inline-block;
+  background: var(--color-surface-03);
+  color: var(--color-text-primary);
+  text-decoration: none;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: background 0.2s ease;
+}
+
+.album-edit-btn:hover {
+  background: #3a3a3a;
 }

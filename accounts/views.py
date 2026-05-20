@@ -1,3 +1,4 @@
+import random
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponseRedirect
 from django.contrib.auth import authenticate, login, logout
@@ -171,11 +172,15 @@ class HomeView(TemplateView):
             # Recomendaciones para tus oídos: 
             # Si nunca ha escuchado → canciones aleatorias
             # Si ha escuchado algo → álbumes con tags de canciones escuchadas
-            user_tags = UserTag.objects.filter(user=user, last_listened__gte=one_month_ago - timedelta(days=30))
+            user_tags = UserTag.objects.filter(user=user, last_listened__gte=one_month_ago)
             if user_tags:
                 # Ha escuchado algo → usar sistema de tags
                 tag_ids = [ut.tag_id for ut in user_tags]
-                recommended_albums = Album.objects.filter(tags__id__in=tag_ids).distinct().order_by('?')[:5]
+                # distinct() deduplica en BD (el JOIN M2M repite álbumes); barajamos
+                # en Python y cogemos 5 (order_by('?') rompería el distinct → duplicados).
+                recommended_albums = list(Album.objects.filter(tags__id__in=tag_ids).distinct())
+                random.shuffle(recommended_albums)
+                recommended_albums = recommended_albums[:5]
             else:
                 # Nunca ha escuchado → mostrar álbumes aleatorios
                 recommended_albums = Album.objects.all().order_by('?')[:5]
@@ -195,6 +200,20 @@ class HomeView(TemplateView):
             else:
                 user_playlists = Playlist.objects.filter(user=user).order_by('-created_at')[:10]
                 context['user_playlists'] = user_playlists
+
+            # Últimos lanzamientos de artistas que sigues (solo listeners con seguidos)
+            latest_releases = []
+            if not user.is_artist and hasattr(user, 'listener_profile'):
+                followed_artists = user.listener_profile.following.all()
+                if followed_artists.exists():
+                    albums = list(Album.objects.filter(artist__in=followed_artists, is_draft=False))
+                    singles = list(Song.objects.filter(artist__in=followed_artists, album__isnull=True))
+                    releases = albums + singles
+                    releases.sort(key=lambda x: x.release_date, reverse=True)
+                    latest_releases = releases[:10]
+                    for item in latest_releases:
+                        item.is_single = isinstance(item, Song)
+            context['latest_releases'] = latest_releases
         else:
             # Para usuarios no autenticados, mostrar datos por defecto
             context['recently_played'] = Song.objects.all().order_by('-plays')[:10]
@@ -202,16 +221,7 @@ class HomeView(TemplateView):
             context['recommended_albums'] = Album.objects.all().order_by('?')[:5]
             context['back_to_music'] = Song.objects.all().order_by('?')[:5]
             context['user_playlists'] = []
-
-        # Canción actual (si hay alguna)
-        current_track = Song.objects.order_by('?').first()
-        context['current_track'] = current_track
-
-        # Artista relacionado
-        if current_track:
-            context['related_artist'] = ArtistProfile.objects.exclude(pk=current_track.artist.pk).order_by('?').first()
-        else:
-            context['related_artist'] = None
+            context['latest_releases'] = []
 
         return context
 
