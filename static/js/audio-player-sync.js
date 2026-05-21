@@ -382,6 +382,12 @@ class AudioPlayerSync {
             if (typeof updatePlayer === 'function') updatePlayer(trackData);
             if (typeof updateRightPanel === 'function') updateRightPanel(trackData);
 
+            // El panel derecho se re-renderizó: avisar para que el botón "+ Seguir"
+            // se re-sincronice con el estado real (follow-system escucha trackChanged).
+            document.dispatchEvent(new CustomEvent('trackChanged', {
+                detail: { artist_id: trackData.artist_id }
+            }));
+
             // Cargar audio y fijar la posición cuando haya metadata
             this.audio.src = trackData.audio_url;
             this.seekAndMaybePlay(session.current_time || 0, session.is_playing);

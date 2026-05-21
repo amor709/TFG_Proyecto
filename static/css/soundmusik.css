@@ -1076,7 +1076,7 @@ img    { display: block; max-width: 100%; object-fit: cover; }
   padding: var(--space-2) 0px;
   background: transparent;
   z-index: 99;
-  transform: translateY(-16px);
+  transform: translateY(-24px);
   height: auto;
   margin-left: var(--sidebar-w);
   margin-right: var(--right-panel-w);

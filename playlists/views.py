@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib import messages
 from django.http import JsonResponse
+from django.db.models import Max
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from .models import Playlist, PlaylistSong
@@ -63,7 +63,6 @@ def edit_playlist(request, pk):
         form = PlaylistForm(request.POST, request.FILES, instance=playlist)
         if form.is_valid():
             form.save()
-            messages.success(request, "Playlist actualizada correctamente.")
             return redirect('playlists:detail', pk=playlist.pk)
     else:
         form = PlaylistForm(instance=playlist)
@@ -79,7 +78,6 @@ def delete_playlist(request, pk):
         return redirect('playlists:detail', pk=playlist.pk)
 
     playlist.delete()
-    messages.success(request, "Playlist eliminada correctamente.")
     return redirect('home')
 
 
@@ -89,7 +87,7 @@ def add_song_to_playlist(request, playlist_id, song_id):
     song = get_object_or_404(Song, pk=song_id)
     if not playlist.songs.filter(pk=song_id).exists():
         # Get next order
-        next_order = playlist.playlistsong_set.count() + 1
+        next_order = (playlist.playlistsong_set.aggregate(Max('order'))['order__max'] or 0) + 1
         PlaylistSong.objects.create(playlist=playlist, song=song, order=next_order)
         return JsonResponse({'success': True})
     return JsonResponse({'success': False})

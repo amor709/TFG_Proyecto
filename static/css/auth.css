@@ -376,6 +376,16 @@ body, html {
     justify-content: center;
 }
 
+/* Los iconos (headphones/microphone) miden 100px de ancho; aquí esta página
+   no carga soundmusik.css, así que les damos tamaño propio: pequeños y
+   centrados dentro del círculo. */
+.option-icon img {
+    width: 30px;
+    height: 30px;
+    object-fit: contain;
+    display: block;
+}
+
 /* ──────────────────────────────────────────────────────────────
    Cropper modal
    ────────────────────────────────────────────────────────────── */

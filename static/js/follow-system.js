@@ -13,12 +13,20 @@ class FollowSystem {
     constructor() {
         this.currentArtistId = null;
         this.pendingRequest = false;
-        this.handleClick = this.onFollowClick.bind(this);
         this.init();
     }
 
     init() {
         this.refreshFromDom();
+
+        // Click por delegación: el botón del panel derecho se re-renderiza
+        // (updateRightPanel), así que escuchamos en document para que siga
+        // respondiendo aunque el elemento cambie.
+        document.addEventListener('click', (e) => {
+            if (e.target.closest('#artist-follow-btn')) {
+                this.onFollowClick(e);
+            }
+        });
 
         document.addEventListener('trackChanged', (e) => {
             if (e.detail && e.detail.artist_id) {
@@ -45,9 +53,6 @@ class FollowSystem {
         if (!isNaN(domId)) {
             this.currentArtistId = domId;
         }
-
-        btn.removeEventListener('click', this.handleClick);
-        btn.addEventListener('click', this.handleClick);
 
         if (this.currentArtistId) {
             this.fetchFollowState();

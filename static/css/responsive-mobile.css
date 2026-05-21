@@ -1,0 +1,138 @@
+/* ════════════════════════════════════════════════════════════════════
+   responsive-mobile.css  –  Capa responsive para móvil (≤768px)
+
+   Aditiva: NO modifica el CSS de escritorio. Salvo el bloque inicial de
+   "solo-móvil ocultos" (necesario para que los elementos nuevos no se
+   vean en desktop), todo vive dentro de @media (max-width: 768px).
+   Quitar el <link> de este archivo en base.html revierte por completo
+   al diseño de escritorio.
+
+   Fase 1: Cimientos (dvh, scroll, grid con mini-player + tabs)
+   Fase 2: Navegación (tabs inferiores, header compacto, paneles)
+   ════════════════════════════════════════════════════════════════════ */
+
+/* Elementos exclusivos de móvil: ocultos por defecto (incluido escritorio) */
+.mobile-tabbar { display: none; }
+
+@media (max-width: 768px) {
+
+  /* ── Variables de alturas móvil ── */
+  :root {
+    --m-header-h: 56px;
+    --m-player-h: 64px;
+    --m-tab-h:    58px;
+  }
+
+  /* ═══════════════════════════════════════════════
+     FASE 1 · CIMIENTOS
+     ═══════════════════════════════════════════════ */
+
+  /* 100dvh: altura real del viewport (descuenta la barra del navegador
+     móvil, que con 100vh deja la UI cortada). */
+  .app-shell {
+    height: 100vh;          /* fallback navegadores sin dvh */
+    height: 100dvh;
+    grid-template-rows:
+      var(--m-header-h)     /* header compacto   */
+      1fr                   /* cuerpo (scroll)   */
+      var(--m-player-h)     /* mini-player       */
+      var(--m-tab-h);       /* pestañas inferior */
+  }
+
+  /* El cuerpo ocupa la fila flexible; main-content ya hace scroll vertical */
+  .main-content { padding: 0 var(--space-4); }
+
+  /* Barra de progreso del player pegada al borde superior del mini-player */
+  .progress-bar-wrapper { transform: none; top: -2px; }
+
+  /* ═══════════════════════════════════════════════
+     FASE 2 · HEADER COMPACTO
+     ═══════════════════════════════════════════════ */
+  .app-header {
+    position: relative;        /* ancla el overlay de búsqueda al header */
+    gap: var(--space-3);
+    padding: 0 var(--space-3);
+    justify-content: space-between;
+  }
+
+  .header__logo { width: auto; }
+  .logo__icon   { width: 130px; height: 42px; }
+
+  .header__controls { width: auto; gap: var(--space-1); }
+  /* Las flechas atrás/adelante no son críticas en móvil (hay gesto del SO) */
+  .header__controls .header-btn { display: none; }
+
+  /* Búsqueda oculta por defecto; se revela con la pestaña "Buscar" */
+  .header__search { display: none; }
+  body.m-search-open .header__search {
+    display: flex;
+    position: absolute;
+    inset: 0;
+    z-index: 120;
+    align-items: center;
+    padding: 0 var(--space-3);
+    background: var(--color-surface-01);
+  }
+  body.m-search-open .search-bar { width: 100%; }
+
+  /* ═══════════════════════════════════════════════
+     FASE 2 · BARRA DE PESTAÑAS INFERIOR
+     ═══════════════════════════════════════════════ */
+  .mobile-tabbar {
+    grid-row: 4;
+    display: flex;
+    align-items: stretch;
+    background: var(--color-surface-01);
+    border-top: 1px solid var(--color-surface-03);
+    z-index: 130;
+    padding-bottom: env(safe-area-inset-bottom);   /* notch iOS */
+  }
+
+  .mobile-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    padding: var(--space-1) 0;
+    text-decoration: none;
+    transition: color var(--duration-fast);
+  }
+  .mobile-tab__icon  { width: 23px; height: 23px; }
+  .mobile-tab__label { font-size: 0.62rem; font-weight: 500; }
+  .mobile-tab--active { color: var(--color-text-primary); }
+  .mobile-tab:active  { color: var(--color-accent); }
+
+  /* ═══════════════════════════════════════════════
+     FASE 2 · PANEL "TU MÚSICA"  (reutiliza el .sidebar)
+     ═══════════════════════════════════════════════ */
+  /* El sidebar está oculto en móvil (regla existente). Al abrir desde la
+     pestaña se muestra como panel entre el header y el mini-player/tabs. */
+  body.m-library-open .sidebar {
+    display: flex;
+    position: fixed;
+    top: var(--m-header-h);
+    left: 0;
+    right: 0;
+    bottom: calc(var(--m-player-h) + var(--m-tab-h));
+    width: auto;
+    z-index: 110;
+    border-right: none;
+    padding: var(--space-4);
+  }
+
+  /* ═══════════════════════════════════════════════
+     FASE 2 · MINI-PLAYER  (footer compacto)
+     La expansión a pantalla completa llega en la Fase 3.
+     ═══════════════════════════════════════════════ */
+  .player { padding: 0 var(--space-3); gap: var(--space-2); }
+  .player__thumb { width: 46px; height: 46px; }
+  .player__controls { gap: var(--space-1); }
+  /* En el mini-player dejamos lo esencial: anterior · play · siguiente */
+  #btn-shuffle, #btn-repeat { display: none; }
+}

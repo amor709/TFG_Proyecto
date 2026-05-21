@@ -2,6 +2,7 @@
 API views para el sistema de "Mis joyas" (cancelar de favoritos)
 """
 from django.http import JsonResponse
+from django.db.models import Max
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_http_methods
 from .models import Playlist, PlaylistSong
@@ -73,7 +74,7 @@ def toggle_liked_song(request, song_id):
         })
     else:
         # Añadir la canción
-        next_order = liked_playlist.playlistsong_set.count() + 1
+        next_order = (liked_playlist.playlistsong_set.aggregate(Max('order'))['order__max'] or 0) + 1
         PlaylistSong.objects.create(
             playlist=liked_playlist,
             song=song,

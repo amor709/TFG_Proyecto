@@ -405,7 +405,6 @@ def edit_listener_profile(request):
         if avatar_form.is_valid() and user_form.is_valid():
             avatar_form.save()
             user_form.save()
-            messages.success(request, "Perfil actualizado correctamente.")
             return redirect('listener_profile', user_id=request.user.id)
     else:
         avatar_form = ListenerProfileForm(instance=listener_profile)

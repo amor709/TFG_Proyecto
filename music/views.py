@@ -317,7 +317,6 @@ def edit_album(request, album_id):
         form = AlbumEditForm(request.POST, request.FILES, instance=album)
         if form.is_valid():
             form.save()
-            messages.success(request, "Álbum actualizado correctamente.")
             return redirect('music:album_detail', album_id=album.pk)
     else:
         form = AlbumEditForm(instance=album)
@@ -335,6 +334,5 @@ def delete_album(request, album_id):
     album.songs.all().delete()
     album.delete()
 
-    messages.success(request, "Álbum y sus canciones eliminados correctamente.")
     return redirect('music:artist_detail')
 
