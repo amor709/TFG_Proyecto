@@ -258,7 +258,11 @@ def add_to_listening_history(request):
         record_play(request.user, song)
 
         # Mantener solo las últimas 100 entradas por usuario
-        ListeningHistory.objects.filter(user=request.user).order_by('-played_at')[100:].delete()
+        keep_ids = list(
+            ListeningHistory.objects.filter(user=request.user)
+            .order_by('-played_at').values_list('id', flat=True)[:100]
+        )
+        ListeningHistory.objects.filter(user=request.user).exclude(id__in=keep_ids).delete()
 
         logger.info(f'Canción agregada al historial: {request.user.username} - {song.title}')
 
